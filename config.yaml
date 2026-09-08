@@ -22,6 +22,21 @@ REF_FILE: ''                   # voice name or reference audio file path (wav, 1
 REF_TEXT: ''                   # reference text for voice cloning (English or Chinese)
 TTS_SERVER: ''                 # TTS server URL, no trailing slash
 
+# -------- LLM (Chat 模式，OpenAI 兼容接口) -----------------------------------
+# 任意兼容 /v1/chat/completions 的服务。示例：
+#   DashScope: 如下默认；Key 用 DASHSCOPE_API_KEY 或 LLM_API_KEY
+#   OpenAI:    llm_base_url: https://api.openai.com/v1    llm_model: gpt-4o-mini
+#   DeepSeek:  llm_base_url: https://api.deepseek.com/v1  llm_model: deepseek-chat
+#   Ollama:    llm_base_url: http://127.0.0.1:11434/v1    llm_model: qwen2.5
+#   vLLM:      llm_base_url: http://127.0.0.1:8000/v1     llm_model: <served-name>
+# llm_base_url: 'https://dashscope.aliyuncs.com/compatible-mode/v1'
+llm_base_url: 'https://api.deepseek.com/v1'
+llm_model: deepseek-chat
+llm_api_key: ''                # 不建议写入仓库；留空则读环境变量
+llm_api_key_env: DEEPSEEK_API_KEY   # 其次回退 DASHSCOPE_API_KEY
+llm_system_prompt: '你是一个知识助手，尽量以简短、口语化的方式输出'
+llm_stream_usage: false        # 本地 vLLM/Ollama 请保持 false
+
 # -------- Transport ----------------------------------------------------------
 transport: webrtc              # rtcpush / webrtc / rtmp / virtualcam
 stun: 'stun:stun.freeswitch.org:3478'  # stun server URL

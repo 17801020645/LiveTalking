@@ -78,6 +78,23 @@ def parse_args():
     parser.add_argument('--REF_TEXT', type=str, default=None)
     parser.add_argument('--TTS_SERVER', type=str, default='http://127.0.0.1:9880')
 
+    # ─── LLM（Chat 模式，OpenAI 兼容接口）──────────────────────────────
+    parser.add_argument('--llm_base_url', type=str,
+                        default='https://dashscope.aliyuncs.com/compatible-mode/v1',
+                        help='OpenAI 兼容 API 的 base_url')
+    parser.add_argument('--llm_model', type=str, default='qwen-plus',
+                        help='对话模型名')
+    parser.add_argument('--llm_api_key', type=str, default='',
+                        help='API Key；为空则从环境变量读取')
+    parser.add_argument('--llm_api_key_env', type=str, default='LLM_API_KEY',
+                        help='API Key 环境变量名；会回退 DASHSCOPE_API_KEY')
+    parser.add_argument('--llm_system_prompt', type=str,
+                        default='你是一个知识助手，尽量以简短、口语化的方式输出',
+                        help='系统提示词')
+    parser.add_argument('--llm_stream_usage', action=argparse.BooleanOptionalAction,
+                        default=False,
+                        help='流式请求是否附带 stream_options.include_usage（部分本地服务不支持）')
+
     # ─── 传输 ─────────────────────────────────────────────────────────
     parser.add_argument('--transport', type=str, default='webrtc',
                         help="output: rtcpush/webrtc/rtmp/virtualcam")
