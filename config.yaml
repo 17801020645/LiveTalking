@@ -14,7 +14,7 @@ avatar_id: wav2lip_avatar_female_model
 batch_size: 16
 
 # -------- Custom Actions ----------------------------------------------------------
-customvideo_config: ''
+customvideo_config: 'data/custom_config.json'
 
 # -------- TTS ----------------------------------------------------------
 tts: edgetts                   # edgetts / gpt-sovits / cosyvoice / fishtts / tencent / doubao / indextts2 / azuretts / qwentts
