@@ -89,7 +89,7 @@ def parse_args():
     parser.add_argument('--llm_api_key_env', type=str, default='LLM_API_KEY',
                         help='API Key 环境变量名；会回退 DASHSCOPE_API_KEY')
     parser.add_argument('--llm_system_prompt', type=str,
-                        default='你是一个知识助手，尽量以简短、口语化的方式输出',
+                        default='你是一个知识助手，尽量以简短、口语化的方式输出。不要使用Markdown，不要用星号或井号强调。',
                         help='系统提示词')
     parser.add_argument('--llm_stream_usage', action=argparse.BooleanOptionalAction,
                         default=False,

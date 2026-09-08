@@ -1,4 +1,5 @@
 import os
+import re
 import time
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -6,6 +7,27 @@ if TYPE_CHECKING:
 from utils.logger import logger
 
 _SENTENCE_ENDS = ",.!;:，。！？：；"
+
+
+def _sanitize_for_speech(text: str) -> str:
+    """去掉 Markdown 标记，避免 TTS 把星号、井号等读出来。"""
+    if not text:
+        return text
+    text = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", text)
+    text = re.sub(r"`+", "", text)
+    text = re.sub(r"^\s{0,3}#{1,6}\s*", "", text, flags=re.M)
+    text = re.sub(r"\*+", "", text)
+    text = re.sub(r"_{2,}", "", text)
+    text = text.replace("\n", " ")
+    text = re.sub(r"[ \t]+", " ", text)
+    return text.strip()
+
+
+def _speak(avatar_session: "BaseAvatar", text: str, datainfo: dict) -> None:
+    spoken = _sanitize_for_speech(text)
+    if spoken:
+        logger.info(spoken)
+        avatar_session.put_msg_txt(spoken, datainfo)
 
 
 def _resolve_api_key(opt) -> str:
@@ -27,7 +49,7 @@ def llm_response(message, avatar_session: "BaseAvatar", datainfo: dict = {}):
         base_url = (getattr(opt, "llm_base_url", None) or "").rstrip("/")
         model = getattr(opt, "llm_model", None) or "qwen-plus"
         system_prompt = getattr(opt, "llm_system_prompt", None) or (
-            "你是一个知识助手，尽量以简短、口语化的方式输出"
+            "你是一个知识助手，尽量以简短、口语化的方式输出。不要使用Markdown，不要用星号或井号强调。"
         )
         api_key = _resolve_api_key(opt)
         if not api_key:
@@ -70,13 +92,12 @@ def llm_response(message, avatar_session: "BaseAvatar", datainfo: dict = {}):
                         result = result + msg[lastpos:i + 1]
                         lastpos = i + 1
                         if len(result) > 10:
-                            logger.info(result)
-                            avatar_session.put_msg_txt(result, datainfo)
+                            _speak(avatar_session, result, datainfo)
                             result = ""
                 result = result + msg[lastpos:]
         logger.info(f"llm Time to last chunk: {time.perf_counter()-start:.4f}s")
         if result:
-            avatar_session.put_msg_txt(result, datainfo)
+            _speak(avatar_session, result, datainfo)
 
     except Exception:
         logger.exception("llm exception:")
