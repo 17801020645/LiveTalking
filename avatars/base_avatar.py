@@ -87,6 +87,14 @@ class BaseAvatar:
         self.msgqueues = []  # 消息队列列表，用于通知外部事件
         # self.custom_opt = {}
         self.__loadcustom()  # 加载自定义配置
+        # #region agent log
+        try:
+            import json as _dbg_json, time as _dbg_time
+            with open('/home/banren45/workspace/01_digital_human/LiveTalking/.cursor/debug-1c4562.log', 'a') as _dbg_f:
+                _dbg_f.write(_dbg_json.dumps({'sessionId':'1c4562','hypothesisId':'D','runId':'pre','location':'base_avatar.py:__init__','message':'customopt loaded','data':{'session_avatar_id':getattr(self.opt,'avatar_id',None),'custom_index_keys':list(self.custom_index.keys()),'custom_img_lens':{str(k):len(v) for k,v in self.custom_img_cycle.items()},'customopt':getattr(self.opt,'customopt',[])},'timestamp':int(_dbg_time.time()*1000)})+'\n')
+        except Exception:
+            pass
+        # #endregion
 
         self.batch_size = opt.batch_size  # 推理批次大小
         self.res_frame_queue = Queue(self.batch_size*2)  # 结果帧队列，用于推理线程与渲染线程通信
@@ -460,8 +468,20 @@ class BaseAvatar:
                     mirindex = mirror_index(len(self.custom_img_cycle[audiotype]),self.custom_index[audiotype])
                     target_frame = self.custom_img_cycle[audiotype][mirindex]
                     self.custom_index[audiotype] += 1
+                    _idle_src = 'customvideo'
                 else:
                     target_frame = self.frame_list_cycle[idx]  # 使用预渲染的完整帧序列
+                    _idle_src = 'avatar_cycle'
+                # #region agent log
+                if getattr(self, '_dbg_idle_logs', 0) < 2:
+                    self._dbg_idle_logs = getattr(self, '_dbg_idle_logs', 0) + 1
+                    try:
+                        import json as _dbg_json
+                        with open('/home/banren45/workspace/01_digital_human/LiveTalking/.cursor/debug-1c4562.log', 'a') as _dbg_f:
+                            _dbg_f.write(_dbg_json.dumps({'sessionId':'1c4562','hypothesisId':'B','runId':'pre','location':'base_avatar.py:process_frames','message':'idle frame source','data':{'session_avatar_id':getattr(self.opt,'avatar_id',None),'audiotype':int(audiotype),'idle_src':_idle_src,'frame_shape':list(target_frame.shape) if hasattr(target_frame,'shape') else None,'avatar_cycle_len':len(self.frame_list_cycle) if getattr(self,'frame_list_cycle',None) is not None else 0},'timestamp':int(time.time()*1000)})+'\n')
+                    except Exception:
+                        pass
+                # #endregion
                 
                 if enable_transition:
                     # 说话→静音过渡

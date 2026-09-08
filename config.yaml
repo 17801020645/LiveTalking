@@ -14,7 +14,10 @@ avatar_id: wav2lip_avatar_female_model
 batch_size: 16
 
 # -------- Custom Actions ----------------------------------------------------------
-customvideo_config: 'data/custom_config.json'
+# 全局动作编排会覆盖所有会话的静音画面。当前 JSON 的 audiotype=1
+# 指向女形象 full_imgs，连 wav2lip_yyh 时待机也会变成她。
+# 需要演示动作编排时再打开，且素材必须与当前 avatar_id 同一人。
+customvideo_config: ''
 
 # -------- TTS ----------------------------------------------------------
 tts: edgetts                   # edgetts / gpt-sovits / cosyvoice / fishtts / tencent / doubao / indextts2 / azuretts / qwentts

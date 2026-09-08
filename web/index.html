@@ -268,6 +268,9 @@ function negotiate() {
             refaudio: document.getElementById('offerRefAudio').value || undefined,
             reftext: document.getElementById('offerRefText').value || undefined,
         };
+        // #region agent log
+        fetch('http://localhost:7487/ingest/9941f763-06b0-43dc-8321-e568b3844cc7',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'1c4562'},body:JSON.stringify({sessionId:'1c4562',hypothesisId:'A',runId:'pre',location:'web/index.html:negotiate',message:'offer payload avatar fields',data:{avatar:body.avatar||null,avatarLen:(document.getElementById('offerAvatar').value||'').length,refaudio:body.refaudio||null},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
         return fetch('/offer', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
     }).then(res => res.json()).then(answer => {
         // 检查服务端返回的错误码
