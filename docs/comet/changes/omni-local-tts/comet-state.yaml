@@ -1,0 +1,295 @@
+schema: comet.native.v4
+name: omni-local-tts
+language: zh-CN
+phase: verify
+status: await-user
+state_version: 7
+brief: brief.md
+spec_changes:
+  - capability: omni-tts-serving
+    operation: create
+    source: specs/omni-tts-serving/spec.md
+workspace:
+  isolation: current
+  change_branch: main
+  target_branch: main
+  finish: null
+loop:
+  stage: await-user
+  goal_cycle: 1
+  iteration: 1
+  attempt: 2
+  retry_epoch: 0
+  failed_iteration_count: 0
+  no_progress_count: 0
+  execution_failure_count: 0
+  previous_unresolved_ids:
+    - A2
+  next_action: resolve-verifier-blocker
+acceptance:
+  - id: A1
+    source: brief.md
+    text: A1：存在独立 `.venv-omni`；LiveTalking `.venv` 中 `torch` 仍为现有 cu128 版本
+    result: passed
+    reason:
+      text: 独立 .venv-omni 存在；LiveTalking .venv 的 torch 仍为 2.9.1+cu128，与 Runtime
+        livetalking-torch 一致。
+      truncated: false
+  - id: A2
+    source: brief.md
+    text: A2：执行 `start-omni.sh` 后本机 `8091` 监听；`GET /v1/audio/voices` 返回成功 JSON
+    result: blocked
+    reason:
+      text: 独立探测已确认 8091 voices 返回 200 JSON，但 Runtime 必过检查 omni-voices 在沙箱中以 curl exit
+        7 失败，无法把 A2 记为正式通过。
+      truncated: false
+  - id: A3
+    source: brief.md
+    text: A3：浏览器打开 `/tts/`，服务器地址 `http://127.0.0.1:8091`，连接测试成功且语音列表非空
+    result: passed
+    reason:
+      text: /tts/index.html 默认连 localhost:8091；voices 列表 10 个音色；管理页曾显示已连接。
+      truncated: false
+  - id: A4
+    source: brief.md
+    text: A4：管理页用预设音色合成一段中文，能播放或下载音频
+    result: passed
+    reason:
+      text: 管理页 vivian 中文合成出现可播放预览与可下载；独立 speech 接口返回合法 WAV。
+      truncated: false
+  - id: A5
+    source: brief.md
+    text: "A5：文档给出将 LiveTalking 切到 `omnitts` 的准确配置项与重启步骤；未改默认 `tts: edgetts`"
+    result: passed
+    reason:
+      text: "docs/omni_tts.md 写明切 omnitts 配置与重启步骤；默认仍为 tts: edgetts。"
+      truncated: false
+  - id: A6
+    source: brief.md
+    text: A6：Omni 启动配置限制两阶段显存占用（各约 0.15），文档说明与数字人同卡时的 `nvidia-smi` 观察方法
+    result: passed
+    reason:
+      text: 两阶段 gpu_memory_utilization 均为 0.15；文档含 nvidia-smi 观察方法。
+      truncated: false
+  - id: A7
+    source: brief.md
+    text: A7：文档写明更换 0.6B-Base / 1.7B 只需改 serve 模型 ID 与显存分数，不必改数字人渲染代码
+    result: passed
+    reason:
+      text: 文档写明换 0.6B-Base / 1.7B 只改 OMNI_MODEL 与显存分数。
+      truncated: false
+builder_handoff:
+  candidate_id: 3285fe08-379a-43f0-bd2d-cabeb61ac075
+  identity_provider: skill-coordinated
+  builder_execution_ref: skill-coordinated:builder:b4f943f4-3966-4d91-83bf-2daebfd635ec
+  iteration: 1
+  summary:
+    text: 独立 .venv-omni 安装 vllm 0.28 + vllm-omni；start-omni.sh 在 8091 拉起 0.6B
+      CustomVoice（两阶段 utilization 0.15）；管理页连接/列表/合成已通；默认 tts 仍为
+      edgetts；docs/omni_tts.md 写切配置、显存观察与换模型路径。
+    truncated: false
+  addressed_acceptance_ids:
+    - A1
+    - A2
+    - A3
+    - A4
+    - A5
+    - A6
+    - A7
+  checks:
+    - name:
+        text: livetalking-torch-unchanged
+        truncated: false
+      result: passed
+      note:
+        text: .venv torch 仍为 2.9.1+cu128
+        truncated: false
+    - name:
+        text: omni-voices-http
+        truncated: false
+      result: passed
+      note:
+        text: GET /v1/audio/voices 返回 10 个预设音色
+        truncated: false
+    - name:
+        text: omni-speech-curl
+        truncated: false
+      result: passed
+      note:
+        text: 中文 vivian 合成得到 24kHz WAV
+        truncated: false
+    - name:
+        text: tts-admin-page
+        truncated: false
+      result: passed
+      note:
+        text: /tts/ 已连接、列表 10、vivian 合成可播放可下载
+        truncated: false
+    - name:
+        text: default-tts-edgetts
+        truncated: false
+      result: passed
+      note:
+        text: "config.yaml 仍为 tts: edgetts"
+        truncated: false
+  checks_truncated: false
+  known_limits:
+    - text: 本机无系统 nvcc，start-omni.sh 默认 VLLM_USE_FLASHINFER_SAMPLER=0
+      truncated: false
+    - text: 与 LiveTalking 同卡时空闲合计约 10GB，高于配方写的 Omni 单独约 5GB
+      truncated: false
+    - text: 未把数字人默认 TTS 切到 omnitts（按确认范围）
+      truncated: false
+    - text: 未部署 0.6B-Base / 1.7B
+      truncated: false
+  known_limits_truncated: false
+  review:
+    status: passed
+    summary:
+      text: 只读审查确认 A1–A7 达到可验收：独立环境未污染数字人 torch，8091 与管理页合成通过，默认仍 EdgeTTS，显存与换模型文档齐全。
+      truncated: false
+    reviewer_execution_ref: be0c271f-538c-48b4-8720-bf6f2c8454b6
+  submitted_at: 2026-09-09T02:57:49.797Z
+blockers:
+  - owner: user
+    reason:
+      text: 除 A2 因 Runtime 沙箱无法探测 8091 被阻塞外，其余验收项通过。实现本身可用。
+      truncated: false
+    acceptance_ids:
+      - A2
+    resolution_action: resolve-verifier-blocker
+verification:
+  candidate_id: 3285fe08-379a-43f0-bd2d-cabeb61ac075
+  identity_provider: skill-coordinated
+  verifier_execution_ref: skill-coordinated:verifier:29471d56-5041-4ef6-a840-5a297a659435
+  iteration: 1
+  attempt: 2
+  assurance: skill-coordinated
+  verdict: blocked
+  checks:
+    - id: livetalking-torch
+      name:
+        text: LiveTalking torch still 2.9.1
+        truncated: false
+      argv_display:
+        - text: -c
+          truncated: false
+        - text: import torch; print(torch.__version__); raise SystemExit(0 if
+            torch.__version__.startswith('2.9.1') else 1)
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 720
+    - id: omni-voices
+      name:
+        text: Omni voices endpoint
+        truncated: false
+      argv_display:
+        - text: -fsS
+          truncated: false
+        - text: -m
+          truncated: false
+        - text: "15"
+          truncated: false
+        - text: http://127.0.0.1:8091/v1/audio/voices
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: failed
+      exit_code: 7
+      duration_ms: 5
+    - id: default-tts
+      name:
+        text: Default tts remains edgetts
+        truncated: false
+      argv_display:
+        - text: -n
+          truncated: false
+        - text: "^tts: edgetts"
+          truncated: false
+        - text: config.yaml
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 3
+    - id: deploy-util
+      name:
+        text: Deploy yaml utilization 0.15
+        truncated: false
+      argv_display:
+        - text: -n
+          truncated: false
+        - text: "gpu_memory_utilization: 0.15"
+          truncated: false
+        - text: deploy/qwen3_tts_0.6b.yaml
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 8
+    - id: omni-docs
+      name:
+        text: Docs cover switch, nvidia-smi, model swap
+        truncated: false
+      argv_display:
+        - text: -E
+          truncated: false
+        - text: -n
+          truncated: false
+        - text: OMNI_MODEL|nvidia-smi|0.6B-Base|1.7B
+          truncated: false
+        - text: docs/omni_tts.md
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 6
+  summary:
+    text: 除 A2 因 Runtime 沙箱无法探测 8091 被阻塞外，其余验收项通过。实现本身可用。
+    truncated: false
+  risks:
+    - text: Runtime 沙箱不能访问 127.0.0.1:8091，导致 A2 阻塞。需要用户确认本机服务可用，或允许在非沙箱重跑该检查。
+      truncated: false
+  risks_truncated: false
+  completed_at: 2026-09-09T03:02:18.783Z
+history:
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 1
+    outcome: execution-error
+    unresolved_ids: []
+    summary:
+      text: "Native Verifier response was invalid: Native verification cannot pass
+        before every required check succeeds"
+      truncated: false
+    completed_at: 2026-09-09T03:01:20.112Z
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 2
+    outcome: blocked
+    unresolved_ids:
+      - A2
+    summary:
+      text: 除 A2 因 Runtime 沙箱无法探测 8091 被阻塞外，其余验收项通过。实现本身可用。
+      truncated: false
+    completed_at: 2026-09-09T03:02:18.783Z
+history_overflow:
+  dropped_entries: 0
+  first_dropped_at: null
+  last_dropped_at: null
+  outcome_counts:
+    pass: 0
+    fail: 0
+    blocked: 0
+    execution-error: 0
+    recovery: 0
+verification_result: blocked
+verification_report: verification.md
+archived: false
+created_at: 2026-09-09T02:22:27.493Z

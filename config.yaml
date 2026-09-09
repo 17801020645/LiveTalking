@@ -20,10 +20,11 @@ batch_size: 16
 customvideo_config: ''
 
 # -------- TTS ----------------------------------------------------------
-tts: edgetts                   # edgetts / gpt-sovits / cosyvoice / fishtts / tencent / doubao / indextts2 / azuretts / qwentts
+# 默认 EdgeTTS，不依赖本机 GPU。切到本地 Omni 的步骤见 docs/omni_tts.md
+tts: edgetts                   # edgetts / omnitts / gpt-sovits / cosyvoice / fishtts / tencent / doubao / indextts2 / azuretts / qwentts
 REF_FILE: ''                   # voice name or reference audio file path (wav, 16kHz, mono)
 REF_TEXT: ''                   # reference text for voice cloning (English or Chinese)
-TTS_SERVER: ''                 # TTS server URL, no trailing slash
+TTS_SERVER: ''                 # TTS server URL, no trailing slash；omnitts 示例 http://127.0.0.1:8091
 
 # -------- LLM (Chat 模式，OpenAI 兼容接口) -----------------------------------
 # 任意兼容 /v1/chat/completions 的服务。示例：
