@@ -112,7 +112,10 @@ class OmniTTS(BaseTTS):
             "speed": speed,
             "language": language,
             "task_type": task_type,
+            # stream=true 且不写 stream_format 时 Omni 默认 SSE（JSON/base64），
+            # 按 int16 PCM 解码会变成沙沙声。裸字节流必须 stream_format=audio。
             "stream": True,
+            "stream_format": "audio",
         }
         if instructions:
             body["instructions"] = instructions
