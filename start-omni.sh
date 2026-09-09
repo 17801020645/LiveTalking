@@ -22,6 +22,8 @@ export PATH="$ROOT/.venv-omni/bin:${PATH:-}"
 unset PYTHONPATH PYTHONHOME
 export HF_HOME="${HF_HOME:-$ROOT/data/hf}"
 export HF_ENDPOINT="${HF_ENDPOINT:-https://hf-mirror.com}"
+# hf-mirror 不提供 Xet；继续走 Xet 会连官方 cas-bridge 并在国内 SSL 中断。
+export HF_HUB_DISABLE_XET="${HF_HUB_DISABLE_XET:-1}"
 # 仅装驱动、无系统 nvcc 时，关闭 FlashInfer sampler 的 JIT，改走 PyTorch 采样。
 export VLLM_USE_FLASHINFER_SAMPLER="${VLLM_USE_FLASHINFER_SAMPLER:-0}"
 mkdir -p "$HF_HOME"
@@ -31,8 +33,17 @@ HOST="${OMNI_HOST:-0.0.0.0}"
 PORT="${OMNI_PORT:-8091}"
 DEPLOY_CONFIG="${OMNI_DEPLOY_CONFIG:-$ROOT/deploy/qwen3_tts_0.6b.yaml}"
 
+# 默认模型已在 HF_HOME 时离线启动，避免每次启动再打 Hub。
+# 缺文件时：HF_HUB_OFFLINE=0 HF_HUB_DISABLE_XET=1 ./start-omni.sh
+model_cache="models--${MODEL//\//--}"
+if [[ -z "${HF_HUB_OFFLINE:-}" && -d "$HF_HOME/hub/$model_cache/snapshots" ]]; then
+  export HF_HUB_OFFLINE=1
+  export TRANSFORMERS_OFFLINE="${TRANSFORMERS_OFFLINE:-1}"
+fi
+
 echo "Omni TTS: model=$MODEL host=$HOST port=$PORT"
 echo "  HF_HOME=$HF_HOME"
+echo "  HF_HUB_DISABLE_XET=${HF_HUB_DISABLE_XET:-} HF_HUB_OFFLINE=${HF_HUB_OFFLINE:-}"
 echo "  deploy=$DEPLOY_CONFIG"
 echo "健康检查: curl http://127.0.0.1:${PORT}/v1/audio/voices"
 

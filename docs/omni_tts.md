@@ -17,7 +17,11 @@
 # 期望仍是现有 cu128 版本，例如 2.9.1+cu128
 ```
 
-权重缓存在 `HF_HOME`（默认 `data/hf`，与 `./start.sh` 相同）。国内默认 `HF_ENDPOINT=https://hf-mirror.com`。
+权重缓存在 `HF_HOME`（默认 `data/hf`，与 `./start.sh` 相同）。国内默认 `HF_ENDPOINT=https://hf-mirror.com`，并关闭 Xet（`HF_HUB_DISABLE_XET=1`）。镜像不支持 Xet，否则会连官方节点并出现 `SSL: UNEXPECTED_EOF_WHILE_READING`。本地已有快照时脚本会设 `HF_HUB_OFFLINE=1`。缺文件再拉：
+
+```bash
+HF_HUB_OFFLINE=0 HF_HUB_DISABLE_XET=1 ./start-omni.sh
+```
 
 ## 启动
 
@@ -35,12 +39,22 @@ curl http://127.0.0.1:8091/v1/audio/voices
 
 应返回含预设音色（如 `vivian`）的 JSON。
 
-局域网浏览器访问管理页时，服务器地址填 `http://<GPU主机>:8091`（脚本已监听 `0.0.0.0`）。仅本机可设 `OMNI_HOST=127.0.0.1`。
+局域网浏览器访问管理页时：
+
+1. 打开 `http://<GPU主机>:8010/tts/index.html`（不要用本机 `localhost`）。
+2. TTS 服务器地址填 `http://<同一GPU主机>:8091`，不要填 `localhost:8091`（那是浏览器官机）。
+3. 本机 UFW 需放行局域网到 **TCP 8091**。现有 [`setup-ufw-lan.sh`](../setup-ufw-lan.sh) 已包含该规则，改完后在 Ubuntu 上执行：
+
+```bash
+sudo bash setup-ufw-lan.sh
+```
+
+Omni 默认监听 `0.0.0.0:8091`。仅本机可设 `OMNI_HOST=127.0.0.1`。
 
 ## 管理页验收
 
-1. 先 `./start.sh` 再打开 `http://127.0.0.1:8010/tts/`（或 `/tts/index.html`）。
-2. 服务器地址填 `http://127.0.0.1:8091`（或 `http://localhost:8091`）。
+1. 先 `./start.sh` 再打开 `http://127.0.0.1:8010/tts/index.html`（局域网用 GPU 主机 IP）。
+2. 本机填 `http://127.0.0.1:8091`；局域网填 `http://<GPU主机>:8091`。
 3. 连接测试成功，语音列表非空。
 4. 选预设音色合成一段中文，应能播放或下载。
 
