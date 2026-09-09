@@ -181,7 +181,13 @@ def main():
             logger.info("[VirtualCam] Virtual camera output enabled - digital human will be rendered to virtual camera")
 
     #############################################################################
-    appasync = web.Application(client_max_size=1024**2*100)
+    from server.platform_auth import platform_auth_middleware
+    from server.platform_routes import attach_platform
+
+    appasync = web.Application(
+        client_max_size=1024**2*100,
+        middlewares=[platform_auth_middleware],
+    )
     appasync["llm_response"] = llm_response
     appasync["opt"] = opt
     appasync["rtc_manager"] = rtc_manager
@@ -189,6 +195,9 @@ def main():
     appasync.on_shutdown.append(on_shutdown)
     appasync.router.add_post("/offer", offer)
     appasync.router.add_get("/record/{sessionid}", download_record)
+
+    # /api/v1 与 /app 必须在 web/ 静态路由之前注册
+    attach_platform(appasync)
 
     # 注册 server/routes.py 中的通用 API 路由
     setup_routes(appasync)

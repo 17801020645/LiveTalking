@@ -1,0 +1,226 @@
+schema: comet.native.v4
+name: user-platform-foundation
+language: zh-CN
+phase: archive
+status: active
+state_version: 7
+brief: brief.md
+spec_changes:
+  - capability: auth-rbac
+    operation: create
+    source: specs/auth-rbac/spec.md
+  - capability: avatar-catalog
+    operation: create
+    source: specs/avatar-catalog/spec.md
+  - capability: web-app-shell
+    operation: create
+    source: specs/web-app-shell/spec.md
+workspace:
+  isolation: worktree
+  change_branch: comet/user-platform-foundation
+  target_branch: main
+  finish: keep
+loop:
+  stage: archive-ready
+  goal_cycle: 1
+  iteration: 1
+  attempt: 1
+  retry_epoch: 0
+  failed_iteration_count: 0
+  no_progress_count: 0
+  execution_failure_count: 0
+  previous_unresolved_ids: []
+  next_action: archive
+acceptance:
+  - id: A1
+    source: brief.md
+    text: A1：无登录访问 `/app/` 受保护页时跳到登录页；错误密码不能进入
+    result: passed
+    reason:
+      text: router.beforeEach 非 public 调 /api/v1/auth/me 失败跳 /login；错误密码 401；正确密码可进入。
+      truncated: false
+  - id: A2
+    source: brief.md
+    text: A2：用引导管理员登录后进入管理员壳，左侧可见「首页 / Avatar 生成 / 管理后台 / TTS 语音管理」四项
+    result: passed
+    reason:
+      text: AdminLayout 侧栏含首页 / Avatar 生成 / 管理后台 / TTS 语音管理；登录 admin 进入 /admin。
+      truncated: false
+  - id: A3
+    source: brief.md
+    text: A3：普通用户登录后进入用户壳，左侧可见「首页 / 我的资产 / 定制数字人」；访问管理员 API 返回 403
+    result: passed
+    reason:
+      text: UserLayout 含首页 / 我的资产 / 定制数字人；普通用户 GET /api/v1/admin/users 返回 403。
+      truncated: false
+  - id: A4
+    source: brief.md
+    text: A4：管理员可创建普通用户，并把已扫描入库的形象绑定给该用户；未绑定形象不出现在该用户资产页
+    result: passed
+    reason:
+      text: 管理员可创建用户并绑定；用户资产仅已订阅形象；未绑定 404。
+      truncated: false
+  - id: A5
+    source: brief.md
+    text: A5：用户在资产页将某形象设为发布后，首页展示该形象；再发布另一个时首页只展示新的那个
+    result: passed
+    reason:
+      text: 发布会清零其它订阅；再发布后首页只保留最新一条。
+      truncated: false
+  - id: A6
+    source: brief.md
+    text: A6：未登录仍可打开 `/` 与 `/avatar.html`；`POST /offer` 与 `POST /api/avatar/task`
+      不要求登录
+    result: passed
+    reason:
+      text: 非 /api/v1 放行；未登录可访问 / 与 /avatar.html，POST /offer 与 /api/avatar/task 不要求登录。
+      truncated: false
+  - id: A7
+    source: brief.md
+    text: A7：原 `web/` 文件未被改写；新 UI 只存在于 `frontend/` 与 `/app/`
+    result: passed
+    reason:
+      text: web/ git diff 干净；新 UI 在 frontend/，由 /app/ 挂载。
+      truncated: false
+builder_handoff:
+  candidate_id: e1412ba5-4bd7-4a9a-9c45-0e93cb44b739
+  identity_provider: skill-coordinated
+  builder_execution_ref: skill-coordinated:builder:556d6897-3bec-48f8-bf81-6445e0b45d63
+  iteration: 1
+  summary:
+    text: 第一期已落地：SQLite 用户/订阅库、Cookie 登录与 RBAC、/api/v1 资源接口、启动扫描 data/avatars、Vue3
+      双角色壳挂 /app/。旧 web/ 与 /offer、/api/avatar/task 保持匿名。
+    truncated: false
+  addressed_acceptance_ids:
+    - A1
+    - A2
+    - A3
+    - A4
+    - A5
+    - A6
+    - A7
+  checks:
+    - name:
+        text: unittest tests.test_platform_v1
+        truncated: false
+      result: passed
+      note:
+        text: 6 tests OK：登录/403/绑定隔离/单发布/匿名旧接口/前端目录
+        truncated: false
+    - name:
+        text: frontend npm run build
+        truncated: false
+      result: passed
+      note:
+        text: vite build 产出 frontend/dist
+        truncated: false
+  checks_truncated: false
+  known_limits:
+    - text: 未用浏览器自动跑登录跳转，A1 前端跳转依赖 Vue 路由守卫源码与 /api/v1/auth/me 401
+      truncated: false
+    - text: 生产需在 frontend/ 执行 npm run build 后 /app/ 才有页面；dist 被仓库 gitignore
+      truncated: false
+    - text: 引导管理员依赖 LIVETALKING_BOOTSTRAP_ADMIN 与 LIVETALKING_BOOTSTRAP_PASSWORD
+      truncated: false
+    - text: 订单、用户连麦、TTS 代理不在本 change
+      truncated: false
+  known_limits_truncated: false
+  review:
+    status: passed
+    summary:
+      text: 对照 brief A1–A7 与三份 Spec 复核：鉴权边界、订阅发布、双角色导航与旧站匿名均有实现与单测覆盖。
+      truncated: false
+    reviewer_execution_ref: unittest tests.test_platform_v1 + vite build
+  submitted_at: 2026-09-09T11:22:05.401Z
+blockers: []
+verification:
+  candidate_id: e1412ba5-4bd7-4a9a-9c45-0e93cb44b739
+  identity_provider: skill-coordinated
+  verifier_execution_ref: skill-coordinated:verifier:f7c0654d-d13a-41f9-862b-bef0ff27a353
+  iteration: 1
+  attempt: 1
+  assurance: skill-coordinated
+  verdict: pass
+  checks:
+    - id: unittest-platform-v1
+      name:
+        text: Platform v1 unit tests
+        truncated: false
+      argv_display:
+        - text: -m
+          truncated: false
+        - text: unittest
+          truncated: false
+        - text: tests.test_platform_v1
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 2217
+    - id: web-untouched
+      name:
+        text: Original web/ unchanged
+        truncated: false
+      argv_display:
+        - text: diff
+          truncated: false
+        - text: --exit-code
+          truncated: false
+        - text: --
+          truncated: false
+        - text: web/
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 9
+    - id: frontend-shell
+      name:
+        text: Vue dual-role layouts exist
+        truncated: false
+      argv_display:
+        - text: -f
+          truncated: false
+        - text: frontend/src/layouts/AdminLayout.vue
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 6
+  summary:
+    text: A1–A7 均由实现与 Runtime 检查覆盖，双角色壳、订阅隔离与旧站匿名可用。
+    truncated: false
+  risks:
+    - text: 生产需先 npm run build，否则 /app/ 返回 503。
+      truncated: false
+    - text: 单测中 /offer 与 /api/avatar/task 为 stub，匿名性与 app.py 真实注册一致。
+      truncated: false
+  risks_truncated: false
+  completed_at: 2026-09-09T11:24:02.043Z
+history:
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 1
+    outcome: pass
+    unresolved_ids: []
+    summary:
+      text: A1–A7 均由实现与 Runtime 检查覆盖，双角色壳、订阅隔离与旧站匿名可用。
+      truncated: false
+    completed_at: 2026-09-09T11:24:02.043Z
+history_overflow:
+  dropped_entries: 0
+  first_dropped_at: null
+  last_dropped_at: null
+  outcome_counts:
+    pass: 0
+    fail: 0
+    blocked: 0
+    execution-error: 0
+    recovery: 0
+verification_result: pass
+verification_report: verification.md
+archived: false
+created_at: 2026-09-09T10:06:31.944Z
