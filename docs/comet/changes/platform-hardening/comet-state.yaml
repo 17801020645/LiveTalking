@@ -3,7 +3,7 @@ name: platform-hardening
 language: zh-CN
 phase: archive
 status: active
-state_version: 8
+state_version: 9
 brief: brief.md
 spec_changes:
   - capability: admin-tts-proxy
@@ -22,7 +22,7 @@ workspace:
   isolation: worktree
   change_branch: comet/platform-hardening
   target_branch: main
-  finish: null
+  finish: merge
 loop:
   stage: archive-ready
   goal_cycle: 2
