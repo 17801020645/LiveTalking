@@ -41,9 +41,8 @@ curl http://127.0.0.1:8091/v1/audio/voices
 
 局域网浏览器访问管理页时：
 
-1. 打开 `http://<GPU主机>:8010/tts/index.html`（不要用本机 `localhost`）。
-2. TTS 服务器地址填 `http://<同一GPU主机>:8091`，不要填 `localhost:8091`（那是浏览器官机）。
-3. 本机 UFW 需放行局域网到 **TCP 8091**。现有 [`setup-ufw-lan.sh`](../setup-ufw-lan.sh) 已包含该规则，改完后在 Ubuntu 上执行：
+1. 打开 `http://<GPU主机>:8010/app/admin/tts`（管理员登录后，8010 代理本机 8091，浏览器不必直连 8091）。
+2. 若仍使用原页 `http://<GPU主机>:8010/tts/index.html`：TTS 服务器地址填 `http://<同一GPU主机>:8091`，不要填 `localhost:8091`（那是浏览器官机），且本机 UFW 需放行局域网到 **TCP 8091**。现有 [`setup-ufw-lan.sh`](../setup-ufw-lan.sh) 已包含该规则，改完后在 Ubuntu 上执行：
 
 ```bash
 sudo bash setup-ufw-lan.sh

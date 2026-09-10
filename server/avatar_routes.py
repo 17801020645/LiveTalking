@@ -2,6 +2,7 @@ import os
 import json
 import uuid
 from aiohttp import web
+from server.platform_auth import require_admin
 from server.task_manager import task_manager
 from utils.logger import logger
 
@@ -25,7 +26,6 @@ async def create_avatar_task(request):
     POST /api/avatar/task
     Parameters: model, avatar_id, video_file (upload), video_path (local), ...
     """
-    from server.platform_auth import require_admin
     denied = require_admin(request)
     if denied:
         return denied
@@ -109,6 +109,9 @@ async def get_avatar_task_status(request):
     """
     GET /api/avatar/task/{task_id}
     """
+    denied = require_admin(request)
+    if denied:
+        return denied
     task_id = request.match_info.get('task_id')
     task = task_manager.get_task(task_id)
     if not task:
@@ -120,6 +123,9 @@ async def list_avatar_tasks(request):
     """
     GET /api/avatar/tasks
     """
+    denied = require_admin(request)
+    if denied:
+        return denied
     tasks = task_manager.list_tasks()
     return json_ok(data={"tasks": tasks})
 
@@ -127,6 +133,9 @@ async def delete_avatar_task(request):
     """
     DELETE /api/avatar/task/{task_id}
     """
+    denied = require_admin(request)
+    if denied:
+        return denied
     task_id = request.match_info.get('task_id')
     success, msg = task_manager.delete_task(task_id)
     if not success:

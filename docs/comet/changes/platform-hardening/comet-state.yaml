@@ -1,0 +1,215 @@
+schema: comet.native.v4
+name: platform-hardening
+language: zh-CN
+phase: archive
+status: active
+state_version: 8
+brief: brief.md
+spec_changes:
+  - capability: admin-tts-proxy
+    operation: create
+    source: specs/admin-tts-proxy/spec.md
+  - capability: auth-rbac
+    operation: modify
+    source: specs/auth-rbac/spec.md
+  - capability: ops-hardening
+    operation: create
+    source: specs/ops-hardening/spec.md
+  - capability: web-app-shell
+    operation: modify
+    source: specs/web-app-shell/spec.md
+workspace:
+  isolation: worktree
+  change_branch: comet/platform-hardening
+  target_branch: main
+  finish: null
+loop:
+  stage: archive-ready
+  goal_cycle: 2
+  iteration: 1
+  attempt: 1
+  retry_epoch: 0
+  failed_iteration_count: 0
+  no_progress_count: 0
+  execution_failure_count: 0
+  previous_unresolved_ids: []
+  next_action: archive
+acceptance:
+  - id: A1
+    source: brief.md
+    text: A1：写入一条生成任务后重启进程，任务列表仍能看到该任务及其状态字段
+    result: passed
+    reason:
+      text: 任务写入 SQLite，重启后 attach_store 再加载；test_a1 二次 start_app 后 GET
+        /api/avatar/tasks 仍见状态字段。
+      truncated: false
+  - id: A2
+    source: brief.md
+    text: A2：进程退出时仍为 `pending`/`running` 的任务，下次启动后列出为 `failed`，并带可理解说明
+    result: passed
+    reason:
+      text: 启动时将 pending/running 标 failed，文案为进程中断；test_a2 覆盖。
+      truncated: false
+  - id: A3
+    source: brief.md
+    text: A3：未登录 `GET /healthz` 返回 200，响应体不含密钥、口令或会话 Cookie
+    result: passed
+    reason:
+      text: 未登录 GET /healthz 返回 200 且 {ok:true}，正文不含密钥或 Cookie。
+      truncated: false
+  - id: A4
+    source: brief.md
+    text: A4：请求 `Origin` 等于当前 Host 对应源时，带 Cookie 的跨资源请求可拿到允许凭证的 CORS 头；未在白名单的 Origin
+      不会被 `*` 放行
+    result: passed
+    reason:
+      text: Host 匹配 Origin 时带凭证 CORS 头；未白名单 Origin 不回 *。
+      truncated: false
+  - id: A5
+    source: brief.md
+    text: A5：环境变量可追加额外 Origin，该 Origin 带凭证请求可通过 CORS
+    result: passed
+    reason:
+      text: LIVETALKING_CORS_ORIGINS 追加源可带凭证通过。
+      truncated: false
+  - id: A6
+    source: brief.md
+    text: A6：已登录管理员在 `/app/admin/tts` 不填写 8091 地址即可拉取音色列表（测试可用假上游）
+    result: passed
+    reason:
+      text: 管理员 TTS 页不填上游地址，经 8010 拉音色；test_a6 假上游非空。
+      truncated: false
+  - id: A7
+    source: brief.md
+    text: A7：管理员经 8010 发起合成，成功时得到音频；上游不可达时得到明确失败，而不是无限等待
+    result: passed
+    reason:
+      text: 合成成功返回音频；上游不可达 502 且有超时上限。
+      truncated: false
+  - id: A8
+    source: brief.md
+    text: A8：未登录访问 TTS 代理为 401；普通用户为 403
+    result: passed
+    reason:
+      text: TTS 代理未登录 401，普通用户 403。
+      truncated: false
+builder_handoff:
+  candidate_id: f0dc4249-e614-4a6e-be82-65efff23c031
+  identity_provider: skill-coordinated
+  builder_execution_ref: skill-coordinated:builder:e2648fb9-d7a1-437f-a606-de5e90c9ed96
+  iteration: 1
+  summary:
+    text: 任务写入 SQLite 并可在重启后列出；中断的 pending/running 启动后标 failed。公开 GET /healthz。CORS
+      取消 *，放行当前 Host 与 LIVETALKING_CORS_ORIGINS。管理员 TTS 经 /api/v1/admin/tts/* 代理
+      Omni，页面不填上游地址。
+    truncated: false
+  addressed_acceptance_ids:
+    - A1
+    - A2
+    - A3
+    - A4
+    - A5
+    - A6
+    - A7
+    - A8
+  checks:
+    - name:
+        text: unittest tests.test_platform_hardening tests.test_platform_v1
+          tests.test_orders tests.test_user_live
+        truncated: false
+      result: passed
+      note:
+        text: 25 tests OK，PYTHONPATH 指向 worktree
+        truncated: false
+  checks_truncated: false
+  known_limits:
+    - text: 未连真实 8091 / GPU；TTS 单测用假上游
+      truncated: false
+    - text: 未在浏览器点选管理员 TTS 页；Vue 改动靠单测与源码核对
+      truncated: false
+    - text: 原 web/tts/ 仍直连 8091，未改写
+      truncated: false
+  known_limits_truncated: false
+  review:
+    status: passed
+    summary:
+      text: 对照 brief A1–A8：任务落盘与中断失败、公开 healthz、Host/白名单 CORS、管理员 TTS 代理与 401/403。
+      truncated: false
+    reviewer_execution_ref: unittest tests.test_platform_hardening
+      tests.test_platform_v1 tests.test_orders tests.test_user_live
+  submitted_at: 2026-09-10T08:04:02.140Z
+blockers: []
+verification:
+  candidate_id: f0dc4249-e614-4a6e-be82-65efff23c031
+  identity_provider: skill-coordinated
+  verifier_execution_ref: skill-coordinated:verifier:11f80a44-c067-491b-a63d-41dd233ada02
+  iteration: 1
+  attempt: 1
+  assurance: skill-coordinated
+  verdict: pass
+  checks:
+    - id: unittest-hardening
+      name:
+        text: Hardening and regression unit tests
+        truncated: false
+      argv_display:
+        - text: -m
+          truncated: false
+        - text: unittest
+          truncated: false
+        - text: tests.test_platform_hardening
+          truncated: false
+        - text: tests.test_platform_v1
+          truncated: false
+        - text: tests.test_orders
+          truncated: false
+        - text: tests.test_user_live
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 5576
+  summary:
+    text: A1–A8 均有实现与 worktree 单测证据（25 tests OK）。
+    truncated: false
+  risks:
+    - text: "演示 /sse 仍单独设置 Access-Control-Allow-Origin: *（无凭证，不在 A4 单测路径）。"
+      truncated: false
+    - text: TTS 单测用假上游，未连真实 8091。
+      truncated: false
+  risks_truncated: false
+  completed_at: 2026-09-10T08:11:10.741Z
+history:
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 0
+    outcome: recovery
+    unresolved_ids: []
+    summary:
+      text: Native target specification declarations changed
+      truncated: false
+    completed_at: 2026-09-10T08:03:04.658Z
+  - goal_cycle: 2
+    iteration: 1
+    attempt: 1
+    outcome: pass
+    unresolved_ids: []
+    summary:
+      text: A1–A8 均有实现与 worktree 单测证据（25 tests OK）。
+      truncated: false
+    completed_at: 2026-09-10T08:11:10.741Z
+history_overflow:
+  dropped_entries: 0
+  first_dropped_at: null
+  last_dropped_at: null
+  outcome_counts:
+    pass: 0
+    fail: 0
+    blocked: 0
+    execution-error: 0
+    recovery: 0
+verification_result: pass
+verification_report: verification.md
+archived: false
+created_at: 2026-09-10T07:43:45.872Z

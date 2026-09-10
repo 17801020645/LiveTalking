@@ -30,7 +30,15 @@ button { font-family: inherit; cursor: pointer; }
   border-radius: 8px;
   padding: 8px 16px;
 }
-.btn:hover { box-shadow: 0 4px 14px rgba(67, 97, 238, 0.3); }
+.btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.field textarea {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #dbe3f0;
+  font-size: 1rem;
+  min-height: 88px;
+  resize: vertical;
+}
 .btn-ghost {
   background: transparent;
   border: 2px solid var(--primary);

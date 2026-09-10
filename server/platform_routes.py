@@ -9,6 +9,7 @@ from pathlib import Path
 
 from aiohttp import web
 
+from server.avatar_routes import setup_avatar_routes
 from server.platform_auth import (
     bootstrap_admin,
     create_session,
@@ -22,7 +23,9 @@ from server.platform_auth import (
     verify_password,
 )
 from server.platform_catalog import avatar_public_dict, resolve_media, scan_avatars
+from server.platform_cors import cors_middleware
 from server.platform_db import COOKIE_NAME, SESSION_DAYS, close_db, connect_db
+from server.platform_tts import setup_tts_routes
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -36,6 +39,8 @@ async def init_platform(app):
     avatars_dir = app.get("avatars_dir") or os.environ.get("LIVETALKING_AVATARS_DIR", DEFAULT_AVATARS)
     db = await connect_db(db_path)
     app["platform_db"] = db
+    from server.task_manager import task_manager
+    task_manager.attach_store(db_path)
     app["avatars_dir"] = avatars_dir
     if "uploads_dir" not in app:
         app["uploads_dir"] = os.path.join("data", "uploads", "orders")
@@ -46,7 +51,6 @@ async def init_platform(app):
     n = await scan_avatars(db, avatars_dir)
     import asyncio
     app["loop"] = asyncio.get_running_loop()
-    from server.task_manager import task_manager
     from server.platform_orders import handle_generation_task
 
     def _on_task(task):
@@ -470,6 +474,20 @@ def setup_v1_routes(app):
     app.router.add_get("/api/v1/media/avatars/{avatar_id}/preview", media_preview)
     from server.platform_orders import setup_order_routes
     setup_order_routes(app)
+    setup_tts_routes(app)
+    app.router.add_get("/healthz", healthz)
+
+
+async def healthz(request):
+    db = request.app.get("platform_db")
+    if db is None:
+        return web.json_response({"ok": False, "error": "db not ready"}, status=503)
+    try:
+        async with db.execute("SELECT 1") as cur:
+            await cur.fetchone()
+    except Exception:
+        return web.json_response({"ok": False, "error": "db unavailable"}, status=503)
+    return web.json_response({"ok": True})
 
 
 def setup_frontend_routes(app):
@@ -480,7 +498,7 @@ def setup_frontend_routes(app):
 
 def create_test_application(db_path, avatars_dir, web_dir=None, uploads_dir=None):
     """Lightweight app for tests: platform APIs + anonymous legacy stubs."""
-    app = web.Application(middlewares=[platform_auth_middleware])
+    app = web.Application(middlewares=[cors_middleware, platform_auth_middleware])
     app["platform_db_path"] = db_path
     app["avatars_dir"] = avatars_dir
     app["fake_avatar_tasks"] = True
@@ -492,19 +510,13 @@ def create_test_application(db_path, avatars_dir, web_dir=None, uploads_dir=None
     async def offer(_request):
         return web.json_response({"sdp": "ok"})
 
-    async def avatar_task(request):
-        denied = require_admin(request)
-        if denied:
-            return denied
-        return web.json_response({"code": 0, "msg": "ok", "data": {"task_id": "t"}})
-
     async def human(request):
         body = await request.json()
         request.app["last_human"] = body
         return web.json_response({"code": 0, "msg": "ok"})
 
     app.router.add_post("/offer", offer)
-    app.router.add_post("/api/avatar/task", avatar_task)
+    setup_avatar_routes(app)
     app.router.add_post("/human", human)
     if web_dir:
         from server.routes import index
@@ -517,6 +529,8 @@ def create_test_application(db_path, avatars_dir, web_dir=None, uploads_dir=None
 
 def attach_platform(app):
     """Register /api/v1 and /app before setup_routes() so they win over static /."""
+    if cors_middleware not in app.middlewares:
+        app.middlewares.append(cors_middleware)
     if platform_auth_middleware not in app.middlewares:
         app.middlewares.append(platform_auth_middleware)
     setup_v1_routes(app)
