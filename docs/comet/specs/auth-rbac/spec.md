@@ -2,12 +2,12 @@
 
 ## 能力
 
-LiveTalking 提供基于 Cookie 的登录与两种角色。新资源接口位于 `/api/v1/`。原有演示接口保持匿名，确保 `web/` 仍可直接连麦和生成 Avatar。
+LiveTalking 提供基于 Cookie 的登录与两种角色。新资源接口位于 `/api/v1/`。原有演示连麦接口保持匿名。Avatar 生成任务接口仅管理员可调用。
 
 ## 角色
 
-- `admin`：可开户、绑定订阅、使用管理员壳。
-- `user`：只能操作自己的会话与已订阅形象；不能开户、不能列出全部形象。
+- `admin`：可开户、绑定订阅、使用管理员壳、查看与创建生成任务、使用 TTS 代理。
+- `user`：只能操作自己的会话与已订阅形象；不能开户、不能列出全部形象、不能调用生成任务或 TTS 代理。
 
 无其它角色。无自助注册接口。
 
@@ -25,11 +25,11 @@ LiveTalking 提供基于 Cookie 的登录与两种角色。新资源接口位于
 
 ## 鉴权边界
 
-需要登录的路径前缀：`/api/v1/`（`/api/v1/auth/login` 除外）。
+需要登录的路径前缀：`/api/v1/`（`/api/v1/auth/login` 除外）、`/api/avatar/`。
 
-保持匿名：`/` 静态 `web/`、`/offer`、`/whep`、`/human`、`/humanaudio`、`/api/avatar/*`、`/api/admin/config`、`/api/admin/sessions`、`/sse`。
+保持匿名：`/` 静态 `web/`、`/offer`、`/whep`、`/human`、`/humanaudio`、`/api/admin/config`、`/api/admin/sessions`、`/sse`、`GET /healthz`。
 
-管理员专属：创建用户、列出全部用户、绑定/解绑任意用户的订阅、列出全部形象元数据。普通用户调用返回 403。
+管理员专属：创建用户、列出全部用户、绑定/解绑任意用户的订阅、列出全部形象元数据、生成任务 CRUD、TTS 代理。普通用户调用返回 403。
 
 ## 用户管理（管理员）
 
