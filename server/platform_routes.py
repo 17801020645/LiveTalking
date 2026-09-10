@@ -18,6 +18,7 @@ from server.platform_auth import (
     json_ok,
     platform_auth_middleware,
     require_admin,
+    require_user,
     verify_password,
 )
 from server.platform_catalog import avatar_public_dict, resolve_media, scan_avatars
@@ -54,6 +55,7 @@ async def init_platform(app):
             asyncio.run_coroutine_threadsafe(handle_generation_task(app, task), loop)
 
     task_manager.on_status = _on_task
+    app.setdefault("user_rtc_sessions", {})
     from utils.logger import logger
     logger.info(f"[platform] db={db_path} avatars_dir={avatars_dir} scanned_new={n}")
 
@@ -326,6 +328,64 @@ async def me_unpublish(request):
     return json_ok()
 
 
+async def me_offer(request):
+    denied = require_user(request)
+    if denied:
+        return denied
+    user = request["user"]
+    db = request.app["platform_db"]
+    async with db.execute(
+        "SELECT avatar_id FROM subscriptions WHERE user_id = ? AND is_published = 1",
+        (user["id"],),
+    ) as cur:
+        row = await cur.fetchone()
+    if not row:
+        return json_error("请先在资产页发布一个数字人")
+    published = row["avatar_id"]
+    live = request.app.setdefault("user_rtc_sessions", {})
+    if live.get(user["id"]):
+        return json_error("已有进行中的连麦，请先断开")
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    if not isinstance(body, dict):
+        body = {}
+    params = dict(body)
+    params["avatar"] = published
+    rtc = request.app.get("rtc_manager")
+    if rtc is None or request.app.get("fake_avatar_tasks"):
+        sid = f"u{user['id']}-{int(time.time() * 1000)}"
+        live[user["id"]] = sid
+        request.app["last_me_offer"] = {
+            "avatar": published,
+            "client_avatar": body.get("avatar"),
+            "user_id": user["id"],
+        }
+        return json_ok({"sdp": "ok", "type": "answer", "sessionid": sid, "avatar_id": published})
+    if not params.get("sdp") or not params.get("type"):
+        return json_error("缺少 SDP")
+    data, err = await rtc.answer_offer(params)
+    if err:
+        return json_error(err, status=503)
+    live[user["id"]] = data["sessionid"]
+    data["avatar_id"] = published
+    return json_ok(data)
+
+
+async def me_hangup(request):
+    denied = require_user(request)
+    if denied:
+        return denied
+    user = request["user"]
+    live = request.app.setdefault("user_rtc_sessions", {})
+    sid = live.pop(user["id"], None)
+    if sid and not request.app.get("fake_avatar_tasks"):
+        from server.session_manager import session_manager
+        session_manager.remove_session(sid)
+    return json_ok()
+
+
 async def _can_access_avatar(request, avatar_id: str) -> bool:
     user = request["user"]
     if user["role"] == "admin":
@@ -404,6 +464,8 @@ def setup_v1_routes(app):
     app.router.add_get("/api/v1/me/home", me_home)
     app.router.add_post("/api/v1/me/avatars/{avatar_id}/publish", me_publish)
     app.router.add_post("/api/v1/me/avatars/{avatar_id}/unpublish", me_unpublish)
+    app.router.add_post("/api/v1/me/offer", me_offer)
+    app.router.add_post("/api/v1/me/hangup", me_hangup)
     app.router.add_get("/api/v1/media/avatars/{avatar_id}/cover", media_cover)
     app.router.add_get("/api/v1/media/avatars/{avatar_id}/preview", media_preview)
     from server.platform_orders import setup_order_routes
@@ -436,8 +498,14 @@ def create_test_application(db_path, avatars_dir, web_dir=None, uploads_dir=None
             return denied
         return web.json_response({"code": 0, "msg": "ok", "data": {"task_id": "t"}})
 
+    async def human(request):
+        body = await request.json()
+        request.app["last_human"] = body
+        return web.json_response({"code": 0, "msg": "ok"})
+
     app.router.add_post("/offer", offer)
     app.router.add_post("/api/avatar/task", avatar_task)
+    app.router.add_post("/human", human)
     if web_dir:
         from server.routes import index
         app.router.add_get("/", index)

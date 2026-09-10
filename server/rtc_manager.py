@@ -75,33 +75,34 @@ class RTCManager:
 
         return pc
 
-    async def handle_offer(self, request):
-        """处理 WebRTC offer 信令"""
-        params = await request.json()
+    async def answer_offer(self, params):
+        """从信令参数创建会话并完成 SDP 交换。成功返回 dict，失败返回 (None, msg)。"""
         offer = RTCSessionDescription(sdp=params["sdp"], type=params["type"])
-
         try:
             sessionid = await session_manager.create_session(params)
         except MaxSessionError as e:
             logger.warning("Rejecting offer: %s", e)
-            return web.Response(
-                content_type="application/json",
-                text=json.dumps({"code": -1, "msg": str(e)}),
-            )
-        logger.info('offer sessionid=%s', sessionid)
-
+            return None, str(e)
+        logger.info("offer sessionid=%s", sessionid)
         pc = await self._create_pc_and_answer(
             session_manager.get_session(sessionid), sessionid, offer
         )
+        return {
+            "sdp": pc.localDescription.sdp,
+            "type": pc.localDescription.type,
+            "sessionid": sessionid,
+        }, None
 
-        return web.Response(
-            content_type="application/json",
-            text=json.dumps({
-                "sdp": pc.localDescription.sdp,
-                "type": pc.localDescription.type,
-                "sessionid": sessionid,
-            }),
-        )
+    async def handle_offer(self, request):
+        """处理 WebRTC offer 信令"""
+        params = await request.json()
+        data, err = await self.answer_offer(params)
+        if err:
+            return web.Response(
+                content_type="application/json",
+                text=json.dumps({"code": -1, "msg": err}),
+            )
+        return web.Response(content_type="application/json", text=json.dumps(data))
 
     async def handle_whep(self, request):
         """

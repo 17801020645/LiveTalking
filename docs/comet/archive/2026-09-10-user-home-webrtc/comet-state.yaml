@@ -1,0 +1,191 @@
+schema: comet.native.v4
+name: user-home-webrtc
+language: zh-CN
+phase: archive
+status: done
+state_version: 8
+brief: brief.md
+spec_changes:
+  - capability: user-live
+    operation: create
+    source: specs/user-live/spec.md
+workspace:
+  isolation: worktree
+  change_branch: comet/user-home-webrtc
+  target_branch: main
+  finish: merge
+loop:
+  stage: done
+  goal_cycle: 1
+  iteration: 1
+  attempt: 1
+  retry_epoch: 0
+  failed_iteration_count: 0
+  no_progress_count: 0
+  execution_failure_count: 0
+  previous_unresolved_ids: []
+  next_action: null
+acceptance:
+  - id: A1
+    source: brief.md
+    text: A1：未登录调用 `POST /api/v1/me/offer` 返回 401；已登录但没有已发布形象时，首页提示去资产页发布，且 offer
+      返回明确错误
+    result: passed
+    reason:
+      text: 未登录 me/offer 为 401；无已发布形象时 400 并提示去资产页。
+      truncated: false
+  - id: A2
+    source: brief.md
+    text: A2：用户发布一个形象后，首页可发起连接；服务端使用该已发布 `avatar_id`，请求体里其它 avatar 无效
+    result: passed
+    reason:
+      text: 发布后可连接；服务端强制已发布 avatar_id，忽略请求里的其它形象。
+      truncated: false
+  - id: A3
+    source: brief.md
+    text: A3：连接成功后用户发送文字，请求带上本次 `sessionid` 到达现有 `/human`
+    result: passed
+    reason:
+      text: 发送文字 POST /human 并带上本次 sessionid。
+      truncated: false
+  - id: A4
+    source: brief.md
+    text: A4：对未订阅或未发布形象发起的连麦被拒绝
+    result: passed
+    reason:
+      text: 未发布或未订阅不能连麦，只认当前用户已发布订阅。
+      truncated: false
+  - id: A5
+    source: brief.md
+    text: A5：未登录仍可 `POST /offer`；原 `web/` 文件未被改写
+    result: passed
+    reason:
+      text: 匿名 POST /offer 仍可用；web/ 无差异。
+      truncated: false
+  - id: A6
+    source: brief.md
+    text: A6：管理员 `/app` 首页仍只有「打开 /」，没有连麦控件
+    result: passed
+    reason:
+      text: 管理员首页只有打开 /；管理员调 me/offer 为 403。
+      truncated: false
+builder_handoff:
+  candidate_id: c1ec94b6-5a87-4a23-a8b8-0275b922263c
+  identity_provider: skill-coordinated
+  builder_execution_ref: skill-coordinated:builder:3ec376b6-6312-4397-9309-7bbabf15de27
+  iteration: 1
+  summary:
+    text: 用户首页连麦已落地：POST /api/v1/me/offer 必须登录且只用已发布形象；假 RTC 单测覆盖鉴权/绑定/发文字；旧 /offer
+      仍匿名；管理员首页不连麦。
+    truncated: false
+  addressed_acceptance_ids:
+    - A1
+    - A2
+    - A3
+    - A4
+    - A5
+    - A6
+  checks:
+    - name:
+        text: unittest tests.test_user_live tests.test_platform_v1 tests.test_orders
+        truncated: false
+      result: passed
+      note:
+        text: 17 tests OK
+        truncated: false
+  checks_truncated: false
+  known_limits:
+    - text: 真 WebRTC 需要 GPU 形象数据，单测走假 SDP
+      truncated: false
+    - text: 不做麦克风实时 ASR；/human 仍可用 sessionid 匿名调用
+      truncated: false
+  known_limits_truncated: false
+  review:
+    status: passed
+    summary:
+      text: 对照 brief A1–A6：未登录/未发布拒绝、已发布强制 avatar、文字走 /human、旧 offer 匿名、管理员首页无连麦。
+      truncated: false
+    reviewer_execution_ref: unittest tests.test_user_live tests.test_platform_v1 tests.test_orders
+  submitted_at: 2026-09-10T07:14:19.863Z
+blockers: []
+verification:
+  candidate_id: c1ec94b6-5a87-4a23-a8b8-0275b922263c
+  identity_provider: skill-coordinated
+  verifier_execution_ref: skill-coordinated:verifier:980f230e-2278-4310-8b1c-71c62130fd43
+  iteration: 1
+  attempt: 1
+  assurance: skill-coordinated
+  verdict: pass
+  checks:
+    - id: unittest-user-live
+      name:
+        text: User live and regression unit tests
+        truncated: false
+      argv_display:
+        - text: -m
+          truncated: false
+        - text: unittest
+          truncated: false
+        - text: tests.test_user_live
+          truncated: false
+        - text: tests.test_platform_v1
+          truncated: false
+        - text: tests.test_orders
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 4626
+    - id: web-untouched
+      name:
+        text: Original web/ unchanged
+        truncated: false
+      argv_display:
+        - text: diff
+          truncated: false
+        - text: --exit-code
+          truncated: false
+        - text: --
+          truncated: false
+        - text: web/
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 13
+  summary:
+    text: A1–A6 均由实现与 Runtime 检查覆盖：登录鉴权、已发布绑定、文字驱动、旧站匿名、管理员首页不连麦。
+    truncated: false
+  risks:
+    - text: 真 WebRTC 依赖 GPU，单测走假 SDP。
+      truncated: false
+    - text: 不做麦克风实时 ASR；/human 仍可用 sessionid。
+      truncated: false
+  risks_truncated: false
+  completed_at: 2026-09-10T07:15:47.021Z
+history:
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 1
+    outcome: pass
+    unresolved_ids: []
+    summary:
+      text: A1–A6 均由实现与 Runtime 检查覆盖：登录鉴权、已发布绑定、文字驱动、旧站匿名、管理员首页不连麦。
+      truncated: false
+    completed_at: 2026-09-10T07:15:47.021Z
+history_overflow:
+  dropped_entries: 0
+  first_dropped_at: null
+  last_dropped_at: null
+  outcome_counts:
+    pass: 0
+    fail: 0
+    blocked: 0
+    execution-error: 0
+    recovery: 0
+verification_result: pass
+verification_report: verification.md
+archived: true
+created_at: 2026-09-10T07:01:15.627Z
