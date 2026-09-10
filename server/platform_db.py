@@ -60,6 +60,18 @@ CREATE TABLE IF NOT EXISTS orders (
     updated_at REAL NOT NULL,
     FOREIGN KEY(user_id) REFERENCES users(id)
 );
+CREATE TABLE IF NOT EXISTS avatar_tasks (
+    task_id TEXT PRIMARY KEY,
+    model_type TEXT NOT NULL,
+    avatar_id TEXT NOT NULL,
+    params TEXT NOT NULL DEFAULT '{}',
+    status TEXT NOT NULL,
+    progress INTEGER NOT NULL DEFAULT 0,
+    error_msg TEXT NOT NULL DEFAULT '',
+    notify_url TEXT,
+    start_time REAL NOT NULL,
+    end_time REAL
+);
 """
 
 

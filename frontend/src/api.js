@@ -17,6 +17,24 @@ export async function api(path, options = {}) {
   return body.data
 }
 
+export async function apiBlob(path, options = {}) {
+  const res = await fetch(path, {
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(options.headers || {}),
+    },
+    ...options,
+  })
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    const err = new Error(body.msg || `HTTP ${res.status}`)
+    err.status = res.status
+    throw err
+  }
+  return res.blob()
+}
+
 export async function apiUpload(path, formData) {
   const res = await fetch(path, {
     method: 'POST',

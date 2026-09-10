@@ -32,7 +32,6 @@ import torch.multiprocessing as mp
 
 from aiohttp import web
 import aiohttp
-import aiohttp_cors
 from aiortc import RTCPeerConnection, RTCSessionDescription,RTCIceServer,RTCConfiguration
 from aiortc.rtcrtpsender import RTCRtpSender
 from server.webrtc import HumanPlayer
@@ -172,11 +171,12 @@ def main():
 
     #############################################################################
     from server.platform_auth import platform_auth_middleware
+    from server.platform_cors import cors_middleware
     from server.platform_routes import attach_platform
 
     appasync = web.Application(
         client_max_size=1024**2*100,
-        middlewares=[platform_auth_middleware],
+        middlewares=[cors_middleware, platform_auth_middleware],
     )
     appasync["llm_response"] = llm_response
     appasync["opt"] = opt
@@ -192,22 +192,9 @@ def main():
     # 注册 server/routes.py 中的通用 API 路由
     setup_routes(appasync)
 
-    # Configure default CORS settings.
-    cors = aiohttp_cors.setup(appasync, defaults={
-            "*": aiohttp_cors.ResourceOptions(
-                allow_credentials=True,
-                expose_headers="*",
-                allow_headers="*",
-            )
-        })
-    # Configure CORS on all routes.
-    for route in list(appasync.router.routes()):
-        cors.add(route)
-
-    # /whep 注册在 CORS 之后：自行管理 OPTIONS，避免与 aiohttp_cors 冲突
+    # /whep：OPTIONS 由 cors_middleware 统一处理
     whep_resource = appasync.router.add_resource('/whep')
     whep_resource.add_route('POST', whep)
-    whep_resource.add_route('OPTIONS', lambda _: web.Response(status=200))
 
     logger.info('start http server; http://<serverip>:'+str(opt.listenport))
     # logger.info('如果使用webrtc，推荐访问webrtc集成前端: http://<serverip>:'+str(opt.listenport)+'/dashboard.html')

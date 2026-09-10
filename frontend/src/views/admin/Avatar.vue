@@ -20,6 +20,24 @@
       <p v-if="okMsg" class="muted">{{ okMsg }}</p>
       <button class="btn" type="button" @click="generate">开始生成</button>
     </div>
+    <div class="glass card" style="margin-top: 16px;">
+      <h3>生成任务</h3>
+      <table class="table">
+        <thead>
+          <tr><th>任务</th><th>形象</th><th>状态</th><th>进度</th><th>说明</th></tr>
+        </thead>
+        <tbody>
+          <tr v-for="t in tasks" :key="t.task_id">
+            <td>{{ t.task_id.slice(0, 8) }}</td>
+            <td>{{ t.avatar_id }}</td>
+            <td>{{ t.status }}</td>
+            <td>{{ t.progress }}%</td>
+            <td>{{ t.error_msg || '—' }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <p v-if="!tasks.length" class="muted">还没有任务记录。</p>
+    </div>
   </div>
 </template>
 
@@ -28,6 +46,7 @@ import { computed, onMounted, ref } from 'vue'
 import { api } from '../../api'
 
 const orders = ref([])
+const tasks = ref([])
 const orderId = ref(0)
 const avatarId = ref('')
 const formError = ref('')
@@ -38,6 +57,12 @@ const accepted = computed(() => orders.value.filter((o) => o.status === 'accepte
 async function load() {
   const data = await api('/api/v1/admin/orders')
   orders.value = data.orders
+  try {
+    const listed = await api('/api/avatar/tasks')
+    tasks.value = listed.tasks || []
+  } catch {
+    tasks.value = []
+  }
 }
 
 onMounted(load)
