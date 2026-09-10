@@ -1,0 +1,188 @@
+schema: comet.native.v4
+name: custom-order-flow
+language: zh-CN
+phase: archive
+status: done
+state_version: 8
+brief: brief.md
+spec_changes:
+  - capability: custom-order
+    operation: create
+    source: specs/custom-order/spec.md
+workspace:
+  isolation: worktree
+  change_branch: comet/custom-order-flow
+  target_branch: main
+  finish: merge
+loop:
+  stage: done
+  goal_cycle: 1
+  iteration: 1
+  attempt: 1
+  retry_epoch: 0
+  failed_iteration_count: 0
+  no_progress_count: 0
+  execution_failure_count: 0
+  previous_unresolved_ids: []
+  next_action: null
+acceptance:
+  - id: A1
+    source: brief.md
+    text: A1：普通用户登录后可提交订单（视频或图片+音频+文字）；未登录或管理员提交用户下单接口返回 401/403
+    result: passed
+    reason:
+      text: 用户可 multipart 下单；管理员 403、未登录 401；图+音频+文字也可提交。
+      truncated: false
+  - id: A2
+    source: brief.md
+    text: A2：用户只能看到自己的订单；不能调用 `POST /api/avatar/task`（401 未登录或 403 非管理员）
+    result: passed
+    reason:
+      text: 订单按 user_id 隔离；用户 POST /api/avatar/task 为 403，未登录 401。
+      truncated: false
+  - id: A3
+    source: brief.md
+    text: A3：管理员可接单或驳回；驳回后用户能看到原因
+    result: passed
+    reason:
+      text: 管理员可接单/驳回；驳回须填原因，用户列表可见 reject_reason。
+      truncated: false
+  - id: A4
+    source: brief.md
+    text: A4：管理员从已接单订单启动生成，任务成功后订单变为已交付，该用户资产中出现新形象且未自动发布
+    result: passed
+    reason:
+      text: 已接单订单生成后 fake 路径交付：资产出现且 is_published=0，首页无自动发布。
+      truncated: false
+  - id: A5
+    source: brief.md
+    text: A5：缺少视频的图+音频订单仍可提交并被接单；管理员若在无视频时点生成，得到明确错误而不是空跑 GPU
+    result: passed
+    reason:
+      text: 图+音频可下单并接单；无视频生成返回 400 且提示需要视频，不进入 GPU。
+      truncated: false
+  - id: A6
+    source: brief.md
+    text: A6：原 `web/` 与用户资产/发布行为保持可用
+    result: passed
+    reason:
+      text: web/ 无差异；旧 avatar.html、/offer 与用户资产发布仍可用。
+      truncated: false
+builder_handoff:
+  candidate_id: d7b6cbda-36d2-4965-bd82-cba880458e44
+  identity_provider: skill-coordinated
+  builder_execution_ref: skill-coordinated:builder:24b11fb0-14de-40c3-a557-7928fe047899
+  iteration: 1
+  summary:
+    text: 第二期订单闭环已落地：用户 multipart 下单，管理员接单/驳回/用视频生成，成功后自动订阅且不发布；图+音频可下单但无视频不能生成；POST
+      /api/avatar/task 仅管理员。
+    truncated: false
+  addressed_acceptance_ids:
+    - A1
+    - A2
+    - A3
+    - A4
+    - A5
+    - A6
+  checks:
+    - name:
+        text: unittest tests.test_platform_v1 tests.test_orders
+        truncated: false
+      result: passed
+      note:
+        text: 12 tests OK
+        truncated: false
+  checks_truncated: false
+  known_limits:
+    - text: 图+音频不自动变口型，生成仍要视频
+      truncated: false
+    - text: 真实 GPU 生成依赖 TaskManager 回调，单测走 fake_avatar_tasks
+      truncated: false
+  known_limits_truncated: false
+  review:
+    status: passed
+    summary:
+      text: 对照 brief A1–A6：下单权限、订单隔离、接单驳回、交付绑定、无视频拒绝生成、旧站与发布仍可用。
+      truncated: false
+    reviewer_execution_ref: unittest tests.test_platform_v1 tests.test_orders
+  submitted_at: 2026-09-10T02:43:51.825Z
+blockers: []
+verification:
+  candidate_id: d7b6cbda-36d2-4965-bd82-cba880458e44
+  identity_provider: skill-coordinated
+  verifier_execution_ref: skill-coordinated:verifier:2c214484-ee3e-4500-b0ce-3dc7b509a52f
+  iteration: 1
+  attempt: 1
+  assurance: skill-coordinated
+  verdict: pass
+  checks:
+    - id: unittest-orders
+      name:
+        text: Platform and order unit tests
+        truncated: false
+      argv_display:
+        - text: -m
+          truncated: false
+        - text: unittest
+          truncated: false
+        - text: tests.test_platform_v1
+          truncated: false
+        - text: tests.test_orders
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 3854
+    - id: web-untouched
+      name:
+        text: Original web/ unchanged
+        truncated: false
+      argv_display:
+        - text: diff
+          truncated: false
+        - text: --exit-code
+          truncated: false
+        - text: --
+          truncated: false
+        - text: web/
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 13
+  summary:
+    text: A1–A6 均由实现与 Runtime 检查覆盖：下单权限、订单隔离、接单驳回、交付绑定未发布、无视频拒绝生成、旧站与发布仍可用。
+    truncated: false
+  risks:
+    - text: 真实 GPU 交付依赖 TaskManager.on_status 回调，单测走 fake_avatar_tasks。
+      truncated: false
+    - text: 图+音频不自动变口型，无视频只能收单不能生成。
+      truncated: false
+  risks_truncated: false
+  completed_at: 2026-09-10T02:46:04.715Z
+history:
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 1
+    outcome: pass
+    unresolved_ids: []
+    summary:
+      text: A1–A6 均由实现与 Runtime 检查覆盖：下单权限、订单隔离、接单驳回、交付绑定未发布、无视频拒绝生成、旧站与发布仍可用。
+      truncated: false
+    completed_at: 2026-09-10T02:46:04.715Z
+history_overflow:
+  dropped_entries: 0
+  first_dropped_at: null
+  last_dropped_at: null
+  outcome_counts:
+    pass: 0
+    fail: 0
+    blocked: 0
+    execution-error: 0
+    recovery: 0
+verification_result: pass
+verification_report: verification.md
+archived: true
+created_at: 2026-09-10T01:52:35.597Z

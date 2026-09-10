@@ -120,7 +120,7 @@ class PlatformV1Tests(unittest.IsolatedAsyncioTestCase):
         offer = await self.client.post("/offer", json={})
         self.assertEqual(offer.status, 200)
         task = await self.client.post("/api/avatar/task", json={})
-        self.assertEqual(task.status, 200)
+        self.assertEqual(task.status, 401)
 
     async def test_a7_frontend_dir_and_web_untouched_markers(self):
         self.assertTrue((REPO / "frontend" / "src" / "layouts" / "AdminLayout.vue").is_file())

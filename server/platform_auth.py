@@ -39,6 +39,8 @@ def verify_password(password: str, stored: str) -> bool:
 def _public_path(path: str, method: str) -> bool:
     if path == "/api/v1/auth/login" and method == "POST":
         return True
+    if path.startswith("/api/avatar"):
+        return False
     return not path.startswith("/api/v1/")
 
 
@@ -136,4 +138,11 @@ def require_admin(request):
     user = request.get("user")
     if not user or user["role"] != "admin":
         return json_error("需要管理员权限", status=403)
+    return None
+
+
+def require_user(request):
+    user = request.get("user")
+    if not user or user["role"] != "user":
+        return json_error("仅普通用户可操作", status=403)
     return None
