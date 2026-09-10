@@ -16,3 +16,19 @@ export async function api(path, options = {}) {
   }
   return body.data
 }
+
+export async function apiUpload(path, formData) {
+  const res = await fetch(path, {
+    method: 'POST',
+    credentials: 'include',
+    body: formData,
+  })
+  const body = await res.json().catch(() => ({}))
+  if (!res.ok || (typeof body.code === 'number' && body.code !== 0)) {
+    const err = new Error(body.msg || `HTTP ${res.status}`)
+    err.status = res.status
+    err.body = body
+    throw err
+  }
+  return body.data
+}

@@ -2,6 +2,29 @@
   <div>
     <h2 class="page-title">管理后台</h2>
     <div class="glass card" style="margin-bottom: 16px;">
+      <h3>定制订单</h3>
+      <table class="table">
+        <thead>
+          <tr><th>ID</th><th>用户</th><th>类型</th><th>状态</th><th>视频</th><th>操作</th></tr>
+        </thead>
+        <tbody>
+          <tr v-for="o in orders" :key="o.id">
+            <td>{{ o.id }}</td>
+            <td>{{ o.username }}</td>
+            <td>{{ o.material_type }}</td>
+            <td>{{ o.status }}{{ o.reject_reason ? ' / ' + o.reject_reason : '' }}</td>
+            <td>{{ o.has_video ? '有' : '无' }}</td>
+            <td class="row-actions">
+              <button v-if="o.status === 'submitted'" class="btn" type="button" @click="accept(o.id)">接单</button>
+              <button v-if="['submitted','accepted','generating'].includes(o.status)" class="btn-danger" type="button" @click="reject(o.id)">驳回</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p v-if="!orders.length" class="muted">暂无订单。</p>
+    </div>
+
+    <div class="glass card" style="margin-bottom: 16px;">
       <h3>创建普通用户</h3>
       <div class="field">
         <label>用户名</label>
@@ -50,6 +73,7 @@ import { api } from '../../api'
 
 const users = ref([])
 const avatars = ref([])
+const orders = ref([])
 const subs = ref({})
 const selected = ref(null)
 const newUser = ref('')
@@ -63,6 +87,8 @@ async function load() {
   users.value = u.users
   const a = await api('/api/v1/admin/avatars')
   avatars.value = a.avatars
+  const o = await api('/api/v1/admin/orders')
+  orders.value = o.orders
   const next = {}
   for (const user of users.value) {
     if (user.role !== 'user') continue
@@ -107,5 +133,20 @@ async function toggle(avatarId, checked) {
   }
   const s = await api(`/api/v1/admin/users/${uid}/subscriptions`)
   subs.value = { ...subs.value, [uid]: s.subscriptions }
+}
+
+async function accept(id) {
+  await api(`/api/v1/admin/orders/${id}/accept`, { method: 'POST', body: '{}' })
+  await load()
+}
+
+async function reject(id) {
+  const reason = window.prompt('驳回原因')
+  if (!reason) return
+  await api(`/api/v1/admin/orders/${id}/reject`, {
+    method: 'POST',
+    body: JSON.stringify({ reason }),
+  })
+  await load()
 }
 </script>

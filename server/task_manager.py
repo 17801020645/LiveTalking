@@ -124,6 +124,12 @@ class TaskManager:
             logger.error(f"Task {task_id} failed: {e}")
         finally:
             task.end_time = time.time()
+            on_status = getattr(self, "on_status", None)
+            if on_status:
+                try:
+                    on_status(task)
+                except Exception as e:
+                    logger.error(f"Task {task_id} status hook failed: {e}")
 
     def _notify(self, task):
         if not task.notify_url:

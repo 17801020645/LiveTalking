@@ -25,6 +25,10 @@ async def create_avatar_task(request):
     POST /api/avatar/task
     Parameters: model, avatar_id, video_file (upload), video_path (local), ...
     """
+    from server.platform_auth import require_admin
+    denied = require_admin(request)
+    if denied:
+        return denied
     try:
         if request.content_type == 'multipart/form-data':
             reader = await request.multipart()

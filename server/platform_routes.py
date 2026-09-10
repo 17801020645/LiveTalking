@@ -36,8 +36,24 @@ async def init_platform(app):
     db = await connect_db(db_path)
     app["platform_db"] = db
     app["avatars_dir"] = avatars_dir
+    if "uploads_dir" not in app:
+        app["uploads_dir"] = os.path.join("data", "uploads", "orders")
+    os.makedirs(app["uploads_dir"], exist_ok=True)
+    if "fake_avatar_tasks" not in app:
+        app["fake_avatar_tasks"] = os.environ.get("LIVETALKING_FAKE_AVATAR_TASK") == "1"
     await bootstrap_admin(db)
     n = await scan_avatars(db, avatars_dir)
+    import asyncio
+    app["loop"] = asyncio.get_running_loop()
+    from server.task_manager import task_manager
+    from server.platform_orders import handle_generation_task
+
+    def _on_task(task):
+        loop = app.get("loop")
+        if loop:
+            asyncio.run_coroutine_threadsafe(handle_generation_task(app, task), loop)
+
+    task_manager.on_status = _on_task
     from utils.logger import logger
     logger.info(f"[platform] db={db_path} avatars_dir={avatars_dir} scanned_new={n}")
 
@@ -390,6 +406,8 @@ def setup_v1_routes(app):
     app.router.add_post("/api/v1/me/avatars/{avatar_id}/unpublish", me_unpublish)
     app.router.add_get("/api/v1/media/avatars/{avatar_id}/cover", media_cover)
     app.router.add_get("/api/v1/media/avatars/{avatar_id}/preview", media_preview)
+    from server.platform_orders import setup_order_routes
+    setup_order_routes(app)
 
 
 def setup_frontend_routes(app):
@@ -398,18 +416,24 @@ def setup_frontend_routes(app):
     app.router.add_get("/app/{path:.*}", spa_fallback)
 
 
-def create_test_application(db_path, avatars_dir, web_dir=None):
+def create_test_application(db_path, avatars_dir, web_dir=None, uploads_dir=None):
     """Lightweight app for tests: platform APIs + anonymous legacy stubs."""
     app = web.Application(middlewares=[platform_auth_middleware])
     app["platform_db_path"] = db_path
     app["avatars_dir"] = avatars_dir
+    app["fake_avatar_tasks"] = True
+    if uploads_dir:
+        app["uploads_dir"] = uploads_dir
     setup_v1_routes(app)
     setup_frontend_routes(app)
 
     async def offer(_request):
         return web.json_response({"sdp": "ok"})
 
-    async def avatar_task(_request):
+    async def avatar_task(request):
+        denied = require_admin(request)
+        if denied:
+            return denied
         return web.json_response({"code": 0, "msg": "ok", "data": {"task_id": "t"}})
 
     app.router.add_post("/offer", offer)

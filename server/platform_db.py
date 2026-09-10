@@ -43,6 +43,23 @@ CREATE TABLE IF NOT EXISTS subscriptions (
     UNIQUE(user_id, avatar_id),
     FOREIGN KEY(user_id) REFERENCES users(id)
 );
+CREATE TABLE IF NOT EXISTS orders (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    status TEXT NOT NULL,
+    material_type TEXT NOT NULL,
+    video_path TEXT,
+    image_path TEXT,
+    audio_path TEXT,
+    script_text TEXT NOT NULL DEFAULT '',
+    reject_reason TEXT NOT NULL DEFAULT '',
+    result_avatar_id TEXT,
+    task_id TEXT,
+    admin_id INTEGER,
+    created_at REAL NOT NULL,
+    updated_at REAL NOT NULL,
+    FOREIGN KEY(user_id) REFERENCES users(id)
+);
 """
 
 
