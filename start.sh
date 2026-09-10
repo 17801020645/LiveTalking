@@ -18,6 +18,13 @@ export PATH="$ROOT/.tools:$ROOT/.venv/bin:${PATH:-}"
 export HF_HOME="${HF_HOME:-$ROOT/data/hf}"
 export HF_ENDPOINT="${HF_ENDPOINT:-https://hf-mirror.com}"
 
+# worktree 不含 gitignored 的 data/avatars，复用主仓库形象目录
+if [[ ! -e "$ROOT/data/avatars" ]]; then
+  if [[ -d "$ROOT/../../data/avatars" ]]; then
+    ln -sfn ../../../data/avatars "$ROOT/data/avatars"
+  fi
+fi
+
 exec "$PYTHON" app.py \
   --transport webrtc \
   --model wav2lip \

@@ -74,14 +74,7 @@ def load_avatar(avatar_id):
     full_imgs_path = f"{avatar_path}/full_imgs" 
     face_imgs_path = f"{avatar_path}/face_imgs" 
     coords_path = f"{avatar_path}/coords.pkl"
-    # #region agent log
-    try:
-        import json as _dbg_json, time as _dbg_time
-        with open('/home/banren45/workspace/01_digital_human/LiveTalking/.cursor/debug-1c4562.log', 'a') as _dbg_f:
-            _dbg_f.write(_dbg_json.dumps({'sessionId':'1c4562','hypothesisId':'E','runId':'pre','location':'wav2lip_avatar.py:load_avatar','message':'loading avatar from disk','data':{'avatar_id':avatar_id,'avatar_path':os.path.realpath(avatar_path),'exists':os.path.isdir(avatar_path)},'timestamp':int(_dbg_time.time()*1000)})+'\n')
-    except Exception:
-        pass
-    # #endregion
+
     
     with open(coords_path, 'rb') as f:
         coord_list_cycle = pickle.load(f)

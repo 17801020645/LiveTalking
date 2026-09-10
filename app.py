@@ -81,7 +81,6 @@ def build_avatar_session(sessionid:str, params:dict)->BaseAvatar:
     opt_this.avatar_id = avatar_id
     ref_audio = params.get('refaudio','') #音色
     ref_text = params.get('reftext','')
-    _avatar_branch = 'load_requested' if (avatar_id and avatar_id != opt.avatar_id) else 'use_startup_default'
     if (avatar_id and avatar_id != opt.avatar_id):
         # Avoid reloading if already cached globally
         if avatar_id not in global_avatars:
@@ -96,15 +95,6 @@ def build_avatar_session(sessionid:str, params:dict)->BaseAvatar:
     custom_config=params.get('custom_config','') #动作编排配置
     if custom_config:
         opt_this.customopt = json.loads(custom_config)
-    # #region agent log
-    try:
-        import time as _dbg_time
-        _dbg_opt = getattr(opt_this, 'customopt', []) or []
-        with open('/home/banren45/workspace/01_digital_human/LiveTalking/.cursor/debug-1c4562.log', 'a') as _dbg_f:
-            _dbg_f.write(json.dumps({'sessionId':'1c4562','hypothesisId':'B','runId':'pre','location':'app.py:build_avatar_session','message':'session avatar selection','data':{'params_avatar':params.get('avatar'),'opt_default':getattr(opt,'avatar_id',None),'resolved_avatar_id':avatar_id,'branch':_avatar_branch,'cached_keys':list(global_avatars.keys()),'customopt':_dbg_opt,'custom_config_param':bool(custom_config)},'timestamp':int(_dbg_time.time()*1000)})+'\n')
-    except Exception:
-        pass
-    # #endregion
 
     avatar_session = registry.create("avatar", opt.model, opt=opt_this, model=model, avatar=avatar_this)
     return avatar_session
