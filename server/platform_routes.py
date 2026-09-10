@@ -178,6 +178,30 @@ async def admin_disable_user(request):
     return json_ok()
 
 
+async def admin_home(request):
+    denied = require_admin(request)
+    if denied:
+        return denied
+    db = request.app["platform_db"]
+    async with db.execute(
+        "SELECT COUNT(*) AS n FROM orders WHERE status = ?",
+        ("submitted",),
+    ) as cur:
+        row = await cur.fetchone()
+    pending_orders = int(row["n"] if row else 0)
+    from server.session_manager import session_manager
+    from server.task_manager import task_manager
+    running_tasks = sum(
+        1 for t in task_manager.list_tasks() if t.get("status") in ("pending", "running")
+    )
+    return json_ok({
+        "pending_orders": pending_orders,
+        "active_sessions": session_manager.active_count(),
+        "max_sessions": int(session_manager.max_session),
+        "running_tasks": running_tasks,
+    })
+
+
 async def admin_list_avatars(request):
     denied = require_admin(request)
     if denied:
@@ -457,6 +481,7 @@ def setup_v1_routes(app):
     app.router.add_post("/api/v1/auth/login", login)
     app.router.add_post("/api/v1/auth/logout", logout)
     app.router.add_get("/api/v1/auth/me", me)
+    app.router.add_get("/api/v1/admin/home", admin_home)
     app.router.add_get("/api/v1/admin/users", admin_list_users)
     app.router.add_post("/api/v1/admin/users", admin_create_user)
     app.router.add_post("/api/v1/admin/users/{user_id}/disable", admin_disable_user)

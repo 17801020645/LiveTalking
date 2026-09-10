@@ -81,6 +81,9 @@ class SessionManager:
         )
         self.sessions[sessionid] = avatar_session
         return sessionid
+
+    def active_count(self) -> int:
+        return sum(1 for s in self.sessions.values() if s is not None)
         
     def add_session(self, sessionid: str, avatar_session: BaseAvatar):
         """同步添加静态或外部管理的会话（供非服务端入口调用）"""
