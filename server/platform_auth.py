@@ -110,6 +110,14 @@ async def delete_session(db, token: str):
     await db.commit()
 
 
+async def delete_other_sessions(db, user_id: int, keep_token: str):
+    await db.execute(
+        "DELETE FROM sessions WHERE user_id = ? AND token != ?",
+        (user_id, keep_token or ""),
+    )
+    await db.commit()
+
+
 async def bootstrap_admin(db):
     async with db.execute("SELECT COUNT(*) AS n FROM users") as cur:
         row = await cur.fetchone()
