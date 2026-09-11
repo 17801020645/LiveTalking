@@ -10,6 +10,7 @@
     <div class="main">
       <header class="topbar">
         <span>{{ username }}</span>
+        <PasswordForm />
         <button class="btn-ghost" type="button" @click="logout">退出</button>
       </header>
       <div class="content">
@@ -23,6 +24,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { api } from '../api'
+import PasswordForm from '../components/PasswordForm.vue'
 
 const username = ref('')
 const router = useRouter()

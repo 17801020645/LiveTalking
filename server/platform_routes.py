@@ -13,6 +13,7 @@ from server.avatar_routes import setup_avatar_routes
 from server.platform_auth import (
     bootstrap_admin,
     create_session,
+    delete_other_sessions,
     delete_session,
     hash_password,
     json_error,
@@ -123,6 +124,34 @@ async def logout(request):
 async def me(request):
     user = request["user"]
     return json_ok({"id": user["id"], "username": user["username"], "role": user["role"]})
+
+
+async def change_password(request):
+    user = request["user"]
+    try:
+        body = await request.json()
+    except Exception:
+        return json_error("无效请求")
+    current_password = body.get("current_password") or ""
+    new_password = body.get("new_password") or ""
+    if len(new_password) < 6:
+        return json_error("密码至少 6 个字符")
+    db = request.app["platform_db"]
+    async with db.execute(
+        "SELECT password_hash FROM users WHERE id = ?",
+        (user["id"],),
+    ) as cur:
+        row = await cur.fetchone()
+    if not row or not verify_password(current_password, row["password_hash"]):
+        return json_error("当前密码不正确")
+    await db.execute(
+        "UPDATE users SET password_hash = ? WHERE id = ?",
+        (hash_password(new_password), user["id"]),
+    )
+    await db.commit()
+    token = request.cookies.get(COOKIE_NAME, "")
+    await delete_other_sessions(db, user["id"], token)
+    return json_ok()
 
 
 async def admin_list_users(request):
@@ -481,6 +510,7 @@ def setup_v1_routes(app):
     app.router.add_post("/api/v1/auth/login", login)
     app.router.add_post("/api/v1/auth/logout", logout)
     app.router.add_get("/api/v1/auth/me", me)
+    app.router.add_post("/api/v1/auth/password", change_password)
     app.router.add_get("/api/v1/admin/home", admin_home)
     app.router.add_get("/api/v1/admin/users", admin_list_users)
     app.router.add_post("/api/v1/admin/users", admin_create_user)

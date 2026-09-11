@@ -107,6 +107,14 @@ button { font-family: inherit; cursor: pointer; }
   gap: 12px;
   padding: 12px 20px;
 }
+.pw-wrap { position: relative; }
+.pw-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  width: 280px;
+  z-index: 8;
+}
 .content { padding: 8px 24px 32px; }
 .page-title { font-size: 1.4rem; font-weight: 700; margin: 0 0 16px; }
 

@@ -1,0 +1,175 @@
+schema: comet.native.v4
+name: user-change-password
+language: zh-CN
+phase: archive
+status: active
+state_version: 6
+brief: brief.md
+spec_changes:
+  - capability: auth-rbac
+    operation: modify
+    source: specs/auth-rbac/spec.md
+  - capability: web-app-shell
+    operation: modify
+    source: specs/web-app-shell/spec.md
+workspace:
+  isolation: worktree
+  change_branch: comet/user-change-password
+  target_branch: main
+  finish: null
+loop:
+  stage: archive-ready
+  goal_cycle: 1
+  iteration: 1
+  attempt: 1
+  retry_epoch: 0
+  failed_iteration_count: 0
+  no_progress_count: 0
+  execution_failure_count: 0
+  previous_unresolved_ids: []
+  next_action: archive
+acceptance:
+  - id: A1
+    source: brief.md
+    text: A1：已登录用户用正确当前密码改密后，旧密码不能再登录，新密码可以；当前 Cookie 仍能访问 `/api/v1/auth/me`
+    result: passed
+    reason:
+      text: 改密后旧密码不能登录、新密码可以；当前 Cookie 仍能访问 me。
+      truncated: false
+  - id: A2
+    source: brief.md
+    text: A2：当前密码错误时改密失败且密码不变；新密码少于 6 位被拒绝
+    result: passed
+    reason:
+      text: 当前密码错误或新密码过短均失败，原密码不变。
+      truncated: false
+  - id: A3
+    source: brief.md
+    text: A3：未登录调用改密接口返回 401
+    result: passed
+    reason:
+      text: 未登录改密 401。
+      truncated: false
+  - id: A4
+    source: brief.md
+    text: A4：管理员与普通用户顶栏都能改自己的密码；管理员后台仍只有开户，没有给别人改密的入口
+    result: passed
+    reason:
+      text: 双壳顶栏有改密；后台只有开户没有代改。
+      truncated: false
+  - id: A5
+    source: brief.md
+    text: A5：改密后该账号其它会话失效；原 `web/` 不变
+    result: passed
+    reason:
+      text: 其它会话删除；web/ 未改。
+      truncated: false
+builder_handoff:
+  candidate_id: 603c1aea-dd2e-4c54-b193-80f9c4126afc
+  identity_provider: skill-coordinated
+  builder_execution_ref: skill-coordinated:builder:5a8c1175-cf28-40e5-8b54-0f5db244b771
+  iteration: 1
+  summary:
+    text: 已登录用户可 POST /api/v1/auth/password 改自己的密码；当前会话保留、其它会话作废。管理员和用户顶栏都有改密，后台不能代改。
+    truncated: false
+  addressed_acceptance_ids:
+    - A1
+    - A2
+    - A3
+    - A4
+    - A5
+  checks:
+    - name:
+        text: unittest tests.test_user_change_password tests.test_platform_v1
+          tests.test_orders tests.test_user_live tests.test_admin_home_ops
+          tests.test_platform_hardening tests.test_avatar_preview_media
+        truncated: false
+      result: passed
+      note:
+        text: 40 tests OK
+        truncated: false
+  checks_truncated: false
+  known_limits:
+    - text: 未在浏览器点过顶栏改密面板
+      truncated: false
+  known_limits_truncated: false
+  review:
+    status: passed
+    summary:
+      text: 对照 brief A1–A5：改密成功、当前密码错误/过短、未登录 401、双壳入口、其它会话失效。
+      truncated: false
+    reviewer_execution_ref: unittest tests.test_user_change_password
+      tests.test_platform_v1 tests.test_orders tests.test_user_live
+      tests.test_admin_home_ops tests.test_platform_hardening
+      tests.test_avatar_preview_media
+  submitted_at: 2026-09-11T03:46:02.513Z
+blockers: []
+verification:
+  candidate_id: 603c1aea-dd2e-4c54-b193-80f9c4126afc
+  identity_provider: skill-coordinated
+  verifier_execution_ref: skill-coordinated:verifier:488233f1-2679-4ad3-b934-5c747d173d05
+  iteration: 1
+  attempt: 1
+  assurance: skill-coordinated
+  verdict: pass
+  checks:
+    - id: unittest-change-password
+      name:
+        text: Change password and regression unit tests
+        truncated: false
+      argv_display:
+        - text: -m
+          truncated: false
+        - text: unittest
+          truncated: false
+        - text: tests.test_user_change_password
+          truncated: false
+        - text: tests.test_platform_v1
+          truncated: false
+        - text: tests.test_orders
+          truncated: false
+        - text: tests.test_user_live
+          truncated: false
+        - text: tests.test_admin_home_ops
+          truncated: false
+        - text: tests.test_platform_hardening
+          truncated: false
+        - text: tests.test_avatar_preview_media
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 8977
+  summary:
+    text: A1–A5 均有实现与单测证据（40 tests OK）。
+    truncated: false
+  risks:
+    - text: 未在浏览器点过顶栏改密面板。
+      truncated: false
+  risks_truncated: false
+  completed_at: 2026-09-11T03:48:27.470Z
+history:
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 1
+    outcome: pass
+    unresolved_ids: []
+    summary:
+      text: A1–A5 均有实现与单测证据（40 tests OK）。
+      truncated: false
+    completed_at: 2026-09-11T03:48:27.470Z
+history_overflow:
+  dropped_entries: 0
+  first_dropped_at: null
+  last_dropped_at: null
+  outcome_counts:
+    pass: 0
+    fail: 0
+    blocked: 0
+    execution-error: 0
+    recovery: 0
+verification_result: pass
+verification_report: verification.md
+archived: false
+created_at: 2026-09-11T03:39:50.425Z
