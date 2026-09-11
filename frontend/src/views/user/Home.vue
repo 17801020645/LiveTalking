@@ -9,20 +9,21 @@
         autoplay
         playsinline
       />
-      <img
-        v-show="!connected && published.cover_url"
-        class="cover"
-        :src="published.cover_url"
-        :alt="published.name"
-      />
       <video
-        v-show="!connected && !published.cover_url && published.preview_url"
+        v-show="!connected && published.preview_url"
         class="cover"
         :src="published.preview_url"
+        :poster="published.cover_url || undefined"
         muted
         loop
         autoplay
         playsinline
+      />
+      <img
+        v-show="!connected && !published.preview_url && published.cover_url"
+        class="cover"
+        :src="published.cover_url"
+        :alt="published.name"
       />
       <h3>{{ published.name }}</h3>
       <p class="muted">{{ connected ? '已连接' : '发布到首页的数字人' }}</p>
