@@ -3,7 +3,7 @@ name: user-change-password
 language: zh-CN
 phase: archive
 status: active
-state_version: 6
+state_version: 7
 brief: brief.md
 spec_changes:
   - capability: auth-rbac
@@ -16,7 +16,7 @@ workspace:
   isolation: worktree
   change_branch: comet/user-change-password
   target_branch: main
-  finish: null
+  finish: merge
 loop:
   stage: archive-ready
   goal_cycle: 1
