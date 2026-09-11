@@ -7,7 +7,7 @@ import time
 from pathlib import Path
 
 from server.platform_auth import json_error, json_ok, require_admin, require_user
-from server.platform_catalog import scan_avatars
+from server.platform_catalog import ensure_avatar_media, scan_avatars
 
 MAX_OPEN_ORDERS = 5
 MAX_VIDEO = 120 * 1024 * 1024
@@ -17,6 +17,14 @@ VIDEO_EXT = {".mp4", ".webm", ".mov", ".mkv"}
 IMAGE_EXT = {".jpg", ".jpeg", ".png", ".webp"}
 AUDIO_EXT = {".wav", ".mp3", ".m4a", ".aac"}
 OPEN_STATUSES = ("submitted", "accepted", "generating")
+
+
+def _write_dummy_frame(path: Path) -> None:
+    import numpy as np
+    import cv2
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    cv2.imwrite(str(path), np.zeros((64, 64, 3), dtype=np.uint8))
 
 
 def _uploads_root(app):
@@ -287,7 +295,8 @@ async def admin_generate_order(request):
     if request.app.get("fake_avatar_tasks"):
         dest = Path(request.app["avatars_dir"]) / avatar_id
         dest.mkdir(parents=True, exist_ok=True)
-        (dest / "cover.jpg").write_bytes(b"\xff\xd8\xff\xd9")
+        _write_dummy_frame(dest / "full_imgs" / "00000000.png")
+        ensure_avatar_media(dest)
         await db.execute(
             "UPDATE orders SET status = ?, task_id = ?, admin_id = ?, updated_at = ? WHERE id = ?",
             ("generating", "fake", request["user"]["id"], time.time(), order_id),
@@ -322,10 +331,14 @@ async def admin_generate_order(request):
 
 
 async def handle_generation_task(app, task):
+    db = app["platform_db"]
+    if task.status == "completed":
+        dest = Path(app["avatars_dir"]) / task.avatar_id
+        ensure_avatar_media(dest)
+        await scan_avatars(db, app["avatars_dir"])
     order_id = (task.params or {}).get("order_id")
     if not order_id:
         return
-    db = app["platform_db"]
     row = await _get_order(db, order_id)
     if not row or row["status"] != "generating":
         return
