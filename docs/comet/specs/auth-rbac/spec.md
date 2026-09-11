@@ -20,6 +20,7 @@ LiveTalking 提供基于 Cookie 的登录与两种角色。新资源接口位于
 - `POST /api/v1/auth/login`：用户名+密码，成功后设置 httpOnly、SameSite 的会话 Cookie。
 - `POST /api/v1/auth/logout`：清除会话。
 - `GET /api/v1/auth/me`：返回当前用户 `id`、`username`、`role`；未登录 401。
+- `POST /api/v1/auth/password`：已登录用户修改自己的密码。请求体含 `current_password` 与 `new_password`。当前密码错误则失败且哈希不变；新密码少于 6 个字符被拒绝。成功后当前会话 Cookie 仍有效，该用户其它会话被删除。未登录 401。
 - 密码使用单向哈希存储。
 - 失败登录不泄露账号是否存在的细节（统一「用户名或密码错误」）。
 
@@ -29,11 +30,11 @@ LiveTalking 提供基于 Cookie 的登录与两种角色。新资源接口位于
 
 保持匿名：`/` 静态 `web/`、`/offer`、`/whep`、`/human`、`/humanaudio`、`/api/admin/config`、`/api/admin/sessions`、`/sse`、`GET /healthz`。
 
-管理员专属：创建用户、列出全部用户、绑定/解绑任意用户的订阅、列出全部形象元数据、生成任务 CRUD、TTS 代理。普通用户调用返回 403。
+管理员专属：创建用户、列出全部用户、绑定/解绑任意用户的订阅、列出全部形象元数据、生成任务 CRUD、TTS 代理。普通用户调用返回 403。管理员不能通过后台重置其他用户密码。
 
 ## 用户管理（管理员）
 
 - 创建普通用户（用户名唯一、初始密码）。
 - 列出用户（不含密码哈希）。
 - 禁用用户后该用户不能登录；已有 Cookie 在下次鉴权时失败。
-- 本规格不包含删除用户、邮箱、验证码。
+- 本规格不包含删除用户、邮箱、验证码、代人改密。
