@@ -62,8 +62,9 @@ class AdminHomeOpsTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("待处理订单", page)
         self.assertIn("活跃连麦", page)
         self.assertIn("生成中任务", page)
-        self.assertIn("打开 /", page)
+        self.assertIn("去演示连麦", page)
         self.assertNotIn("开始连麦", page)
+        self.assertNotIn("开始连接", page)
 
     async def test_a2_pending_orders_and_link(self):
         await self.login()

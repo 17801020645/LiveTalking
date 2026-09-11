@@ -4,6 +4,7 @@ import Login from '../views/Login.vue'
 import AdminLayout from '../layouts/AdminLayout.vue'
 import UserLayout from '../layouts/UserLayout.vue'
 import AdminHome from '../views/admin/Home.vue'
+import AdminLive from '../views/admin/Live.vue'
 import AdminAvatar from '../views/admin/Avatar.vue'
 import AdminOps from '../views/admin/Ops.vue'
 import AdminTts from '../views/admin/Tts.vue'
@@ -21,6 +22,7 @@ export const router = createRouter({
       meta: { role: 'admin' },
       children: [
         { path: '', component: AdminHome },
+        { path: 'live', component: AdminLive },
         { path: 'avatar', component: AdminAvatar },
         { path: 'ops', component: AdminOps },
         { path: 'tts', component: AdminTts },

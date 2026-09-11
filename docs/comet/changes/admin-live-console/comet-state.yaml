@@ -1,0 +1,246 @@
+schema: comet.native.v4
+name: admin-live-console
+language: zh-CN
+phase: verify
+status: await-user
+state_version: 10
+brief: brief.md
+spec_changes:
+  - capability: admin-home-ops
+    operation: modify
+    source: specs/admin-home-ops/spec.md
+  - capability: admin-live-console
+    operation: create
+    source: specs/admin-live-console/spec.md
+  - capability: user-live
+    operation: modify
+    source: specs/user-live/spec.md
+  - capability: web-app-shell
+    operation: modify
+    source: specs/web-app-shell/spec.md
+workspace:
+  isolation: worktree
+  change_branch: comet/admin-live-console
+  target_branch: main
+  finish: null
+loop:
+  stage: await-user
+  goal_cycle: 2
+  iteration: 1
+  attempt: 1
+  retry_epoch: 0
+  failed_iteration_count: 0
+  no_progress_count: 0
+  execution_failure_count: 0
+  previous_unresolved_ids: []
+  next_action: confirm-skill-coordinated-pass
+acceptance:
+  - id: A1
+    source: brief.md
+    text: A1：管理员首页只有三张待办卡片和「去演示连麦」入口；没有「开始连接」、发文字或打断
+    result: passed
+    reason:
+      text: Home.vue 仅有三张待办卡和「去演示连麦」，无开始连接、发送文字、打断或 /offer。
+      truncated: false
+  - id: A2
+    source: brief.md
+    text: A2：侧栏第二项为「演示连麦」；`/app/admin/live` 有选形象、开始连接、发文字、打断，以及「打开 /」；未选形象时不能开始
+    result: passed
+    reason:
+      text: AdminLayout 第二项为演示连麦；Live.vue 有选形象、开始连接、发文字、打断、打开 /；未选形象按钮禁用。
+      truncated: false
+  - id: A3
+    source: brief.md
+    text: A3：管理员选择已入库形象后可发起 `/offer`，请求带上该 `avatar`；连接后发文字走到 `/human`，`type` 为
+      `echo` 且带 `sessionid`
+    result: passed
+    reason:
+      text: Live.vue POST /offer 带 avatar；POST /human type=echo 且带 sessionid。test_a3
+        覆盖库存 stock。
+      truncated: false
+  - id: A4
+    source: brief.md
+    text: A4：打断请求走到 `/interrupt_talk` 并带上本次 `sessionid`
+    result: passed
+    reason:
+      text: Live.vue interrupt() 走 /interrupt_talk 且带 sessionid。test_a4 覆盖 stub。
+      truncated: false
+  - id: A5
+    source: brief.md
+    text: A5：普通用户首页仍是已发布形象 + `/api/v1/me/offer`；用户打不开管理员演示页
+    result: passed
+    reason:
+      text: 用户首页仍 /api/v1/me/offer 与开始连麦；用户 GET /api/v1/admin/avatars 为 403。
+      truncated: false
+  - id: A6
+    source: brief.md
+    text: A6：未登录仍可 `POST /offer`；原 `web/` 不变
+    result: passed
+    reason:
+      text: 匿名 POST /offer 200；git diff --exit-code -- web/ 通过。
+      truncated: false
+builder_handoff:
+  candidate_id: 11131516-7da6-4286-81b0-25a46fefb9fe
+  identity_provider: skill-coordinated
+  builder_execution_ref: skill-coordinated:builder:b926e6df-a3af-485e-a9eb-06b3e9f319a6
+  iteration: 1
+  summary:
+    text: 演示连麦拆到 /app/admin/live
+      两栏页：选形象、连接、echo、打断；首页只留待办和「去演示连麦」。侧栏第二项为演示连麦。不整页搬原站。用户首页仍
+      /api/v1/me/offer。
+    truncated: false
+  addressed_acceptance_ids:
+    - A1
+    - A2
+    - A3
+    - A4
+    - A5
+    - A6
+  checks:
+    - name:
+        text: unittest tests.test_admin_live_console tests.test_admin_home_ops
+          tests.test_user_live tests.test_orders tests.test_platform_v1
+          tests.test_platform_hardening tests.test_avatar_preview_media
+          tests.test_user_change_password
+        truncated: false
+      result: passed
+      note:
+        text: 46 tests OK，PYTHONPATH 指向 worktree
+        truncated: false
+  checks_truncated: false
+  known_limits:
+    - text: 真 WebRTC 需要 GPU 形象数据，单测走假 SDP
+      truncated: false
+    - text: 未在浏览器打开 /app/admin/live 点选开始连接
+      truncated: false
+  known_limits_truncated: false
+  review:
+    status: passed
+    summary:
+      text: 对照 brief A1–A6：首页无连麦、独立演示页、/offer 带 avatar、echo、打断、用户首页不变、匿名 /offer 与 web/
+        保留。
+      truncated: false
+    reviewer_execution_ref: unittest tests.test_admin_live_console
+      tests.test_admin_home_ops tests.test_user_live tests.test_orders
+      tests.test_platform_v1 tests.test_platform_hardening
+      tests.test_avatar_preview_media tests.test_user_change_password
+  submitted_at: 2026-09-11T06:50:04.220Z
+blockers:
+  - owner: user
+    reason:
+      text: The generic Skill bridge cannot prove an independent Verifier execution;
+        user confirmation is required before Archive.
+      truncated: false
+    acceptance_ids: []
+    resolution_action: await-user
+verification:
+  candidate_id: 11131516-7da6-4286-81b0-25a46fefb9fe
+  identity_provider: skill-coordinated
+  verifier_execution_ref: skill-coordinated:verifier:6eb1bd44-2b12-4dd3-9ec5-6518b11dbbf8
+  iteration: 1
+  attempt: 1
+  assurance: skill-coordinated
+  verdict: pass
+  checks:
+    - id: unittest-admin-live
+      name:
+        text: Admin live console and regression unit tests
+        truncated: false
+      argv_display:
+        - text: PYTHONPATH=/home/banren45/workspace/01_digital_human/LiveTalking/.worktrees/admin-live-console
+          truncated: false
+        - text: /home/banren45/workspace/01_digital_human/LiveTalking/.venv/bin/python
+          truncated: false
+        - text: -m
+          truncated: false
+        - text: unittest
+          truncated: false
+        - text: tests.test_admin_live_console
+          truncated: false
+        - text: tests.test_admin_home_ops
+          truncated: false
+        - text: tests.test_user_live
+          truncated: false
+        - text: tests.test_orders
+          truncated: false
+        - text: tests.test_platform_v1
+          truncated: false
+        - text: tests.test_platform_hardening
+          truncated: false
+        - text: tests.test_avatar_preview_media
+          truncated: false
+        - text: tests.test_user_change_password
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 9624
+    - id: web-untouched
+      name:
+        text: Original web/ unchanged
+        truncated: false
+      argv_display:
+        - text: diff
+          truncated: false
+        - text: --exit-code
+          truncated: false
+        - text: --
+          truncated: false
+        - text: web/
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 13
+  summary:
+    text: A1–A6 均由页面源码、角色路由与 unittest 覆盖并通过；原 web/ 未改。
+    truncated: false
+  risks:
+    - text: 真 WebRTC 未在浏览器/GPU 环境手测；单测使用假 SDP。
+      truncated: false
+  risks_truncated: false
+  completed_at: 2026-09-11T06:53:43.791Z
+history:
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 1
+    outcome: pass
+    unresolved_ids: []
+    summary:
+      text: A1–A5 均由页面源码、角色路由/403 与现有 unittest 覆盖并通过；原 web/ 未改，真 WebRTC 仍待 GPU 环境手测。
+      truncated: false
+    completed_at: 2026-09-11T04:13:06.600Z
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 1
+    outcome: recovery
+    unresolved_ids: []
+    summary:
+      text: 用户可见行为变更：演示连麦从首页拆到独立页 /app/admin/live；首页只留待办；不整页搬原站控件。
+      truncated: false
+    completed_at: 2026-09-11T06:45:23.074Z
+  - goal_cycle: 2
+    iteration: 1
+    attempt: 1
+    outcome: pass
+    unresolved_ids: []
+    summary:
+      text: A1–A6 均由页面源码、角色路由与 unittest 覆盖并通过；原 web/ 未改。
+      truncated: false
+    completed_at: 2026-09-11T06:53:43.791Z
+history_overflow:
+  dropped_entries: 0
+  first_dropped_at: null
+  last_dropped_at: null
+  outcome_counts:
+    pass: 0
+    fail: 0
+    blocked: 0
+    execution-error: 0
+    recovery: 0
+verification_result: pass
+verification_report: verification.md
+archived: false
+created_at: 2026-09-11T03:56:58.737Z

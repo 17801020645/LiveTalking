@@ -562,17 +562,31 @@ def create_test_application(db_path, avatars_dir, web_dir=None, uploads_dir=None
     setup_v1_routes(app)
     setup_frontend_routes(app)
 
-    async def offer(_request):
-        return web.json_response({"sdp": "ok"})
+    async def offer(request):
+        try:
+            body = await request.json()
+        except Exception:
+            body = {}
+        request.app["last_offer"] = body
+        return web.json_response({"sdp": "ok", "type": "answer", "sessionid": "legacy-sid"})
 
     async def human(request):
         body = await request.json()
         request.app["last_human"] = body
         return web.json_response({"code": 0, "msg": "ok"})
 
+    async def interrupt_talk(request):
+        try:
+            body = await request.json()
+        except Exception:
+            body = {}
+        request.app["last_interrupt"] = body
+        return web.json_response({"code": 0, "msg": "ok"})
+
     app.router.add_post("/offer", offer)
     setup_avatar_routes(app)
     app.router.add_post("/human", human)
+    app.router.add_post("/interrupt_talk", interrupt_talk)
     if web_dir:
         from server.routes import index
         app.router.add_get("/", index)
