@@ -1,9 +1,9 @@
 schema: comet.native.v4
 name: admin-live-console
 language: zh-CN
-phase: verify
-status: await-user
-state_version: 10
+phase: archive
+status: active
+state_version: 12
 brief: brief.md
 spec_changes:
   - capability: admin-home-ops
@@ -22,9 +22,9 @@ workspace:
   isolation: worktree
   change_branch: comet/admin-live-console
   target_branch: main
-  finish: null
+  finish: merge
 loop:
-  stage: await-user
+  stage: archive-ready
   goal_cycle: 2
   iteration: 1
   attempt: 1
@@ -33,7 +33,7 @@ loop:
   no_progress_count: 0
   execution_failure_count: 0
   previous_unresolved_ids: []
-  next_action: confirm-skill-coordinated-pass
+  next_action: archive
 acceptance:
   - id: A1
     source: brief.md
@@ -125,14 +125,7 @@ builder_handoff:
       tests.test_platform_v1 tests.test_platform_hardening
       tests.test_avatar_preview_media tests.test_user_change_password
   submitted_at: 2026-09-11T06:50:04.220Z
-blockers:
-  - owner: user
-    reason:
-      text: The generic Skill bridge cannot prove an independent Verifier execution;
-        user confirmation is required before Archive.
-      truncated: false
-    acceptance_ids: []
-    resolution_action: await-user
+blockers: []
 verification:
   candidate_id: 11131516-7da6-4286-81b0-25a46fefb9fe
   identity_provider: skill-coordinated
