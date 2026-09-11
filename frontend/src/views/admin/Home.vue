@@ -19,10 +19,10 @@
         <p class="muted">pending / running，点击查看生成页</p>
       </router-link>
     </div>
-    <div class="glass card">
-      <p>演示连麦仍使用原站点入口：<a href="/" target="_blank" rel="noopener">打开 /</a></p>
-      <p class="muted">当前管理员：{{ username }}</p>
-    </div>
+    <p class="muted">
+      <router-link to="/admin/live">去演示连麦</router-link>
+    </p>
+    <p class="muted">当前管理员：{{ username }}</p>
   </div>
 </template>
 

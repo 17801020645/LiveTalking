@@ -112,11 +112,15 @@ class UserLiveTests(unittest.IsolatedAsyncioTestCase):
         page = await self.client.get("/avatar.html")
         self.assertEqual(page.status, 200)
 
-    async def test_a6_admin_home_no_webrtc(self):
+    async def test_a6_admin_live_uses_legacy_offer(self):
         admin_home = (FRONTEND_SRC / "views" / "admin" / "Home.vue").read_text()
-        self.assertIn("打开 /", admin_home)
-        self.assertNotIn("/api/v1/me/offer", admin_home)
-        self.assertNotIn("开始连麦", admin_home)
+        admin_live = (FRONTEND_SRC / "views" / "admin" / "Live.vue").read_text()
+        self.assertIn("去演示连麦", admin_home)
+        self.assertNotIn("开始连接", admin_home)
+        self.assertIn("打开 /", admin_live)
+        self.assertNotIn("/api/v1/me/offer", admin_live)
+        self.assertNotIn("开始连麦", admin_live)
+        self.assertIn("开始连接", admin_live)
         await self.login("admin", "secret12")
         forbidden = await self.client.post("/api/v1/me/offer", json={"sdp": "x", "type": "offer"})
         self.assertEqual(forbidden.status, 403)

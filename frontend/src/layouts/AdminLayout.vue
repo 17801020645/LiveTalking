@@ -3,6 +3,7 @@
     <aside class="sidebar">
       <div class="brand">LiveTalking</div>
       <router-link class="nav-link" to="/admin">首页</router-link>
+      <router-link class="nav-link" to="/admin/live">演示连麦</router-link>
       <router-link class="nav-link" to="/admin/avatar">Avatar 生成</router-link>
       <router-link class="nav-link" to="/admin/ops">管理后台</router-link>
       <router-link class="nav-link" to="/admin/tts">TTS 语音管理</router-link>

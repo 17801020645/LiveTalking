@@ -60,7 +60,7 @@ class PlatformV1Tests(unittest.IsolatedAsyncioTestCase):
         forbidden = await self.client.get("/api/v1/admin/users")
         self.assertEqual(forbidden.status, 403)
         layout = (FRONTEND_SRC / "layouts" / "AdminLayout.vue").read_text()
-        for label in ("首页", "Avatar 生成", "管理后台", "TTS 语音管理"):
+        for label in ("首页", "演示连麦", "Avatar 生成", "管理后台", "TTS 语音管理"):
             self.assertIn(label, layout)
         user_layout = (FRONTEND_SRC / "layouts" / "UserLayout.vue").read_text()
         for label in ("首页", "我的资产", "定制数字人"):
