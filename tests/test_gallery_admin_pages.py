@@ -3,8 +3,6 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 ADMIN = REPO / "frontend" / "src" / "views" / "admin"
-USER = REPO / "frontend" / "src" / "views" / "user"
-LOGIN = REPO / "frontend" / "src" / "views" / "Login.vue"
 CSS = REPO / "frontend" / "src" / "styles.css"
 
 
@@ -34,15 +32,10 @@ class GalleryAdminPagesTests(unittest.TestCase):
         self.assertIn("/tts/", src)
         self.assertNotIn("glass card", src)
 
-    def test_a5_login_user_shell_and_web_untouched_markers(self):
-        login = LOGIN.read_text(encoding="utf-8")
-        self.assertIn("glass login-card", login)
-        self.assertNotIn("monitor-panel", login)
-        for name in ("Home.vue", "Assets.vue", "Custom.vue"):
-            src = (USER / name).read_text(encoding="utf-8")
-            self.assertNotIn("monitor-panel", src)
+    def test_a5_monitor_css_and_web_index_remain(self):
         css = CSS.read_text(encoding="utf-8")
         self.assertIn(".monitor-panel", css)
+        self.assertTrue((REPO / "web" / "index.html").is_file())
 
 
 if __name__ == "__main__":

@@ -1,19 +1,22 @@
 <template>
-  <div class="login-wrap">
-    <form class="glass login-card" @submit.prevent="submit">
-      <h1>LiveTalking</h1>
-      <p>登录后进入数字人工作台</p>
-      <div class="field">
-        <label>用户名</label>
-        <input v-model="username" autocomplete="username" />
-      </div>
-      <div class="field">
-        <label>密码</label>
-        <input v-model="password" type="password" autocomplete="current-password" />
-      </div>
-      <p v-if="error" class="error">{{ error }}</p>
-      <button class="btn" type="submit" :disabled="loading">{{ loading ? '登录中…' : '登录' }}</button>
-    </form>
+  <div class="gallery login-wrap">
+    <section class="monitor-panel login-monitor" :class="{ 'is-fault': Boolean(error), 'is-program': loading }">
+      <span class="tally" :class="error ? 'is-fault' : (loading ? 'is-program' : 'is-idle')" aria-hidden="true" />
+      <p class="monitor-name">LiveTalking</p>
+      <form class="monitor-body" @submit.prevent="submit">
+        <p class="muted">登录后进入数字人工作台</p>
+        <div class="field">
+          <label>用户名</label>
+          <input v-model="username" autocomplete="username" />
+        </div>
+        <div class="field">
+          <label>密码</label>
+          <input v-model="password" type="password" autocomplete="current-password" />
+        </div>
+        <p v-if="error" class="error">{{ error }}</p>
+        <button class="btn" type="submit" :disabled="loading">{{ loading ? '登录中…' : '登录' }}</button>
+      </form>
+    </section>
   </div>
 </template>
 

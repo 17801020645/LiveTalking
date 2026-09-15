@@ -1,14 +1,33 @@
 <template>
-  <div class="shell">
-    <aside class="sidebar">
+  <div class="shell gallery">
+    <aside class="sidebar" aria-label="用户导航">
       <div class="brand">LiveTalking</div>
-      <router-link class="nav-link" to="/user">首页</router-link>
-      <router-link class="nav-link" to="/user/assets">我的资产</router-link>
-      <router-link class="nav-link" to="/user/custom">定制数字人</router-link>
+      <nav class="rail-nav">
+        <router-link class="nav-link" to="/user">
+          <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 11.5 12 5l8 6.5V20H4z" />
+            <path d="M9.5 20v-6h5v6" />
+          </svg>
+          首页
+        </router-link>
+        <router-link class="nav-link" to="/user/assets">
+          <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="4" y="5" width="16" height="14" rx="2" />
+            <path d="M8 14.5 10.5 12l3 3 2-2 2.5 2.5" />
+          </svg>
+          我的资产
+        </router-link>
+        <router-link class="nav-link" to="/user/custom">
+          <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+          定制数字人
+        </router-link>
+      </nav>
     </aside>
     <div class="main">
       <header class="topbar">
-        <span>{{ username }}</span>
+        <span class="topbar-user">{{ username }}</span>
         <PasswordForm />
         <button class="btn-ghost" type="button" @click="logout">退出</button>
       </header>

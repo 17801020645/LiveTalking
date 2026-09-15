@@ -1,20 +1,24 @@
 <template>
   <div class="pw-wrap">
     <button class="btn-ghost" type="button" @click="open = !open">改密</button>
-    <form v-if="open" class="glass card pw-panel" @submit.prevent="submit">
-      <div class="field">
-        <label>当前密码</label>
-        <input v-model="currentPassword" type="password" autocomplete="current-password" />
-      </div>
-      <div class="field">
-        <label>新密码</label>
-        <input v-model="newPassword" type="password" autocomplete="new-password" />
-      </div>
-      <p v-if="error" class="error">{{ error }}</p>
-      <p v-if="ok" class="muted">已更新</p>
-      <div class="row-actions">
-        <button class="btn" type="submit" :disabled="saving">{{ saving ? '保存中…' : '保存' }}</button>
-        <button class="btn-ghost" type="button" @click="open = false">取消</button>
+    <form v-if="open" class="monitor-panel pw-panel" :class="{ 'is-fault': Boolean(error), 'is-program': ok }" @submit.prevent="submit">
+      <span class="tally" :class="error ? 'is-fault' : (ok ? 'is-live' : 'is-idle')" aria-hidden="true" />
+      <p class="monitor-name">改密</p>
+      <div class="monitor-body">
+        <div class="field">
+          <label>当前密码</label>
+          <input v-model="currentPassword" type="password" autocomplete="current-password" />
+        </div>
+        <div class="field">
+          <label>新密码</label>
+          <input v-model="newPassword" type="password" autocomplete="new-password" />
+        </div>
+        <p v-if="error" class="error">{{ error }}</p>
+        <p v-if="ok" class="muted">已更新</p>
+        <div class="row-actions">
+          <button class="btn" type="submit" :disabled="saving">{{ saving ? '保存中…' : '保存' }}</button>
+          <button class="btn-ghost" type="button" @click="open = false">取消</button>
+        </div>
       </div>
     </form>
   </div>

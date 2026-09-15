@@ -1,53 +1,60 @@
 <template>
-  <div>
+  <div class="deck">
     <h2 class="page-title">定制数字人</h2>
-    <div class="glass card" style="margin-bottom: 16px;">
-      <div class="field">
-        <label>素材类型</label>
-        <select v-model="materialType">
-          <option value="video">视频</option>
-          <option value="image_audio">图片 + 音频</option>
-        </select>
-      </div>
-      <div v-if="materialType === 'video'" class="field">
-        <label>视频</label>
-        <input type="file" accept="video/*" @change="video = $event.target.files[0]" />
-      </div>
-      <template v-else>
+    <section class="monitor-panel" :class="{ 'is-fault': Boolean(formError) }">
+      <span class="tally" :class="formError ? 'is-fault' : 'is-idle'" aria-hidden="true" />
+      <p class="monitor-name">提交素材</p>
+      <div class="monitor-body">
         <div class="field">
-          <label>图片</label>
-          <input type="file" accept="image/*" @change="image = $event.target.files[0]" />
+          <label>素材类型</label>
+          <select v-model="materialType">
+            <option value="video">视频</option>
+            <option value="image_audio">图片 + 音频</option>
+          </select>
         </div>
+        <div v-if="materialType === 'video'" class="field">
+          <label>视频</label>
+          <input type="file" accept="video/*" @change="video = $event.target.files[0]" />
+        </div>
+        <template v-else>
+          <div class="field">
+            <label>图片</label>
+            <input type="file" accept="image/*" @change="image = $event.target.files[0]" />
+          </div>
+          <div class="field">
+            <label>音频</label>
+            <input type="file" accept="audio/*" @change="audio = $event.target.files[0]" />
+          </div>
+        </template>
         <div class="field">
-          <label>音频</label>
-          <input type="file" accept="audio/*" @change="audio = $event.target.files[0]" />
+          <label>文字说明</label>
+          <input v-model="scriptText" placeholder="形象、音色或口播文案说明" />
         </div>
-      </template>
-      <div class="field">
-        <label>文字说明</label>
-        <input v-model="scriptText" placeholder="形象、音色或口播文案说明" />
+        <p v-if="formError" class="error">{{ formError }}</p>
+        <button class="btn" type="button" :disabled="submitting" @click="submit">{{ submitting ? '提交中…' : '提交订单' }}</button>
       </div>
-      <p v-if="formError" class="error">{{ formError }}</p>
-      <button class="btn" type="button" :disabled="submitting" @click="submit">{{ submitting ? '提交中…' : '提交订单' }}</button>
-    </div>
+    </section>
 
-    <div class="glass card">
-      <h3>我的订单</h3>
-      <table class="table">
-        <thead>
-          <tr><th>ID</th><th>类型</th><th>状态</th><th>说明</th></tr>
-        </thead>
-        <tbody>
-          <tr v-for="o in orders" :key="o.id">
-            <td>{{ o.id }}</td>
-            <td>{{ o.material_type }}</td>
-            <td>{{ statusLabel(o) }}</td>
-            <td>{{ o.reject_reason || o.script_text || '—' }}</td>
-          </tr>
-        </tbody>
-      </table>
-      <p v-if="!orders.length" class="muted">还没有订单。</p>
-    </div>
+    <section class="monitor-panel">
+      <span class="tally is-idle" aria-hidden="true" />
+      <p class="monitor-name">我的订单</p>
+      <div class="monitor-body">
+        <table class="table">
+          <thead>
+            <tr><th>ID</th><th>类型</th><th>状态</th><th>说明</th></tr>
+          </thead>
+          <tbody>
+            <tr v-for="o in orders" :key="o.id">
+              <td>{{ o.id }}</td>
+              <td>{{ o.material_type }}</td>
+              <td>{{ statusLabel(o) }}</td>
+              <td>{{ o.reject_reason || o.script_text || '—' }}</td>
+            </tr>
+          </tbody>
+        </table>
+        <p v-if="!orders.length" class="muted">还没有订单。</p>
+      </div>
+    </section>
   </div>
 </template>
 

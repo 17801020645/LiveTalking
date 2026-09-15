@@ -1,48 +1,54 @@
 <template>
-  <div>
+  <div class="deck">
     <h2 class="page-title">首页</h2>
-    <div v-if="published" class="glass card" style="max-width: 480px;">
-      <video
-        v-show="connected"
-        ref="remoteVideo"
-        class="cover"
-        autoplay
-        playsinline
-      />
-      <video
-        v-show="!connected && published.preview_url"
-        class="cover"
-        :src="published.preview_url"
-        :poster="published.cover_url || undefined"
-        muted
-        loop
-        autoplay
-        playsinline
-      />
-      <img
-        v-show="!connected && !published.preview_url && published.cover_url"
-        class="cover"
-        :src="published.cover_url"
-        :alt="published.name"
-      />
-      <h3>{{ published.name }}</h3>
-      <p class="muted">{{ connected ? '已连接' : '发布到首页的数字人' }}</p>
-      <p v-if="error" class="error">{{ error }}</p>
-      <div class="row-actions">
-        <button v-if="!connected" class="btn" type="button" :disabled="starting" @click="start">
-          {{ starting ? '连接中…' : '开始连麦' }}
-        </button>
-        <button v-else class="btn-ghost" type="button" @click="stop">断开</button>
+    <section
+      class="monitor-panel user-live-panel"
+      :class="{ 'is-program': connected, 'is-fault': Boolean(error) }"
+    >
+      <span class="tally" :class="connected ? 'is-live' : (error ? 'is-fault' : 'is-idle')" aria-hidden="true" />
+      <p class="monitor-name">{{ published ? published.name : '连麦' }}</p>
+      <div class="monitor-body">
+        <template v-if="published">
+          <video
+            v-show="connected"
+            ref="remoteVideo"
+            class="cover"
+            autoplay
+            playsinline
+          />
+          <video
+            v-show="!connected && published.preview_url"
+            class="cover"
+            :src="published.preview_url"
+            :poster="published.cover_url || undefined"
+            muted
+            loop
+            autoplay
+            playsinline
+          />
+          <img
+            v-show="!connected && !published.preview_url && published.cover_url"
+            class="cover"
+            :src="published.cover_url"
+            :alt="published.name"
+          />
+          <p class="muted">{{ connected ? '已连接' : '发布到首页的数字人' }}</p>
+          <p v-if="error" class="error">{{ error }}</p>
+          <div class="row-actions">
+            <button v-if="!connected" class="btn" type="button" :disabled="starting" @click="start">
+              {{ starting ? '连接中…' : '开始连麦' }}
+            </button>
+            <button v-else class="btn-ghost" type="button" @click="stop">断开</button>
+          </div>
+          <div v-if="connected" class="field" style="margin-top: 12px;">
+            <label>发送文字</label>
+            <input v-model="text" @keyup.enter="sendText" placeholder="输入后回车发送" />
+            <button class="btn" type="button" style="margin-top: 8px;" @click="sendText">发送</button>
+          </div>
+        </template>
+        <p v-else class="muted">还没有发布数字人，请到「我的资产」选择一个并发布。</p>
       </div>
-      <div v-if="connected" class="field" style="margin-top: 12px;">
-        <label>发送文字</label>
-        <input v-model="text" @keyup.enter="sendText" placeholder="输入后回车发送" />
-        <button class="btn" type="button" style="margin-top: 8px;" @click="sendText">发送</button>
-      </div>
-    </div>
-    <div v-else class="glass empty">
-      还没有发布数字人，请到「我的资产」选择一个并发布。
-    </div>
+    </section>
   </div>
 </template>
 

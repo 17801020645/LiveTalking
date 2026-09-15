@@ -1,0 +1,224 @@
+schema: comet.native.v4
+name: gallery-user-shell
+language: zh-CN
+phase: archive
+status: done
+state_version: 7
+brief: brief.md
+spec_changes:
+  - capability: web-app-shell
+    operation: modify
+    source: specs/web-app-shell/spec.md
+workspace:
+  isolation: current
+  change_branch: main
+  target_branch: main
+  finish: null
+loop:
+  stage: done
+  goal_cycle: 1
+  iteration: 1
+  attempt: 1
+  retry_epoch: 0
+  failed_iteration_count: 0
+  no_progress_count: 0
+  execution_failure_count: 0
+  previous_unresolved_ids: []
+  next_action: null
+acceptance:
+  - id: A1
+    source: brief.md
+    text: A1：`/app/login` 是暗墙上的 Gallery 监视器框（可见
+      tally/bezel），不是浅色玻璃卡；用户名+密码登录、失败统一错误文案、成功按角色跳转仍可用
+    result: passed
+    reason:
+      text: Login.vue 为 gallery login-wrap +
+        monitor-panel/tally，无浅色玻璃卡；用户名+密码、失败统一错误、按角色跳转仍在。
+      truncated: false
+  - id: A2
+    source: brief.md
+    text: A2：用户首页工作区是监视器框；有已发布形象时可连接、看画面、发文字；无发布时引导去资产页，不是浅色 empty 卡
+    result: passed
+    reason:
+      text: 用户首页单块 monitor-panel；有发布可连接/看画面/发文字，无发布引导去资产，不是 glass empty。
+      truncated: false
+  - id: A3
+    source: brief.md
+    text: A3：我的资产为监视器框网格；发布/取消发布仍可用；无订阅时仍是 Gallery 空态
+    result: passed
+    reason:
+      text: 资产为 monitor-panel 网格；发布/取消发布未改；无订阅是监视器空态。
+      truncated: false
+  - id: A4
+    source: brief.md
+    text: A4：定制数字人的上传区与订单表是监视器框；提交订单与列表仍可用
+    result: passed
+    reason:
+      text: 定制页上传区与订单表各一块监视器框；提交与列表逻辑未改。
+      truncated: false
+  - id: A5
+    source: brief.md
+    text: A5：顶栏改密浮层是 Gallery 语言（管理员与用户皆然）；改密接口行为不变
+    result: passed
+    reason:
+      text: 共享 PasswordForm 为监视器浮层，两端共用；改密接口由单测覆盖。
+      truncated: false
+  - id: A6
+    source: brief.md
+    text: A6：`web/` 无改动；现有 `/api/v1` 与 WebRTC 行为不因本 change 改变
+    result: passed
+    reason:
+      text: web/ 无 diff；未改后端/WebRTC；platform、user-live、orders 等回归通过。
+      truncated: false
+builder_handoff:
+  candidate_id: bf74ce44-e55e-4372-a731-22ac86587ba2
+  identity_provider: skill-coordinated
+  builder_execution_ref: skill-coordinated:builder:adeeb078-ba3f-47eb-8d93-6507ff75de0f
+  iteration: 1
+  summary:
+    text: 登录页与用户壳已铺进 Broadcast Gallery：暗墙居中监视器登录框；用户首页/资产/定制用
+      monitor-panel；共享改密浮层一并改。能力与接口未改。
+    truncated: false
+  addressed_acceptance_ids:
+    - A1
+    - A2
+    - A3
+    - A4
+    - A5
+    - A6
+  checks:
+    - name:
+        text: unittest gallery + platform + user-live + orders + live + password +
+          home-ops
+        truncated: false
+      result: passed
+      note:
+        text: 45 tests OK（含 tests.test_gallery_user_shell A1–A6 源码断言）
+        truncated: false
+    - name:
+        text: git diff --exit-code -- web/
+        truncated: false
+      result: passed
+      note:
+        text: web/ 无改动
+        truncated: false
+  checks_truncated: false
+  known_limits:
+    - text: 未在浏览器连 8010 点过登录/用户三页；生产 /app/ 需 npm run build
+      truncated: false
+    - text: 未跑 Impeccable document / DESIGN.md 回写（非目标）
+      truncated: false
+  known_limits_truncated: false
+  review:
+    status: passed
+    summary:
+      text: 独立审查 A1–A6 均覆盖：监视器框替换玻璃卡，登录/连麦/发布/下单/改密脚本未改，web/ 与 API 无改动。
+      truncated: false
+    reviewer_execution_ref: 6c3b5854-a4ed-4a11-b26f-2240dd0c0ef0
+  submitted_at: 2026-09-15T09:48:39.902Z
+blockers: []
+verification:
+  candidate_id: bf74ce44-e55e-4372-a731-22ac86587ba2
+  identity_provider: skill-coordinated
+  verifier_execution_ref: skill-coordinated:verifier:ece087c1-7cbe-44ce-96dd-ad1b03e6a669
+  iteration: 1
+  attempt: 1
+  assurance: skill-coordinated
+  verdict: pass
+  checks:
+    - id: unittest-gallery-user-shell
+      name:
+        text: Gallery user shell and regression tests
+        truncated: false
+      argv_display:
+        - text: -m
+          truncated: false
+        - text: unittest
+          truncated: false
+        - text: tests.test_gallery_user_shell
+          truncated: false
+        - text: tests.test_gallery_admin_pages
+          truncated: false
+        - text: tests.test_platform_v1
+          truncated: false
+        - text: tests.test_user_live
+          truncated: false
+        - text: tests.test_orders
+          truncated: false
+        - text: tests.test_admin_live_console
+          truncated: false
+        - text: tests.test_user_change_password
+          truncated: false
+        - text: tests.test_admin_home_ops
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 7973
+    - id: web-untouched
+      name:
+        text: Original web/ unchanged
+        truncated: false
+      argv_display:
+        - text: diff
+          truncated: false
+        - text: --exit-code
+          truncated: false
+        - text: --
+          truncated: false
+        - text: web/
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 45
+    - id: login-monitor
+      name:
+        text: Login uses monitor-panel not glass card
+        truncated: false
+      argv_display:
+        - text: -F
+          truncated: false
+        - text: monitor-panel
+          truncated: false
+        - text: frontend/src/views/Login.vue
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 2
+  summary:
+    text: 登录页与用户壳已铺进 Broadcast Gallery 监视器框，能力与 /api/v1、WebRTC、web/ 均未因本 change 改变。
+    truncated: false
+  risks:
+    - text: 未在浏览器连 8010 点过登录与用户三页；生产 /app/ 需 npm run build
+      truncated: false
+  risks_truncated: false
+  completed_at: 2026-09-15T09:52:28.866Z
+history:
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 1
+    outcome: pass
+    unresolved_ids: []
+    summary:
+      text: 登录页与用户壳已铺进 Broadcast Gallery 监视器框，能力与 /api/v1、WebRTC、web/ 均未因本 change 改变。
+      truncated: false
+    completed_at: 2026-09-15T09:52:28.866Z
+history_overflow:
+  dropped_entries: 0
+  first_dropped_at: null
+  last_dropped_at: null
+  outcome_counts:
+    pass: 0
+    fail: 0
+    blocked: 0
+    execution-error: 0
+    recovery: 0
+verification_result: pass
+verification_report: verification.md
+archived: true
+created_at: 2026-09-15T09:40:17.586Z
