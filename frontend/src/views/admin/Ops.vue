@@ -1,69 +1,87 @@
 <template>
-  <div>
+  <div class="deck">
     <h2 class="page-title">管理后台</h2>
-    <div class="glass card" style="margin-bottom: 16px;">
-      <h3>定制订单</h3>
-      <table class="table">
-        <thead>
-          <tr><th>ID</th><th>用户</th><th>类型</th><th>状态</th><th>视频</th><th>操作</th></tr>
-        </thead>
-        <tbody>
-          <tr v-for="o in orders" :key="o.id">
-            <td>{{ o.id }}</td>
-            <td>{{ o.username }}</td>
-            <td>{{ o.material_type }}</td>
-            <td>{{ o.status }}{{ o.reject_reason ? ' / ' + o.reject_reason : '' }}</td>
-            <td>{{ o.has_video ? '有' : '无' }}</td>
-            <td class="row-actions">
-              <button v-if="o.status === 'submitted'" class="btn" type="button" @click="accept(o.id)">接单</button>
-              <button v-if="['submitted','accepted','generating'].includes(o.status)" class="btn-danger" type="button" @click="reject(o.id)">驳回</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <p v-if="!orders.length" class="muted">暂无订单。</p>
-    </div>
-
-    <div class="glass card" style="margin-bottom: 16px;">
-      <h3>创建普通用户</h3>
-      <div class="field">
-        <label>用户名</label>
-        <input v-model="newUser" />
+    <section class="monitor-panel" :class="{ 'is-program': hasSubmitted }">
+      <span class="tally" :class="hasSubmitted ? 'is-live' : 'is-idle'" aria-hidden="true" />
+      <p class="monitor-name">定制订单</p>
+      <div class="monitor-body">
+        <table class="table">
+          <thead>
+            <tr><th>ID</th><th>用户</th><th>类型</th><th>状态</th><th>视频</th><th>操作</th></tr>
+          </thead>
+          <tbody>
+            <tr v-for="o in orders" :key="o.id">
+              <td>{{ o.id }}</td>
+              <td>{{ o.username }}</td>
+              <td>{{ o.material_type }}</td>
+              <td>{{ o.status }}{{ o.reject_reason ? ' / ' + o.reject_reason : '' }}</td>
+              <td>{{ o.has_video ? '有' : '无' }}</td>
+              <td class="row-actions">
+                <button v-if="o.status === 'submitted'" class="btn" type="button" @click="accept(o.id)">接单</button>
+                <button v-if="['submitted','accepted','generating'].includes(o.status)" class="btn-danger" type="button" @click="reject(o.id)">驳回</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p v-if="!orders.length" class="muted">暂无订单。</p>
       </div>
-      <div class="field">
-        <label>初始密码</label>
-        <input v-model="newPass" type="password" />
-      </div>
-      <p v-if="formError" class="error">{{ formError }}</p>
-      <button class="btn" type="button" @click="createUser">创建</button>
-    </div>
+    </section>
 
-    <div class="glass card">
-      <h3>用户与订阅</h3>
-      <table class="table">
-        <thead>
-          <tr><th>用户</th><th>角色</th><th>状态</th><th>已绑定形象</th></tr>
-        </thead>
-        <tbody>
-          <tr v-for="u in users" :key="u.id" @click="select(u)" :style="{ cursor: 'pointer', background: selected?.id === u.id ? 'rgba(67,97,238,0.08)' : '' }">
-            <td>{{ u.username }}</td>
-            <td>{{ u.role }}</td>
-            <td>{{ u.status }}</td>
-            <td>{{ (subs[u.id] || []).map(s => s.avatar_id).join(', ') || '—' }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div v-if="selected && selected.role === 'user'" class="glass card" style="margin-top: 16px;">
-      <h3>为 {{ selected.username }} 绑定形象</h3>
-      <div v-for="a in avatars" :key="a.avatar_id" class="row-actions">
-        <label>
-          <input type="checkbox" :checked="boundIds.has(a.avatar_id)" @change="toggle(a.avatar_id, $event.target.checked)" />
-          {{ a.name }} <span class="muted">({{ a.avatar_id }} / {{ a.status }})</span>
-        </label>
+    <section class="monitor-panel">
+      <span class="tally is-idle" aria-hidden="true" />
+      <p class="monitor-name">创建普通用户</p>
+      <div class="monitor-body">
+        <div class="field">
+          <label>用户名</label>
+          <input v-model="newUser" />
+        </div>
+        <div class="field">
+          <label>初始密码</label>
+          <input v-model="newPass" type="password" />
+        </div>
+        <p v-if="formError" class="error">{{ formError }}</p>
+        <button class="btn" type="button" @click="createUser">创建</button>
       </div>
-    </div>
+    </section>
+
+    <section class="monitor-panel" :class="{ 'is-program': Boolean(selected) }">
+      <span class="tally" :class="selected ? 'is-program' : 'is-idle'" aria-hidden="true" />
+      <p class="monitor-name">用户与订阅</p>
+      <div class="monitor-body">
+        <table class="table">
+          <thead>
+            <tr><th>用户</th><th>角色</th><th>状态</th><th>已绑定形象</th></tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="u in users"
+              :key="u.id"
+              :class="{ 'is-selected': selected?.id === u.id }"
+              @click="select(u)"
+              style="cursor: pointer"
+            >
+              <td>{{ u.username }}</td>
+              <td>{{ u.role }}</td>
+              <td>{{ u.status }}</td>
+              <td>{{ (subs[u.id] || []).map(s => s.avatar_id).join(', ') || '—' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section v-if="selected && selected.role === 'user'" class="monitor-panel is-program">
+      <span class="tally is-program" aria-hidden="true" />
+      <p class="monitor-name">为 {{ selected.username }} 绑定形象</p>
+      <div class="monitor-body">
+        <div v-for="a in avatars" :key="a.avatar_id" class="row-actions">
+          <label>
+            <input type="checkbox" :checked="boundIds.has(a.avatar_id)" @change="toggle(a.avatar_id, $event.target.checked)" />
+            {{ a.name }} <span class="muted">({{ a.avatar_id }} / {{ a.status }})</span>
+          </label>
+        </div>
+      </div>
+    </section>
   </div>
 </template>
 
@@ -81,6 +99,7 @@ const newPass = ref('')
 const formError = ref('')
 
 const boundIds = computed(() => new Set((subs.value[selected.value?.id] || []).map((s) => s.avatar_id)))
+const hasSubmitted = computed(() => orders.value.some((o) => o.status === 'submitted'))
 
 async function load() {
   const u = await api('/api/v1/admin/users')

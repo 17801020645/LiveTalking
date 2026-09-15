@@ -1,0 +1,210 @@
+schema: comet.native.v4
+name: gallery-admin-pages
+language: zh-CN
+phase: archive
+status: done
+state_version: 7
+brief: brief.md
+spec_changes:
+  - capability: admin-live-console
+    operation: modify
+    source: specs/admin-live-console/spec.md
+  - capability: web-app-shell
+    operation: modify
+    source: specs/web-app-shell/spec.md
+workspace:
+  isolation: current
+  change_branch: main
+  target_branch: main
+  finish: null
+loop:
+  stage: done
+  goal_cycle: 1
+  iteration: 1
+  attempt: 1
+  retry_epoch: 0
+  failed_iteration_count: 0
+  no_progress_count: 0
+  execution_failure_count: 0
+  previous_unresolved_ids: []
+  next_action: null
+acceptance:
+  - id: A1
+    source: brief.md
+    text: A1：`/app/admin/live` 的工作区是 Gallery 监视器框（可见
+      tally/bezel），不是浅色玻璃卡；选形象、连接、Echo/Chat、打断、音频上传、录制、动作编排仍可用
+    result: passed
+    reason:
+      text: /app/admin/live 工作区为 monitor-panel（tally + bezel），不是浅色 glass
+        card；选形象、连接、Echo/Chat、打断、音频、录制、动作仍在。连麦单测已过。
+      truncated: false
+  - id: A2
+    source: brief.md
+    text: A2：`/app/admin/avatar` 同样是监视器框；仍可从已接单订单启动生成并看到任务表
+    result: passed
+    reason:
+      text: Avatar 页两块监视器框；可从已接单订单启动生成并列出任务表。
+      truncated: false
+  - id: A3
+    source: brief.md
+    text: A3：`/app/admin/ops` 同样是监视器框；订单、开户、订阅绑定仍可用
+    result: passed
+    reason:
+      text: Ops 页订单、开户、订阅绑定均在监视器框内，接口未改。
+      truncated: false
+  - id: A4
+    source: brief.md
+    text: A4：`/app/admin/tts` 同样是监视器框；不填 8091 仍可拉音色/试听/上传删除
+    result: passed
+    reason:
+      text: TTS 页监视器框；不填 8091，经 8010 代理拉音色/试听/上传删除。
+      truncated: false
+  - id: A5
+    source: brief.md
+    text: A5：登录页与用户壳仍是浅色玻璃卡片；`web/` 无改动；现有 `/api/v1` 行为不因本 change 改变
+    result: passed
+    reason:
+      text: 登录页与用户壳仍浅色玻璃卡；web/ 无差异；无 API 文件改动。
+      truncated: false
+builder_handoff:
+  candidate_id: 9c730aa5-6a0e-4a05-bad4-8c25e38601fe
+  identity_provider: skill-coordinated
+  builder_execution_ref: skill-coordinated:builder:481a9652-43a9-480d-abac-fe13add2b4af
+  iteration: 1
+  summary:
+    text: 管理员 live/avatar/ops/tts 四页工作区从浅色玻璃卡改为 Gallery 监视器框（tally +
+      bezel）；两栏连麦与原有操作保留；登录页与用户壳未改。
+    truncated: false
+  addressed_acceptance_ids:
+    - A1
+    - A2
+    - A3
+    - A4
+    - A5
+  checks:
+    - name:
+        text: unittest tests.test_gallery_admin_pages tests.test_admin_live_console
+          tests.test_user_live tests.test_admin_home_ops
+          tests.test_platform_hardening
+        truncated: false
+      result: passed
+      note:
+        text: 30 tests OK
+        truncated: false
+  checks_truncated: false
+  known_limits:
+    - text: 8010 未在听，未做浏览器听音/点选；生产 /app/ 需 npm run build 才吃到 Vue 改动
+      truncated: false
+    - text: 未从成品重扫 DESIGN.md
+      truncated: false
+  known_limits_truncated: false
+  review:
+    status: passed
+    summary:
+      text: 对照 brief A1–A5：四页已用 monitor-panel（tally/bezel），能力保留；登录页与用户壳仍浅色玻璃卡，web/ 与
+        API 未改。
+      truncated: false
+    reviewer_execution_ref: 86bea495-2c99-486e-9c61-363f035f3a01
+  submitted_at: 2026-09-15T08:35:53.262Z
+blockers: []
+verification:
+  candidate_id: 9c730aa5-6a0e-4a05-bad4-8c25e38601fe
+  identity_provider: skill-coordinated
+  verifier_execution_ref: skill-coordinated:verifier:14732d33-dfad-4198-9459-6c44232fee14
+  iteration: 1
+  attempt: 1
+  assurance: skill-coordinated
+  verdict: pass
+  checks:
+    - id: unittest-gallery-admin
+      name:
+        text: Gallery admin pages and regression tests
+        truncated: false
+      argv_display:
+        - text: -m
+          truncated: false
+        - text: unittest
+          truncated: false
+        - text: tests.test_gallery_admin_pages
+          truncated: false
+        - text: tests.test_admin_live_console
+          truncated: false
+        - text: tests.test_user_live
+          truncated: false
+        - text: tests.test_admin_home_ops
+          truncated: false
+        - text: tests.test_platform_hardening
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 4774
+    - id: web-untouched
+      name:
+        text: Original web/ unchanged
+        truncated: false
+      argv_display:
+        - text: diff
+          truncated: false
+        - text: --exit-code
+          truncated: false
+        - text: --
+          truncated: false
+        - text: web/
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 7
+    - id: monitor-panel-css
+      name:
+        text: monitor-panel CSS exists
+        truncated: false
+      argv_display:
+        - text: -F
+          truncated: false
+        - text: .monitor-panel
+          truncated: false
+        - text: frontend/src/styles.css
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 7
+  summary:
+    text: 管理员四页已纳入 Gallery 监视器框，能力与接口未改；登录页和用户壳仍浅色玻璃卡。
+    truncated: false
+  risks:
+    - text: 8010 未在听，未做浏览器点选；生产 /app/ 需 npm run build。
+      truncated: false
+    - text: 未从成品重扫 DESIGN.md。
+      truncated: false
+  risks_truncated: false
+  completed_at: 2026-09-15T08:38:39.994Z
+history:
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 1
+    outcome: pass
+    unresolved_ids: []
+    summary:
+      text: 管理员四页已纳入 Gallery 监视器框，能力与接口未改；登录页和用户壳仍浅色玻璃卡。
+      truncated: false
+    completed_at: 2026-09-15T08:38:39.994Z
+history_overflow:
+  dropped_entries: 0
+  first_dropped_at: null
+  last_dropped_at: null
+  outcome_counts:
+    pass: 0
+    fail: 0
+    blocked: 0
+    execution-error: 0
+    recovery: 0
+verification_result: pass
+verification_report: verification.md
+archived: true
+created_at: 2026-09-15T07:19:15.581Z

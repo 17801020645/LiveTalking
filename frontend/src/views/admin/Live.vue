@@ -5,11 +5,14 @@
         <div v-if="toast" class="glass live-toast" role="status">{{ toast }}</div>
       </Transition>
     </Teleport>
+    <div class="deck">
     <h2 class="page-title">演示连麦</h2>
     <p v-if="error" class="error">{{ error }}</p>
     <div class="live-grid">
-      <div class="glass card">
-        <h3>连接</h3>
+      <section class="monitor-panel" :class="{ 'is-program': connected, 'is-fault': Boolean(error) }">
+        <span class="tally" :class="connected ? 'is-program' : (error ? 'is-fault' : 'is-idle')" aria-hidden="true" />
+        <p class="monitor-name">连接</p>
+        <div class="monitor-body">
         <div class="field">
           <label>形象</label>
           <select v-model="avatarId" :disabled="connected">
@@ -71,10 +74,13 @@
           </button>
           <button v-else class="btn-ghost" type="button" @click="stop">断开</button>
         </div>
-      </div>
+        </div>
+      </section>
       <div class="live-side">
-      <div class="glass card">
-        <h3>说话</h3>
+      <section class="monitor-panel" :class="{ 'is-program': connected }">
+        <span class="tally" :class="connected ? 'is-live' : 'is-idle'" aria-hidden="true" />
+        <p class="monitor-name">说话</p>
+        <div class="monitor-body">
         <p v-if="!connected" class="muted">连接后即可发送</p>
         <div class="field">
           <label>发送文字</label>
@@ -104,9 +110,12 @@
             打断
           </button>
         </div>
-      </div>
-      <div class="glass card">
-        <h3>音频驱动</h3>
+        </div>
+      </section>
+      <section class="monitor-panel" :class="{ 'is-program': connected }">
+        <span class="tally" :class="connected ? 'is-live' : 'is-idle'" aria-hidden="true" />
+        <p class="monitor-name">音频驱动</p>
+        <div class="monitor-body">
         <p v-if="!connected" class="muted">连接后可上传音频驱动口型</p>
         <div class="field">
           <label>音频文件</label>
@@ -117,9 +126,12 @@
             {{ uploading ? '上传中…' : '上传并播放' }}
           </button>
         </div>
-      </div>
-      <div class="glass card">
-        <h3>录制控制</h3>
+        </div>
+      </section>
+      <section class="monitor-panel" :class="{ 'is-warn': recording, 'is-program': connected && !recording }">
+        <span class="tally" :class="recording ? 'is-warn' : (connected ? 'is-live' : 'is-idle')" aria-hidden="true" />
+        <p class="monitor-name">录制控制</p>
+        <div class="monitor-body">
         <div class="row-actions">
           <button
             class="btn"
@@ -134,9 +146,12 @@
             下载录像
           </button>
         </div>
-      </div>
-      <div class="glass card">
-        <h3>动作编排</h3>
+        </div>
+      </section>
+      <section class="monitor-panel" :class="{ 'is-program': connected }">
+        <span class="tally" :class="connected ? 'is-live' : 'is-idle'" aria-hidden="true" />
+        <p class="monitor-name">动作编排</p>
+        <div class="monitor-body">
         <div class="field">
           <label>Audiotype 索引</label>
           <input v-model.number="audiotype" type="number" min="2" :disabled="!connected" />
@@ -147,7 +162,8 @@
         <p class="muted" style="margin-top: 16px;">
           麦克风 ASR 等仍可使用原站点：<a href="/" target="_blank" rel="noopener">打开 /</a>
         </p>
-      </div>
+        </div>
+      </section>
       </div>
     </div>
   </div>

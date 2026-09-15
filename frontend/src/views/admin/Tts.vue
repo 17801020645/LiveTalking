@@ -1,78 +1,91 @@
 <template>
-  <div>
+  <div class="deck">
     <h2 class="page-title">TTS 语音管理</h2>
-    <div class="glass card" style="margin-bottom: 16px;">
-      <p>
-        经本机 8010 代理 Omni，无需在浏览器填写上游地址。
-        本机调试仍可打开原页 <a href="/tts/index.html" target="_blank" rel="noopener">/tts/</a>。
-      </p>
-      <p class="muted">状态：{{ statusText }}</p>
-      <p v-if="formError" class="error">{{ formError }}</p>
-      <div class="row-actions">
-        <button class="btn" type="button" :disabled="busy" @click="refresh">刷新音色</button>
+    <section class="monitor-panel" :class="{ 'is-program': connected, 'is-fault': Boolean(formError) && !connected }">
+      <span class="tally" :class="connected ? 'is-live' : (formError ? 'is-fault' : 'is-idle')" aria-hidden="true" />
+      <p class="monitor-name">上游状态</p>
+      <div class="monitor-body">
+        <p>
+          经本机 8010 代理 Omni，无需在浏览器填写上游地址。
+          本机调试仍可打开原页 <a href="/tts/index.html" target="_blank" rel="noopener">/tts/</a>。
+        </p>
+        <p class="muted">状态：{{ statusText }}</p>
+        <p v-if="formError" class="error">{{ formError }}</p>
+        <div class="row-actions">
+          <button class="btn" type="button" :disabled="busy" @click="refresh">刷新音色</button>
+        </div>
       </div>
-    </div>
+    </section>
 
-    <div class="glass card" style="margin-bottom: 16px;">
-      <h3>音色列表</h3>
-      <table class="table">
-        <thead>
-          <tr><th>名称</th><th>类型</th><th></th></tr>
-        </thead>
-        <tbody>
-          <tr v-for="v in presetVoices" :key="'p-' + v">
-            <td>{{ v }}</td>
-            <td>预设</td>
-            <td><button class="btn-ghost" type="button" @click="voice = v">选用</button></td>
-          </tr>
-          <tr v-for="v in uploadedVoices" :key="'u-' + v.name">
-            <td>{{ v.name }}</td>
-            <td>已上传</td>
-            <td class="row-actions">
-              <button class="btn-ghost" type="button" @click="voice = v.name">选用</button>
-              <button class="btn-danger" type="button" @click="removeVoice(v.name)">删除</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <p v-if="!presetVoices.length && !uploadedVoices.length" class="muted">还没有音色，或上游未连接。</p>
-    </div>
+    <section class="monitor-panel" :class="{ 'is-program': connected }">
+      <span class="tally" :class="connected ? 'is-live' : 'is-idle'" aria-hidden="true" />
+      <p class="monitor-name">音色列表</p>
+      <div class="monitor-body">
+        <table class="table">
+          <thead>
+            <tr><th>名称</th><th>类型</th><th></th></tr>
+          </thead>
+          <tbody>
+            <tr v-for="v in presetVoices" :key="'p-' + v">
+              <td>{{ v }}</td>
+              <td>预设</td>
+              <td><button class="btn-ghost" type="button" @click="voice = v">选用</button></td>
+            </tr>
+            <tr v-for="v in uploadedVoices" :key="'u-' + v.name">
+              <td>{{ v.name }}</td>
+              <td>已上传</td>
+              <td class="row-actions">
+                <button class="btn-ghost" type="button" @click="voice = v.name">选用</button>
+                <button class="btn-danger" type="button" @click="removeVoice(v.name)">删除</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p v-if="!presetVoices.length && !uploadedVoices.length" class="muted">还没有音色，或上游未连接。</p>
+      </div>
+    </section>
 
-    <div class="glass card" style="margin-bottom: 16px;">
-      <h3>合成试听</h3>
-      <div class="field">
-        <label>音色</label>
-        <input v-model="voice" placeholder="例如 vivian" />
+    <section class="monitor-panel">
+      <span class="tally" :class="audioUrl ? 'is-live' : 'is-idle'" aria-hidden="true" />
+      <p class="monitor-name">合成试听</p>
+      <div class="monitor-body">
+        <div class="field">
+          <label>音色</label>
+          <input v-model="voice" placeholder="例如 vivian" />
+        </div>
+        <div class="field">
+          <label>文本</label>
+          <textarea v-model="text" placeholder="输入要合成的中文"></textarea>
+        </div>
+        <div class="field">
+          <label>语速</label>
+          <input v-model.number="speed" type="number" min="0.5" max="2" step="0.1" />
+        </div>
+        <button class="btn" type="button" :disabled="busy" @click="synthesize">合成</button>
+        <audio v-if="audioUrl" :src="audioUrl" controls style="display:block; margin-top: 12px; width: 100%;"></audio>
       </div>
-      <div class="field">
-        <label>文本</label>
-        <textarea v-model="text" placeholder="输入要合成的中文"></textarea>
-      </div>
-      <div class="field">
-        <label>语速</label>
-        <input v-model.number="speed" type="number" min="0.5" max="2" step="0.1" />
-      </div>
-      <button class="btn" type="button" :disabled="busy" @click="synthesize">合成</button>
-      <audio v-if="audioUrl" :src="audioUrl" controls style="display:block; margin-top: 12px; width: 100%;"></audio>
-    </div>
+    </section>
 
-    <div class="glass card">
-      <h3>上传克隆音色</h3>
-      <div class="field">
-        <label>音频</label>
-        <input type="file" accept="audio/*" @change="audioFile = $event.target.files[0]" />
+    <section class="monitor-panel">
+      <span class="tally is-idle" aria-hidden="true" />
+      <p class="monitor-name">上传克隆音色</p>
+      <div class="monitor-body">
+        <div class="field">
+          <label>音频</label>
+          <input type="file" accept="audio/*" @change="audioFile = $event.target.files[0]" />
+        </div>
+        <div class="field">
+          <label>名称</label>
+          <input v-model="cloneName" />
+        </div>
+        <div class="field">
+          <label>参考文本</label>
+          <textarea v-model="refText" placeholder="与音频内容一致的文本"></textarea>
+        </div>
+        <p class="muted">上游若未部署 Base 克隆模型，上传会失败并显示原因。</p>
+        <button class="btn" type="button" :disabled="busy" @click="upload">上传</button>
       </div>
-      <div class="field">
-        <label>名称</label>
-        <input v-model="cloneName" />
-      </div>
-      <div class="field">
-        <label>参考文本</label>
-        <textarea v-model="refText" placeholder="与音频内容一致的文本"></textarea>
-      </div>
-      <p class="muted">上游若未部署 Base 克隆模型，上传会失败并显示原因。</p>
-      <button class="btn" type="button" :disabled="busy" @click="upload">上传</button>
-    </div>
+    </section>
   </div>
 </template>
 
