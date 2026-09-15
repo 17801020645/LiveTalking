@@ -1,8 +1,15 @@
 # 本机 Omni TTS（vLLM-Omni）
 
-独立进程在 **8091** 提供 OpenAI 兼容语音接口。LiveTalking（8010）只当客户端。默认数字人仍用 EdgeTTS，避免 8091 未启动时首页失声。
+独立进程在 **8091** 提供 OpenAI 兼容语音接口。LiveTalking（8010）只当客户端。数字人**默认** `tts: omnitts`，文本驱动走 Omni 预设音色 `vivian`。
 
-仅支持 **Ubuntu + NVIDIA CUDA**。不要装进 `.venv`，不要在本机默认切 `tts: omnitts`。
+仅支持 **Ubuntu + NVIDIA CUDA**。不要把 vLLM 装进 `.venv`。先起 Omni 再起数字人：
+
+```bash
+./start-omni.sh
+./start.sh
+```
+
+8091 未启动时首页会失声，**不会**自动改回 EdgeTTS。Omni 崩溃不会拖垮 8010。
 
 ## 一次性安装
 
@@ -59,15 +66,9 @@ Omni 默认监听 `0.0.0.0:8091`。仅本机可设 `OMNI_HOST=127.0.0.1`。
 
 克隆上传需要 **Base** 模型，本轮不部署。见下文换模型。
 
-## 把数字人切到 Omni（手工）
+## 默认配置（Omni）
 
-`config.yaml` 默认保持：
-
-```yaml
-tts: edgetts
-```
-
-8091 健康后再改同一文件（或启动参数），然后**重启** `./start.sh`：
+`config.yaml` 与 `config.py` 默认：
 
 ```yaml
 tts: omnitts
@@ -75,15 +76,23 @@ TTS_SERVER: http://127.0.0.1:8091
 REF_FILE: vivian          # 必须是 /v1/audio/voices 里的音色名
 ```
 
+`./start.sh` 会读该文件。8091 须已在听，否则文本驱动没有声音。
+
+## 切回 EdgeTTS
+
+改同一文件（或启动参数），然后**重启** `./start.sh`，不必停 8091：
+
+```yaml
+tts: edgetts
+```
+
 等价命令行：
 
 ```bash
-./start.sh --tts omnitts --TTS_SERVER http://127.0.0.1:8091 --REF_FILE vivian
+./start.sh --tts edgetts
 ```
 
-首页文本驱动应走 Omni 声 + 口型。切回 EdgeTTS：把 `tts` 改回 `edgetts` 并重启，不必停 8091。
-
-没有自动故障回退。Omni 崩溃不会拖垮 8010。
+没有自动故障回退。
 
 ## 同卡显存（4090 24GB）
 

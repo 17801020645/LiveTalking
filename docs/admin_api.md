@@ -33,10 +33,10 @@ GET /api/admin/config
       "modelres": 192,
       "modelfile": "",
       "customvideo_config": "",
-      "tts": "edgetts",
-      "REF_FILE": "zh-CN-YunxiaNeural",
+      "tts": "omnitts",
+      "REF_FILE": "vivian",
       "REF_TEXT": null,
-      "TTS_SERVER": "http://127.0.0.1:9880",
+      "TTS_SERVER": "http://127.0.0.1:8091",
       "transport": "webrtc",
       "push_url": "http://localhost:1985/rtc/v1/whip/?app=live&stream=livestream",
       "max_session": 1,
@@ -62,10 +62,10 @@ GET /api/admin/config
 | `modelres` | int | 192 | 模型分辨率 |
 | `modelfile` | string | "" | 自定义模型文件路径 |
 | `customvideo_config` | string | "" | 自定义动作 JSON 文件路径 |
-| `tts` | string | "edgetts" | TTS 插件 |
-| `REF_FILE` | string | "zh-CN-YunxiaNeural" | TTS 参考文件或语音模型ID |
+| `tts` | string | "omnitts" | TTS 插件 |
+| `REF_FILE` | string | "vivian" | TTS 参考文件或语音模型ID |
 | `REF_TEXT` | string | null | TTS 参考文本 |
-| `TTS_SERVER` | string | "http://127.0.0.1:9880" | TTS 服务地址 |
+| `TTS_SERVER` | string | "http://127.0.0.1:8091" | TTS 服务地址 |
 | `transport` | string | "webrtc" | 输出传输方式：rtcpush / webrtc / rtmp / virtualcam |
 | `push_url` | string | — | RTCPush 目标地址 |
 | `max_session` | int | 1 | 最大会话数 |

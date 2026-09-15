@@ -1,0 +1,232 @@
+schema: comet.native.v4
+name: default-omnitts
+language: zh-CN
+phase: archive
+status: done
+state_version: 7
+brief: brief.md
+spec_changes:
+  - capability: admin-tts-proxy
+    operation: modify
+    source: specs/admin-tts-proxy/spec.md
+  - capability: omni-tts-serving
+    operation: modify
+    source: specs/omni-tts-serving/spec.md
+workspace:
+  isolation: current
+  change_branch: main
+  target_branch: main
+  finish: null
+loop:
+  stage: done
+  goal_cycle: 1
+  iteration: 1
+  attempt: 1
+  retry_epoch: 0
+  failed_iteration_count: 0
+  no_progress_count: 0
+  execution_failure_count: 0
+  previous_unresolved_ids: []
+  next_action: null
+acceptance:
+  - id: A1
+    source: brief.md
+    text: "A1：仓库默认配置为 `tts: omnitts`、`TTS_SERVER: http://127.0.0.1:8091`、`REF_FILE:
+      vivian`（yaml 与 `config.py` 默认一致）"
+    result: passed
+    reason:
+      text: "config.yaml 为 tts: omnitts、TTS_SERVER: http://127.0.0.1:8091、REF_FILE:
+        vivian；config.py argparse 默认值相同。parse_args 读 yaml 与跳过 yaml
+        时单测均得到这三项。Runtime grep 与 unittest 已过。"
+      truncated: false
+  - id: A2
+    source: brief.md
+    text: A2：8091 已启动时，重启 8010 后文本驱动会话走 Omni 客户端，而不是 EdgeTTS
+    result: passed
+    reason:
+      text: 默认 opt.tts 为 omnitts；start.sh 不覆盖 --tts；BaseAvatar 按 opt.tts 动态创建客户端，无改写为
+        edgetts 的路径。单测 test_a2 已过。只读探测 8091 /v1/audio/voices 返回 200 且含
+        vivian。未重启 8010、未做 Echo/Chat 听音，不因此判 blocked。
+      truncated: false
+  - id: A3
+    source: brief.md
+    text: A3：8091 未启动时，文本驱动不会悄悄改用 EdgeTTS；失败可观察（日志或无语音），且进程不必退出
+    result: passed
+    reason:
+      text: OmniTTS 创建时不探测 8091；合成失败只 logger.error/exception，不 yield、不 raise、无
+        sys.exit，也不改走 EdgeTTS。单测 ConnectionError 得到空 chunk。进程不必退出。
+      truncated: false
+  - id: A4
+    source: brief.md
+    text: A4：文档写明默认已是 Omni，以及改回 `edgetts` 并重启 8010 的步骤；不必停 8091
+    result: passed
+    reason:
+      text: "docs/omni_tts.md 写明默认 tts: omnitts / 8091 / vivian，切回 tts: edgetts 后重启
+        ./start.sh，并含「不必停 8091」。change 内规格已同步。Runtime grep 与 test_a4 已过。web/
+        无改动。"
+      truncated: false
+builder_handoff:
+  candidate_id: 9cc08566-4d4e-4255-aaf4-3a26d08577e8
+  identity_provider: skill-coordinated
+  builder_execution_ref: skill-coordinated:builder:d8df6e02-3ae1-4875-9dd8-a1f8904bc0ee
+  iteration: 1
+  summary:
+    text: 数字人默认 TTS 改为 omnitts：config.yaml 与 config.py 均为 8091/vivian；文档写明默认 Omni
+      与切回 edgetts 并重启 8010；单测覆盖默认值、客户端选择、8091 不可用时不回退。
+    truncated: false
+  addressed_acceptance_ids:
+    - A1
+    - A2
+    - A3
+    - A4
+  checks:
+    - name:
+        text: unittest tests.test_default_omnitts
+        truncated: false
+      result: passed
+      note:
+        text: 4 tests OK：yaml/argparse 默认、Omni 客户端无回退、连接失败不 yield、文档切回步骤
+        truncated: false
+  checks_truncated: false
+  known_limits:
+    - text: 单测未连接真实 8091，也未重启 8010；A2 现场文本驱动留给 Verifier
+      truncated: false
+    - text: 未改 start.sh 启动参数；TTS 仍来自 yaml 默认
+      truncated: false
+  known_limits_truncated: false
+  review:
+    status: passed
+    summary:
+      text: 对照 brief A1–A4：yaml 与 argparse 默认同为 omnitts/8091/vivian；按 opt.tts 加载
+        Omni、无 EdgeTTS 回退；8091 不可用只打日志且不退出；文档含默认 Omni 与切回 edgetts 并重启 8010。
+      truncated: false
+    reviewer_execution_ref: 328a9cef-711a-461e-87af-3e6c93dae3c5
+  submitted_at: 2026-09-15T02:18:07.097Z
+blockers: []
+verification:
+  candidate_id: 9cc08566-4d4e-4255-aaf4-3a26d08577e8
+  identity_provider: skill-coordinated
+  verifier_execution_ref: skill-coordinated:verifier:a13eefe0-5aa2-4c2e-8ad2-8577c8ec956f
+  iteration: 1
+  attempt: 1
+  assurance: skill-coordinated
+  verdict: pass
+  checks:
+    - id: unittest-default-omnitts
+      name:
+        text: Default omnitts unit tests
+        truncated: false
+      argv_display:
+        - text: -m
+          truncated: false
+        - text: unittest
+          truncated: false
+        - text: tests.test_default_omnitts
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 220
+    - id: default-tts-yaml
+      name:
+        text: config.yaml default tts omnitts 8091 vivian
+        truncated: false
+      argv_display:
+        - text: -E
+          truncated: false
+        - text: "^tts: omnitts|^TTS_SERVER: http://127.0.0.1:8091|^REF_FILE: vivian"
+          truncated: false
+        - text: config.yaml
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 8
+    - id: default-tts-argparse
+      name:
+        text: config.py argparse defaults omnitts 8091 vivian
+        truncated: false
+      argv_display:
+        - text: -E
+          truncated: false
+        - text: default='omnitts'|default="vivian"|default='http://127.0.0.1:8091'
+          truncated: false
+        - text: config.py
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 6
+    - id: docs-switch-back
+      name:
+        text: docs/omni_tts.md default Omni and switch back
+        truncated: false
+      argv_display:
+        - text: -F
+          truncated: false
+        - text: 不必停 8091
+          truncated: false
+        - text: docs/omni_tts.md
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 7
+    - id: web-untouched
+      name:
+        text: Original web/ unchanged
+        truncated: false
+      argv_display:
+        - text: diff
+          truncated: false
+        - text: --exit-code
+          truncated: false
+        - text: --
+          truncated: false
+        - text: web/
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 8
+  summary:
+    text: 默认 TTS 已改为 omnitts（8091/vivian），创建路径无 EdgeTTS 回退，失败可观察且不退出，文档含切回步骤。未重启
+      8010，现场听音未做。
+    truncated: false
+  risks:
+    - text: 当前 8010 可能仍是改默认前启动的进程；未重启则现场文本驱动不一定已切到 Omni。本次未做 Echo/Chat 听音。
+      truncated: false
+    - text: docs/comet/specs 主规格仍写默认 edgetts，需归档时同步；change delta 已改。
+      truncated: false
+  risks_truncated: false
+  completed_at: 2026-09-15T02:21:44.649Z
+history:
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 1
+    outcome: pass
+    unresolved_ids: []
+    summary:
+      text: 默认 TTS 已改为 omnitts（8091/vivian），创建路径无 EdgeTTS 回退，失败可观察且不退出，文档含切回步骤。未重启
+        8010，现场听音未做。
+      truncated: false
+    completed_at: 2026-09-15T02:21:44.649Z
+history_overflow:
+  dropped_entries: 0
+  first_dropped_at: null
+  last_dropped_at: null
+  outcome_counts:
+    pass: 0
+    fail: 0
+    blocked: 0
+    execution-error: 0
+    recovery: 0
+verification_result: pass
+verification_report: verification.md
+archived: true
+created_at: 2026-09-15T02:09:57.784Z

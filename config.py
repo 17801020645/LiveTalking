@@ -71,12 +71,12 @@ def parse_args():
                         help="custom action json")
 
     # ─── TTS ───────────────────────────────────────────────────────────
-    parser.add_argument('--tts', type=str, default='edgetts',
+    parser.add_argument('--tts', type=str, default='omnitts',
                         help="tts plugin: edgetts/omnitts/gpt-sovits/cosyvoice/fishtts/tencent/doubao/indextts2/azuretts/qwentts")
-    parser.add_argument('--REF_FILE', type=str, default="zh-CN-YunxiaNeural",
+    parser.add_argument('--REF_FILE', type=str, default="vivian",
                         help="参考文件名或语音模型ID")
     parser.add_argument('--REF_TEXT', type=str, default=None)
-    parser.add_argument('--TTS_SERVER', type=str, default='http://127.0.0.1:9880')
+    parser.add_argument('--TTS_SERVER', type=str, default='http://127.0.0.1:8091')
 
     # ─── LLM（Chat 模式，OpenAI 兼容接口）──────────────────────────────
     parser.add_argument('--llm_base_url', type=str,
