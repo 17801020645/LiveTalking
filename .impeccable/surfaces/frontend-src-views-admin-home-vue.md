@@ -2,7 +2,7 @@
 version: 1
 slug: "frontend-src-views-admin-home-vue"
 primary_target: "frontend/src/views/admin/Home.vue"
-related_targets: []
+related_targets: ["frontend/src/layouts/AdminLayout.vue"]
 ---
 
 # Surface: Admin home
@@ -25,5 +25,7 @@ STORY: The operator sees what needs them now, believes the numbers are the live 
 FIRST VIEWPORT: Thin dark rail left with LiveTalking and five admin links. Main wall: three large preview monitors in a row (订单 / 连麦 / 生成), each with a huge count, a tally lamp, and a short caption. 「去演示连麦」 sits under the wall as the program cut, not inside a fourth card. Username and logout stay on a slim top strip.
 
 FORM: Broadcast Gallery (grounded pick; seed key 7c9c70d8). Not the assigned rundown board.
+
+APPROVED COMP: `.impeccable/mocks/admin-home-comp-row.png` — three equal preview monitors in a row; 去演示连麦 as program cut under the wall. Comp Chinese is not literal; implement real copy. Bezels and lamps are CSS, not rasterized type.
 
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
