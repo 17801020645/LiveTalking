@@ -160,7 +160,7 @@
           <button class="btn" type="button" :disabled="!connected" @click="setAudiotype">切换状态</button>
         </div>
         <p class="muted" style="margin-top: 16px;">
-          麦克风 ASR 等仍可使用原站点：<a href="/" target="_blank" rel="noopener">打开 /</a>
+          麦克风 ASR 等仍可使用原站点：<a href="/index.html" target="_blank" rel="noopener">打开 /index.html</a>
         </p>
         </div>
       </section>

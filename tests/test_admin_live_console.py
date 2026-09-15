@@ -52,7 +52,7 @@ class AdminLiveConsoleTests(unittest.IsolatedAsyncioTestCase):
         self.assertLess(layout.find("演示连麦"), layout.find("Avatar 生成"))
         self.assertIn('to="/admin/live"', layout)
         page = ADMIN_LIVE.read_text()
-        for label in ("请选择形象", "开始连接", "发送文字", "打断", "打开 /", "Echo 复读", "Chat LLM", "上传并播放", "开始录制", "切换状态", "参考音频"):
+        for label in ("请选择形象", "开始连接", "发送文字", "打断", "打开 /index.html", "Echo 复读", "Chat LLM", "上传并播放", "开始录制", "切换状态", "参考音频"):
             self.assertIn(label, page)
         self.assertIn("starting || !avatarId", page)
         self.assertIn("btn-interrupt", page)

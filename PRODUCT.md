@@ -25,7 +25,7 @@ web
 
 ## Operating Context
 
-- 入口：`/` 为原站控制台；`/app/` 为 Vue 3 双角色工作台（登录后按角色进管理员壳或用户壳）。
+- 入口：默认 WebRTC 打开 `/` 进入 `/app/` Vue 3 双角色工作台（未登录到登录页，登录后按角色进管理员壳或用户壳）；原站控制台走 `/index.html`。
 - 本机启动：仓库根目录 `./start.sh`，默认 WebRTC + wav2lip，服务约在 `8010`。
 - 管理员演示连麦走匿名信令 `POST /offer`、`POST /human`、`POST /interrupt_talk`；用户连麦走 `/api/v1/me/offer`。
 - 口型与推流依赖本机 GPU 与已入库形象数据。TTS 可经 8010 代理到本机 Omni 服务。

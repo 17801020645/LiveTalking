@@ -231,14 +231,14 @@ async def admin_sessions(request):
 # ─── 路由注册 ──────────────────────────────────────────────────────────────
 
 async def index(request):
-    """默认首页重定向"""
+    """默认首页重定向：WebRTC 进 /app/；rtmp/rtcpush 仍进对应 HTML。"""
     opt = request.app.get("opt")
-    pagename = 'index.html'
-    if opt and opt.transport == 'rtmp':
-        pagename = 'rtmpapi.html'
-    elif opt and opt.transport == 'rtcpush':
-        pagename = 'rtcpushapi.html'
-    raise web.HTTPFound(f'/{pagename}')
+    transport = getattr(opt, "transport", None) if opt else None
+    if transport == "rtmp":
+        raise web.HTTPFound("/rtmpapi.html")
+    if transport == "rtcpush":
+        raise web.HTTPFound("/rtcpushapi.html")
+    raise web.HTTPFound("/app/")
 
 
 def setup_routes(app):

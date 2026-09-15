@@ -1,0 +1,197 @@
+schema: comet.native.v4
+name: default-app-entry
+language: zh-CN
+phase: archive
+status: done
+state_version: 7
+brief: brief.md
+spec_changes:
+  - capability: admin-live-console
+    operation: modify
+    source: specs/admin-live-console/spec.md
+  - capability: web-app-shell
+    operation: modify
+    source: specs/web-app-shell/spec.md
+workspace:
+  isolation: current
+  change_branch: main
+  target_branch: main
+  finish: null
+loop:
+  stage: done
+  goal_cycle: 1
+  iteration: 1
+  attempt: 1
+  retry_epoch: 0
+  failed_iteration_count: 0
+  no_progress_count: 0
+  execution_failure_count: 0
+  previous_unresolved_ids: []
+  next_action: null
+acceptance:
+  - id: A1
+    source: brief.md
+    text: A1：默认 WebRTC 下 `GET /`（不跟随跳转）返回 302/301，Location 为 `/app/` 或等价 `/app`
+    result: passed
+    reason:
+      text: index() 在非 rtmp/rtcpush 时 HTTPFound 到 /app/；单测 GET / 不跟随跳转断言 301/302 且
+        Location 以 /app/ 或 /app 结尾。
+      truncated: false
+  - id: A2
+    source: brief.md
+    text: A2：`GET /index.html` 仍返回原站控制台（200），不是 Vue 壳
+    result: passed
+    reason:
+      text: GET /index.html 返回 200 原站标题 LiveTalking - 数字人实时驱动，不含 Vue id=app；静态
+        web/index.html 仍可匿名打开。
+      truncated: false
+  - id: A3
+    source: brief.md
+    text: A3：`/app/admin/live` 的原站入口指向 `/index.html`，文案不再是「打开 /」链到 `/`
+    result: passed
+    reason:
+      text: Live.vue 为 href=/index.html 与文案「打开 /index.html」，源码无 href=/；相关测试已同步。
+      truncated: false
+  - id: A4
+    source: brief.md
+    text: A4：`web/` 无改动；rtmp / rtcpush 时 `GET /` 仍分别指向 `rtmpapi.html` /
+      `rtcpushapi.html`
+    result: passed
+    reason:
+      text: git diff --exit-code -- web/ 通过；rtmp/rtcpush 时 GET / 仍分别指向 rtmpapi.html /
+        rtcpushapi.html，单测覆盖。
+      truncated: false
+builder_handoff:
+  candidate_id: 592cbcd0-6146-47cb-80a1-2cd75102dbe7
+  identity_provider: skill-coordinated
+  builder_execution_ref: skill-coordinated:builder:ef06eac8-3c3e-4fa1-8be0-92f0b6a7a674
+  iteration: 1
+  summary:
+    text: 默认 WebRTC 下 GET / 重定向到 /app/；/index.html 仍为原站控制台；演示连麦 ASR 入口改为打开
+      /index.html。rtmp/rtcpush 的 / 仍指向对应 HTML。web/ 未改。
+    truncated: false
+  addressed_acceptance_ids:
+    - A1
+    - A2
+    - A3
+    - A4
+  checks:
+    - name:
+        text: unittest tests.test_default_app_entry tests.test_gallery_admin_pages
+          tests.test_admin_live_console tests.test_user_live
+          tests.test_platform_v1
+        truncated: false
+      result: passed
+      note:
+        text: 27 tests OK
+        truncated: false
+    - name:
+        text: git diff --exit-code -- web/
+        truncated: false
+      result: passed
+      note:
+        text: web/ 无改动
+        truncated: false
+  checks_truncated: false
+  known_limits:
+    - text: 8010 未在听，未用浏览器打开 / 验证跳转到登录页
+      truncated: false
+    - text: 生产 /app/ 需 npm run build 后才有 Vue 页面
+      truncated: false
+  known_limits_truncated: false
+  review:
+    status: passed
+    summary:
+      text: 对照 brief A1–A4：webrtc / → /app/，/index.html 仍为原站，Live ASR 链到
+        /index.html，rtmp/rtcpush / 特例与 web/ 未改。
+      truncated: false
+    reviewer_execution_ref: unittest tests.test_default_app_entry
+      tests.test_gallery_admin_pages tests.test_admin_live_console
+      tests.test_user_live tests.test_platform_v1
+  submitted_at: 2026-09-15T11:09:34.315Z
+blockers: []
+verification:
+  candidate_id: 592cbcd0-6146-47cb-80a1-2cd75102dbe7
+  identity_provider: skill-coordinated
+  verifier_execution_ref: skill-coordinated:verifier:7ff85ec5-4a8d-4c92-b91c-51ca96738732
+  iteration: 1
+  attempt: 1
+  assurance: skill-coordinated
+  verdict: pass
+  checks:
+    - id: unittest-default-app-entry
+      name:
+        text: Default entry and related unit tests
+        truncated: false
+      argv_display:
+        - text: -m
+          truncated: false
+        - text: unittest
+          truncated: false
+        - text: tests.test_default_app_entry
+          truncated: false
+        - text: tests.test_gallery_admin_pages
+          truncated: false
+        - text: tests.test_admin_live_console
+          truncated: false
+        - text: tests.test_user_live
+          truncated: false
+        - text: tests.test_platform_v1
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 4278
+    - id: web-untouched
+      name:
+        text: Original web/ unchanged
+        truncated: false
+      argv_display:
+        - text: diff
+          truncated: false
+        - text: --exit-code
+          truncated: false
+        - text: --
+          truncated: false
+        - text: web/
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 44
+  summary:
+    text: 默认 WebRTC 根路径改走 /app/，原站改走 /index.html，Live ASR 入口与 rtmp/rtcpush 特例均按
+      brief 落地。
+    truncated: false
+  risks:
+    - text: 8010 未在听，未做浏览器跟跳验证；A1–A4 为 HTTP/源码/git 项。
+      truncated: false
+  risks_truncated: false
+  completed_at: 2026-09-15T11:14:57.501Z
+history:
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 1
+    outcome: pass
+    unresolved_ids: []
+    summary:
+      text: 默认 WebRTC 根路径改走 /app/，原站改走 /index.html，Live ASR 入口与 rtmp/rtcpush 特例均按
+        brief 落地。
+      truncated: false
+    completed_at: 2026-09-15T11:14:57.501Z
+history_overflow:
+  dropped_entries: 0
+  first_dropped_at: null
+  last_dropped_at: null
+  outcome_counts:
+    pass: 0
+    fail: 0
+    blocked: 0
+    execution-error: 0
+    recovery: 0
+verification_result: pass
+verification_report: verification.md
+archived: true
+created_at: 2026-09-15T11:00:33.071Z
