@@ -1,0 +1,184 @@
+schema: comet.native.v4
+name: admin-disable-user
+language: zh-CN
+phase: archive
+status: done
+state_version: 7
+brief: brief.md
+spec_changes:
+  - capability: auth-rbac
+    operation: modify
+    source: specs/auth-rbac/spec.md
+  - capability: web-app-shell
+    operation: modify
+    source: specs/web-app-shell/spec.md
+workspace:
+  isolation: current
+  change_branch: main
+  target_branch: main
+  finish: null
+loop:
+  stage: done
+  goal_cycle: 1
+  iteration: 1
+  attempt: 1
+  retry_epoch: 0
+  failed_iteration_count: 0
+  no_progress_count: 0
+  execution_failure_count: 0
+  previous_unresolved_ids: []
+  next_action: null
+acceptance:
+  - id: A1
+    source: brief.md
+    text: A1：管理员在管理后台对普通活跃用户点禁用（经确认）后，该行状态为 `disabled`
+    result: passed
+    reason:
+      text: Ops 对活跃普通用户显示禁用，确认后调用 disable 并刷新；列表状态为 disabled。
+      truncated: false
+  - id: A2
+    source: brief.md
+    text: A2：被禁用用户登录返回与错误密码相同的失败文案，进不了 `/app`
+    result: passed
+    reason:
+      text: 禁后登录 401，文案与错误密码相同；进不了 /app。
+      truncated: false
+  - id: A3
+    source: brief.md
+    text: A3：管理员不能禁用当前登录账号；对管理员行没有禁用按钮；未登录 401，普通用户调禁用接口 403
+    result: passed
+    reason:
+      text: 禁自己 400；管理员行无按钮；未登录 401，普通用户 403。
+      truncated: false
+  - id: A4
+    source: brief.md
+    text: A4：`web/` 无改动；开户、绑定、订单、Gallery 行为不因本 change 改变
+    result: passed
+    reason:
+      text: web/ 无 diff；开户/绑定/订单/Gallery 回归通过。
+      truncated: false
+builder_handoff:
+  candidate_id: de50cc1f-38d2-49a2-b553-75c8a689eb45
+  identity_provider: skill-coordinated
+  builder_execution_ref: skill-coordinated:builder:51867029-ad86-4ec9-ae27-4b14086b8c3a
+  iteration: 1
+  summary:
+    text: 管理后台用户表对活跃普通用户提供确认后的禁用按钮；沿用现有 disable API，禁自己 400、无匹配用户 404；禁后不能登录。不做启用。
+    truncated: false
+  addressed_acceptance_ids:
+    - A1
+    - A2
+    - A3
+    - A4
+  checks:
+    - name:
+        text: unittest tests.test_admin_disable_user tests.test_platform_v1
+          tests.test_gallery_admin_pages tests.test_orders
+        truncated: false
+      result: passed
+      note:
+        text: 21 tests OK
+        truncated: false
+    - name:
+        text: git diff --exit-code -- web/
+        truncated: false
+      result: passed
+      note:
+        text: web/ 无改动
+        truncated: false
+  checks_truncated: false
+  known_limits:
+    - text: 未在浏览器点过禁用确认框；生产 /app/ 需 npm run build
+      truncated: false
+    - text: 禁用不踢正在进行的 WebRTC 会话，只清平台登录 Cookie
+      truncated: false
+  known_limits_truncated: false
+  review:
+    status: passed
+    summary:
+      text: 独立审查 A1–A4 覆盖：按钮、登录失败文案、禁自己/401/403、web/ 未改。
+      truncated: false
+    reviewer_execution_ref: de2ef52e-a5bf-4426-804e-33a8c8d1288a
+  submitted_at: 2026-09-15T10:09:18.850Z
+blockers: []
+verification:
+  candidate_id: de50cc1f-38d2-49a2-b553-75c8a689eb45
+  identity_provider: skill-coordinated
+  verifier_execution_ref: skill-coordinated:verifier:93c0a8a1-1a62-4518-979e-d39a81b67200
+  iteration: 1
+  attempt: 1
+  assurance: skill-coordinated
+  verdict: pass
+  checks:
+    - id: unittest-admin-disable-user
+      name:
+        text: Disable user and regression tests
+        truncated: false
+      argv_display:
+        - text: -m
+          truncated: false
+        - text: unittest
+          truncated: false
+        - text: tests.test_admin_disable_user
+          truncated: false
+        - text: tests.test_platform_v1
+          truncated: false
+        - text: tests.test_gallery_admin_pages
+          truncated: false
+        - text: tests.test_orders
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 4741
+    - id: web-untouched
+      name:
+        text: Original web/ unchanged
+        truncated: false
+      argv_display:
+        - text: diff
+          truncated: false
+        - text: --exit-code
+          truncated: false
+        - text: --
+          truncated: false
+        - text: web/
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 47
+  summary:
+    text: 管理后台可禁用普通用户，能力边界与接口符合规格，A1–A4 通过。
+    truncated: false
+  risks:
+    - text: 未在浏览器点过禁用确认；禁用不踢 WebRTC 会话
+      truncated: false
+  risks_truncated: false
+  completed_at: 2026-09-15T10:12:02.416Z
+history:
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 1
+    outcome: pass
+    unresolved_ids: []
+    summary:
+      text: 管理后台可禁用普通用户，能力边界与接口符合规格，A1–A4 通过。
+      truncated: false
+    completed_at: 2026-09-15T10:12:02.416Z
+history_overflow:
+  dropped_entries: 0
+  first_dropped_at: null
+  last_dropped_at: null
+  outcome_counts:
+    pass: 0
+    fail: 0
+    blocked: 0
+    execution-error: 0
+    recovery: 0
+verification_result: pass
+verification_report: verification.md
+archived: true
+created_at: 2026-09-15T10:02:09.358Z

@@ -50,7 +50,7 @@
       <div class="monitor-body">
         <table class="table">
           <thead>
-            <tr><th>用户</th><th>角色</th><th>状态</th><th>已绑定形象</th></tr>
+            <tr><th>用户</th><th>角色</th><th>状态</th><th>已绑定形象</th><th>操作</th></tr>
           </thead>
           <tbody>
             <tr
@@ -64,6 +64,14 @@
               <td>{{ u.role }}</td>
               <td>{{ u.status }}</td>
               <td>{{ (subs[u.id] || []).map(s => s.avatar_id).join(', ') || '—' }}</td>
+              <td class="row-actions">
+                <button
+                  v-if="u.role === 'user' && u.status === 'active'"
+                  class="btn-danger"
+                  type="button"
+                  @click.stop="disableUser(u)"
+                >禁用</button>
+              </td>
             </tr>
           </tbody>
         </table>
@@ -166,6 +174,13 @@ async function reject(id) {
     method: 'POST',
     body: JSON.stringify({ reason }),
   })
+  await load()
+}
+
+async function disableUser(u) {
+  if (!window.confirm(`禁用用户 ${u.username}？禁用后将无法登录。`)) return
+  await api(`/api/v1/admin/users/${u.id}/disable`, { method: 'POST', body: '{}' })
+  if (selected.value?.id === u.id) selected.value = { ...selected.value, status: 'disabled' }
   await load()
 }
 </script>

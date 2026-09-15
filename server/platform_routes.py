@@ -201,7 +201,12 @@ async def admin_disable_user(request):
     if request["user"]["id"] == user_id:
         return json_error("不能禁用当前登录账号")
     db = request.app["platform_db"]
-    await db.execute("UPDATE users SET status = ? WHERE id = ? AND role = ?", ("disabled", user_id, "user"))
+    cur = await db.execute(
+        "UPDATE users SET status = ? WHERE id = ? AND role = ?",
+        ("disabled", user_id, "user"),
+    )
+    if cur.rowcount == 0:
+        return json_error("用户不存在", status=404)
     await db.execute("DELETE FROM sessions WHERE user_id = ?", (user_id,))
     await db.commit()
     return json_ok()
