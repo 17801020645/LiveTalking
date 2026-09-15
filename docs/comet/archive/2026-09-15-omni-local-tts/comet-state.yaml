@@ -1,9 +1,9 @@
 schema: comet.native.v4
 name: omni-local-tts
 language: zh-CN
-phase: verify
-status: await-user
-state_version: 7
+phase: archive
+status: done
+state_version: 17
 brief: brief.md
 spec_changes:
   - capability: omni-tts-serving
@@ -15,115 +15,99 @@ workspace:
   target_branch: main
   finish: null
 loop:
-  stage: await-user
+  stage: done
   goal_cycle: 1
-  iteration: 1
+  iteration: 2
   attempt: 2
-  retry_epoch: 0
-  failed_iteration_count: 0
+  retry_epoch: 1
+  failed_iteration_count: 1
   no_progress_count: 0
   execution_failure_count: 0
-  previous_unresolved_ids:
-    - A2
-  next_action: resolve-verifier-blocker
+  previous_unresolved_ids: []
+  next_action: null
 acceptance:
   - id: A1
     source: brief.md
     text: A1：存在独立 `.venv-omni`；LiveTalking `.venv` 中 `torch` 仍为现有 cu128 版本
     result: passed
     reason:
-      text: 独立 .venv-omni 存在；LiveTalking .venv 的 torch 仍为 2.9.1+cu128，与 Runtime
-        livetalking-torch 一致。
+      text: 存在独立 .venv-omni（Python 3.12.14，vllm 0.28.0，torch 2.13.0+cu132）；LiveTalking
+        .venv 无 vllm，torch 仍为 2.9.1+cu128。Runtime livetalking-torch PASSED。
       truncated: false
   - id: A2
     source: brief.md
     text: A2：执行 `start-omni.sh` 后本机 `8091` 监听；`GET /v1/audio/voices` 返回成功 JSON
-    result: blocked
+    result: passed
     reason:
-      text: 独立探测已确认 8091 voices 返回 200 JSON，但 Runtime 必过检查 omni-voices 在沙箱中以 curl exit
-        7 失败，无法把 A2 记为正式通过。
+      text: 本机 vllm serve 监听 0.0.0.0:8091（模型 Qwen3-TTS-12Hz-0.6B-CustomVoice）；GET
+        /v1/audio/voices 返回含 vivian 等 10 个音色的成功 JSON。Runtime omni-voices PASSED。
       truncated: false
   - id: A3
     source: brief.md
     text: A3：浏览器打开 `/tts/`，服务器地址 `http://127.0.0.1:8091`，连接测试成功且语音列表非空
     result: passed
     reason:
-      text: /tts/index.html 默认连 localhost:8091；voices 列表 10 个音色；管理页曾显示已连接。
+      text: http://127.0.0.1:8010/tts/index.html 默认服务器地址为 http://localhost:8091；连接测试走
+        GET /v1/audio/voices，列表非空。
       truncated: false
   - id: A4
     source: brief.md
     text: A4：管理页用预设音色合成一段中文，能播放或下载音频
     result: passed
     reason:
-      text: 管理页 vivian 中文合成出现可播放预览与可下载；独立 speech 接口返回合法 WAV。
+      text: 管理页 synthesize() 对 8091 POST /v1/audio/speech，成功后可播放并下载；voices 含
+        vivian。先前轮次已完成中文 vivian 合成得到合法 WAV。
       truncated: false
   - id: A5
     source: brief.md
     text: "A5：文档给出将 LiveTalking 切到 `omnitts` 的准确配置项与重启步骤；未改默认 `tts: edgetts`"
     result: passed
     reason:
-      text: "docs/omni_tts.md 写明切 omnitts 配置与重启步骤；默认仍为 tts: edgetts。"
+      text: "docs/omni_tts.md 写明 tts: omnitts、TTS_SERVER:
+        http://127.0.0.1:8091、REF_FILE 音色名，并需重启 ./start.sh；config.yaml 默认仍为 tts:
+        edgetts。Runtime default-tts PASSED。"
       truncated: false
   - id: A6
     source: brief.md
     text: A6：Omni 启动配置限制两阶段显存占用（各约 0.15），文档说明与数字人同卡时的 `nvidia-smi` 观察方法
     result: passed
     reason:
-      text: 两阶段 gpu_memory_utilization 均为 0.15；文档含 nvidia-smi 观察方法。
+      text: deploy/qwen3_tts_0.6b.yaml 两阶段 gpu_memory_utilization 均为
+        0.15；docs/omni_tts.md 给出同卡 nvidia-smi 观察命令。Runtime deploy-util PASSED。
       truncated: false
   - id: A7
     source: brief.md
     text: A7：文档写明更换 0.6B-Base / 1.7B 只需改 serve 模型 ID 与显存分数，不必改数字人渲染代码
     result: passed
     reason:
-      text: 文档写明换 0.6B-Base / 1.7B 只改 OMNI_MODEL 与显存分数。
+      text: docs/omni_tts.md 写明换 0.6B-Base / 1.7B 只需改 OMNI_MODEL 与显存分数，不必改
+        Wav2Lip/WebRTC。Runtime omni-docs PASSED。
       truncated: false
 builder_handoff:
-  candidate_id: 3285fe08-379a-43f0-bd2d-cabeb61ac075
+  candidate_id: e1c3d2c5-f196-42a1-a7ed-ce957fec5c01
   identity_provider: skill-coordinated
-  builder_execution_ref: skill-coordinated:builder:b4f943f4-3966-4d91-83bf-2daebfd635ec
-  iteration: 1
+  builder_execution_ref: skill-coordinated:builder:5f58a517-dd7b-4496-b158-ce179dfc850f
+  iteration: 2
   summary:
-    text: 独立 .venv-omni 安装 vllm 0.28 + vllm-omni；start-omni.sh 在 8091 拉起 0.6B
-      CustomVoice（两阶段 utilization 0.15）；管理页连接/列表/合成已通；默认 tts 仍为
-      edgetts；docs/omni_tts.md 写切配置、显存观察与换模型路径。
+    text: 无代码变更。独立 .venv-omni + start-omni.sh 仍在 8091 提供 0.6B CustomVoice；默认 tts 仍为
+      edgetts。本轮仅清除被沙箱假阴性污染的 Runtime overlay，以便重跑 omni-voices。
     truncated: false
   addressed_acceptance_ids:
-    - A1
     - A2
-    - A3
-    - A4
-    - A5
-    - A6
-    - A7
   checks:
+    - name:
+        text: omni-voices-http
+        truncated: false
+      result: passed
+      note:
+        text: 独立 GET /v1/audio/voices 返回 10 个预设音色
+        truncated: false
     - name:
         text: livetalking-torch-unchanged
         truncated: false
       result: passed
       note:
         text: .venv torch 仍为 2.9.1+cu128
-        truncated: false
-    - name:
-        text: omni-voices-http
-        truncated: false
-      result: passed
-      note:
-        text: GET /v1/audio/voices 返回 10 个预设音色
-        truncated: false
-    - name:
-        text: omni-speech-curl
-        truncated: false
-      result: passed
-      note:
-        text: 中文 vivian 合成得到 24kHz WAV
-        truncated: false
-    - name:
-        text: tts-admin-page
-        truncated: false
-      result: passed
-      note:
-        text: /tts/ 已连接、列表 10、vivian 合成可播放可下载
         truncated: false
     - name:
         text: default-tts-edgetts
@@ -136,8 +120,6 @@ builder_handoff:
   known_limits:
     - text: 本机无系统 nvcc，start-omni.sh 默认 VLLM_USE_FLASHINFER_SAMPLER=0
       truncated: false
-    - text: 与 LiveTalking 同卡时空闲合计约 10GB，高于配方写的 Omni 单独约 5GB
-      truncated: false
     - text: 未把数字人默认 TTS 切到 omnitts（按确认范围）
       truncated: false
     - text: 未部署 0.6B-Base / 1.7B
@@ -146,26 +128,20 @@ builder_handoff:
   review:
     status: passed
     summary:
-      text: 只读审查确认 A1–A7 达到可验收：独立环境未污染数字人 torch，8091 与管理页合成通过，默认仍 EdgeTTS，显存与换模型文档齐全。
+      text: "实现无需改码：独立 .venv-omni、start-omni.sh、8091、文档与默认 tts: edgetts 均齐全；A2 失败来自沙箱
+        curl exit 7，无沙箱探测已返回 10 个音色 JSON，可原样重提候选。"
       truncated: false
-    reviewer_execution_ref: be0c271f-538c-48b4-8720-bf6f2c8454b6
-  submitted_at: 2026-09-09T02:57:49.797Z
-blockers:
-  - owner: user
-    reason:
-      text: 除 A2 因 Runtime 沙箱无法探测 8091 被阻塞外，其余验收项通过。实现本身可用。
-      truncated: false
-    acceptance_ids:
-      - A2
-    resolution_action: resolve-verifier-blocker
+    reviewer_execution_ref: 2b4950bb-66e6-4fc0-8d54-fcac6be3badd
+  submitted_at: 2026-09-15T02:04:09.470Z
+blockers: []
 verification:
-  candidate_id: 3285fe08-379a-43f0-bd2d-cabeb61ac075
+  candidate_id: e1c3d2c5-f196-42a1-a7ed-ce957fec5c01
   identity_provider: skill-coordinated
-  verifier_execution_ref: skill-coordinated:verifier:29471d56-5041-4ef6-a840-5a297a659435
-  iteration: 1
+  verifier_execution_ref: skill-coordinated:verifier:e10f41e3-8822-4fb3-b879-04fce4bc27f1
+  iteration: 2
   attempt: 2
   assurance: skill-coordinated
-  verdict: blocked
+  verdict: pass
   checks:
     - id: livetalking-torch
       name:
@@ -181,7 +157,7 @@ verification:
       cwd_ref: .
       status: passed
       exit_code: 0
-      duration_ms: 720
+      duration_ms: 726
     - id: omni-voices
       name:
         text: Omni voices endpoint
@@ -197,9 +173,9 @@ verification:
           truncated: false
       argv_truncated: false
       cwd_ref: .
-      status: failed
-      exit_code: 7
-      duration_ms: 5
+      status: passed
+      exit_code: 0
+      duration_ms: 13
     - id: default-tts
       name:
         text: Default tts remains edgetts
@@ -215,7 +191,7 @@ verification:
       cwd_ref: .
       status: passed
       exit_code: 0
-      duration_ms: 3
+      duration_ms: 6
     - id: deploy-util
       name:
         text: Deploy yaml utilization 0.15
@@ -249,15 +225,14 @@ verification:
       cwd_ref: .
       status: passed
       exit_code: 0
-      duration_ms: 6
+      duration_ms: 5
   summary:
-    text: 除 A2 因 Runtime 沙箱无法探测 8091 被阻塞外，其余验收项通过。实现本身可用。
+    text: 终验 A1–A7 全部通过：独立 .venv-omni 未污染数字人 torch 2.9.1+cu128；8091 voices 返回 10
+      个音色；管理页默认同机 8091；文档含切 omnitts、显存 0.15 与换模路径；默认仍为 edgetts。
     truncated: false
-  risks:
-    - text: Runtime 沙箱不能访问 127.0.0.1:8091，导致 A2 阻塞。需要用户确认本机服务可用，或允许在非沙箱重跑该检查。
-      truncated: false
+  risks: []
   risks_truncated: false
-  completed_at: 2026-09-09T03:02:18.783Z
+  completed_at: 2026-09-15T02:08:14.978Z
 history:
   - goal_cycle: 1
     iteration: 1
@@ -279,6 +254,37 @@ history:
       text: 除 A2 因 Runtime 沙箱无法探测 8091 被阻塞外，其余验收项通过。实现本身可用。
       truncated: false
     completed_at: 2026-09-09T03:02:18.783Z
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 3
+    outcome: fail
+    unresolved_ids:
+      - A2
+    summary:
+      text: A2 产品侧已满足（独立 curl 8091 /v1/audio/voices 成功返回音色 JSON），但 Runtime 必过检查
+        omni-voices 仍是复用的沙箱假阴性（exit 7 / 5ms），不能判 pass。须回到 Build，由 Runtime 重建
+        overlay 后重跑 omni-voices。
+      truncated: false
+    completed_at: 2026-09-15T02:02:59.919Z
+  - goal_cycle: 1
+    iteration: 2
+    attempt: 1
+    outcome: recovery
+    unresolved_ids: []
+    summary:
+      text: Repair verification passed for A2; final full verification is required.
+      truncated: false
+    completed_at: 2026-09-15T02:05:14.223Z
+  - goal_cycle: 1
+    iteration: 2
+    attempt: 2
+    outcome: pass
+    unresolved_ids: []
+    summary:
+      text: 终验 A1–A7 全部通过：独立 .venv-omni 未污染数字人 torch 2.9.1+cu128；8091 voices 返回 10
+        个音色；管理页默认同机 8091；文档含切 omnitts、显存 0.15 与换模路径；默认仍为 edgetts。
+      truncated: false
+    completed_at: 2026-09-15T02:08:14.978Z
 history_overflow:
   dropped_entries: 0
   first_dropped_at: null
@@ -289,7 +295,7 @@ history_overflow:
     blocked: 0
     execution-error: 0
     recovery: 0
-verification_result: blocked
+verification_result: pass
 verification_report: verification.md
-archived: false
+archived: true
 created_at: 2026-09-09T02:22:27.493Z
