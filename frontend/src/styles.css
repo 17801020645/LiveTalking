@@ -210,6 +210,12 @@ a.stat-card { color: inherit; text-decoration: none; }
 @media (max-width: 900px) {
   .live-grid { grid-template-columns: 1fr; }
 }
+.live-side {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
 .live-video {
   width: 100%;
   height: auto;

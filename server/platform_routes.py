@@ -583,10 +583,32 @@ def create_test_application(db_path, avatars_dir, web_dir=None, uploads_dir=None
         request.app["last_interrupt"] = body
         return web.json_response({"code": 0, "msg": "ok"})
 
+    async def humanaudio(request):
+        form = await request.post()
+        fileobj = form.get("file")
+        request.app["last_humanaudio"] = {
+            "sessionid": str(form.get("sessionid", "")),
+            "filename": getattr(fileobj, "filename", None),
+        }
+        return web.json_response({"code": 0, "msg": "ok"})
+
+    async def record(request):
+        body = await request.json()
+        request.app["last_record"] = body
+        return web.json_response({"code": 0, "msg": "ok"})
+
+    async def set_audiotype(request):
+        body = await request.json()
+        request.app["last_audiotype"] = body
+        return web.json_response({"code": 0, "msg": "ok"})
+
     app.router.add_post("/offer", offer)
     setup_avatar_routes(app)
     app.router.add_post("/human", human)
     app.router.add_post("/interrupt_talk", interrupt_talk)
+    app.router.add_post("/humanaudio", humanaudio)
+    app.router.add_post("/record", record)
+    app.router.add_post("/set_audiotype", set_audiotype)
     if web_dir:
         from server.routes import index
         app.router.add_get("/", index)

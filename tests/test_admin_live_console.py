@@ -52,16 +52,16 @@ class AdminLiveConsoleTests(unittest.IsolatedAsyncioTestCase):
         self.assertLess(layout.find("演示连麦"), layout.find("Avatar 生成"))
         self.assertIn('to="/admin/live"', layout)
         page = ADMIN_LIVE.read_text()
-        for label in ("请选择形象", "开始连接", "发送文字", "打断", "打开 /", "Echo 复读", "Chat LLM"):
+        for label in ("请选择形象", "开始连接", "发送文字", "打断", "打开 /", "Echo 复读", "Chat LLM", "上传并播放", "开始录制", "切换状态", "参考音频"):
             self.assertIn(label, page)
         self.assertIn("starting || !avatarId", page)
         self.assertIn("btn-interrupt", page)
         self.assertIn("is-fired", page)
         self.assertIn("已停止讲话", page)
         self.assertNotIn("avatars.value[0]", page)
-        self.assertNotIn("/humanaudio", page)
-        self.assertNotIn("/record", page)
-        self.assertNotIn("/set_audiotype", page)
+        self.assertIn("/humanaudio", page)
+        self.assertIn("/record", page)
+        self.assertIn("/set_audiotype", page)
 
     async def test_a3_offer_uses_selected_avatar_and_human_echo(self):
         await self.login()
@@ -87,12 +87,39 @@ class AdminLiveConsoleTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("avatar: avatarId.value", page)
         self.assertIn("type: talkType.value", page)
         self.assertIn("Chat LLM", page)
+        self.assertIn("offerBody.refaudio", page)
 
     async def test_a4_interrupt(self):
         page = ADMIN_LIVE.read_text()
         self.assertIn("/interrupt_talk", page)
         await self.client.post("/interrupt_talk", json={"sessionid": "legacy-sid"})
         self.assertEqual(self.app["last_interrupt"]["sessionid"], "legacy-sid")
+
+    async def test_a7_audio_record_and_audiotype(self):
+        page = ADMIN_LIVE.read_text()
+        self.assertIn("fetch('/humanaudio'", page)
+        self.assertIn("postJson('/record'", page)
+        self.assertIn("'/set_audiotype'", page)
+        from aiohttp import FormData
+        data = FormData()
+        data.add_field("sessionid", "legacy-sid")
+        data.add_field("file", b"RIFF", filename="clip.wav", content_type="audio/wav")
+        uploaded = await self.client.post("/humanaudio", data=data)
+        self.assertEqual(uploaded.status, 200)
+        self.assertEqual(self.app["last_humanaudio"]["sessionid"], "legacy-sid")
+        self.assertEqual(self.app["last_humanaudio"]["filename"], "clip.wav")
+        recorded = await self.client.post(
+            "/record",
+            json={"type": "start_record", "sessionid": "legacy-sid"},
+        )
+        self.assertEqual(recorded.status, 200)
+        self.assertEqual(self.app["last_record"]["type"], "start_record")
+        switched = await self.client.post(
+            "/set_audiotype",
+            json={"audiotype": 2, "sessionid": "legacy-sid"},
+        )
+        self.assertEqual(switched.status, 200)
+        self.assertEqual(self.app["last_audiotype"]["audiotype"], 2)
 
     async def test_a5_user_home_unchanged(self):
         user_home = (FRONTEND_SRC / "views" / "user" / "Home.vue").read_text()
