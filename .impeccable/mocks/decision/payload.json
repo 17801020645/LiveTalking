@@ -1,0 +1,140 @@
+{
+  "title": "Choose the visual world",
+  "question": "管理员首页要换成哪套视觉世界？这会写成改版方向，不是现在的浅色壳。",
+  "options": [
+    {
+      "id": "assigned",
+      "label": "Rundown Board",
+      "kicker": "THE ROLL",
+      "lineage": "电视导播台本与红绿状态印",
+      "thesis": "管理员首页是一张正在执行的导播台本：待办就是下一条 cue。",
+      "palette": ["#0b1220", "#4361ee", "#e2e8f0", "#10b981", "#ef4444"],
+      "materials": ["frosted glass", "laminated cue sheets", "indigo status chops"],
+      "viewport": "暗室毛玻璃台面；三行厚实 cue（待处理订单、活跃连麦、生成中）带红绿印；标题 LiveTalking 不缩小。",
+      "risk": "台本密度过高时，三个数字会挤成节目单而不是可点的工作入口。",
+      "raised": [
+        { "from": "iridescent-cloud-edge", "raise": "信号色只出现在窄印上，大面积保持近黑与冷灰。" },
+        { "from": "sneaker-box-stacks", "raise": "点进一张 cue 像抽出一层夹子，而不是跳进另一套皮肤。" },
+        { "from": "cracktro-scroller-queue", "raise": "最紧急的一行停在最前、最亮；后面的行可以慢移。" },
+        { "from": "studio-dumbar-identity", "raise": "每张 cue 整块铺色，不只在角上点一颗徽章。" },
+        { "from": "tdr-info-noise-sleeve", "raise": "页名与最大数字永不缩小。" }
+      ],
+      "comp": ".impeccable/mocks/decision/assigned.webp"
+    },
+    {
+      "id": "model-pick",
+      "label": "Broadcast Gallery",
+      "kicker": "IMPECCABLE’S PICK",
+      "lineage": "导播间预监墙",
+      "thesis": "三个待办是三面预监：数字是 tally，点进去才切主输出。",
+      "palette": ["#111318", "#4361ee", "#f8fafc", "#22c55e"],
+      "materials": ["bezel frames", "matte black wall", "tally LEDs"],
+      "viewport": "左一条细轨，主区三面带框监视器，框上亮着绿/红 tally。",
+      "risk": "也是这类产品最常落到的样子：像直播后台，辨识度高但不够陌生。",
+      "comp": ".impeccable/mocks/decision/model-pick.webp"
+    },
+    {
+      "id": "challenger-oscilloscope",
+      "label": "Signal Bench",
+      "verdict": "competitive",
+      "lineage": "示波器与信号台",
+      "thesis": "工作台是一块刻度玻璃：订单、连麦、生成是叠在同一格网上的三条迹。",
+      "palette": ["#05080c", "#39ff14", "#4361ee", "#fbbf24"],
+      "materials": ["phosphor glass", "etched graticule", "detented knobs"],
+      "viewport": "近黑屏上三条迹对应三类待办；数字是七段读数，不在卡片里。",
+      "case": "运营的人认得「看信号」；三个计数要译成迹，否则首页任务不清晰。",
+      "risk": "如果迹只是装饰波形，首页就变成科幻壁纸。",
+      "comp": ".impeccable/mocks/decision/challenger-oscilloscope.webp",
+      "hero": "https://impeccable.style/worlds/cards/scientific-notation-oscilloscope-signal-bench-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/scientific-notation-oscilloscope-signal-bench.webp"
+    },
+    {
+      "id": "challenger-cloud",
+      "label": "Iridescent Edge",
+      "verdict": "declined",
+      "lineage": "虹彩云边",
+      "palette": ["#f7f4ef", "#94a3b8", "#a7f3d0", "#f9a8d4", "#c4b5fd"],
+      "materials": ["cloud white", "pastel fringe"],
+      "thesis": "待办是云体，状态只出现在薄薄的光谱边。",
+      "viewport": "大块留白，彩色只在边缘一条。",
+      "case": "机房运营认不出气象观测，三个入口会被淡化。",
+      "kept": "信号色只占窄边。",
+      "risk": "过淡，任务扫不出来。",
+      "hero": "https://impeccable.style/worlds/cards/clouds-storms-auroras-iridescent-cloud-edge-hero.webp"
+    },
+    {
+      "id": "challenger-boxes",
+      "label": "Archive Stack",
+      "verdict": "declined",
+      "lineage": "球鞋盒墙",
+      "palette": ["#c45c26", "#111111", "#f5f0e8"],
+      "materials": ["cardboard", "tissue"],
+      "thesis": "订单是抽出的盒子。",
+      "viewport": "端标墙，抽出一层看详情。",
+      "case": "库存隐喻盖过「现在要处理哪三件事」。",
+      "kept": "点进去像抽出一层。",
+      "risk": "像电商品类页。",
+      "hero": "https://impeccable.style/worlds/cards/textiles-weave-drape-fashion-sneaker-box-stacks-hero.webp"
+    },
+    {
+      "id": "challenger-cracktro",
+      "label": "Void Queue",
+      "verdict": "declined",
+      "lineage": "cracktro 滚动队列",
+      "palette": ["#000000", "#e8e4dc", "#ffbf00"],
+      "materials": ["emissive void", "bitmap dust"],
+      "thesis": "没有盒子，优先级就是深度。",
+      "viewport": "黑底一行象牙字，后面灰尘慢漂。",
+      "case": "禁止围框，三个可点入口会消失。",
+      "kept": "最前一行最亮且静止。",
+      "risk": "运营扫读失败。",
+      "hero": "https://impeccable.style/worlds/cards/operate-c-cracktro-scroller-queue-hero.webp"
+    },
+    {
+      "id": "challenger-dumbar",
+      "label": "Modular Bars",
+      "verdict": "declined",
+      "lineage": "Studio Dumbar 模块色条",
+      "palette": ["#00A3E0", "#E6007E", "#FFED00", "#78BE20"],
+      "materials": ["flat vector bars", "photograph"],
+      "thesis": "形象照片被色条压住，待办是色块模块。",
+      "viewport": "照片上叠饱和色条。",
+      "case": "海报语法压过控制室任务。",
+      "kept": "颜色占整块区域。",
+      "risk": "像品牌运动页。",
+      "hero": "https://impeccable.style/worlds/cards/studio-dumbar-identity-hero.webp"
+    },
+    {
+      "id": "challenger-tdr",
+      "label": "Info Noise",
+      "verdict": "declined",
+      "lineage": "The Designers Republic 封套",
+      "palette": ["#000000", "#ff00aa", "#ff5a00", "#ffffff"],
+      "materials": ["flat print", "registration marks"],
+      "thesis": "首页是一张敌意品牌信息噪声。",
+      "viewport": "黑底洋红靶心，一个巨大数字喊出来。",
+      "case": "密度本身会盖住三个待办入口。",
+      "kept": "页名与最大数字永不缩小。",
+      "risk": "扫读失败。",
+      "hero": "https://impeccable.style/worlds/cards/tdr-info-noise-sleeve-hero.webp"
+    }
+  ],
+  "reroll": {
+    "registers": ["safer", "bolder"]
+  },
+  "buildPath": {
+    "value": "comp",
+    "toggle": true
+  },
+  "canon": true,
+  "canonCard": {
+    "label": "浅冷玻璃工作台",
+    "thesis": "就是现在的 /app/：Inter、靛紫侧栏、半透明白卡片、浅冷底。",
+    "palette": ["#f0f4fc", "#4361ee", "#ffffff", "#1e293b"],
+    "materials": ["glass cards", "indigo rail", "cool wash"],
+    "viewport": "左 240px 靛紫导航，右待办玻璃卡。",
+    "risk": "和现有开源演示壳、大量 SaaS 后台长得一样。",
+    "comp": ".impeccable/mocks/decision/canon.webp"
+  },
+  "steer": true
+}
