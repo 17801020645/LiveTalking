@@ -47,9 +47,9 @@ class DefaultAppEntryTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_a3_live_asr_link_points_to_index_html(self):
         src = LIVE.read_text(encoding="utf-8")
-        self.assertIn('href="/index.html"', src)
-        self.assertIn("打开 /index.html", src)
         self.assertNotIn('href="/"', src)
+        self.assertNotIn("打开 /index.html", src)
+        self.assertIn("开始说话", src)
 
     async def _root_for_transport(self, transport):
         tmp = tempfile.TemporaryDirectory()

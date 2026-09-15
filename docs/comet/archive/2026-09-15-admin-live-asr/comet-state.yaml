@@ -1,0 +1,193 @@
+schema: comet.native.v4
+name: admin-live-asr
+language: zh-CN
+phase: archive
+status: done
+state_version: 7
+brief: brief.md
+spec_changes:
+  - capability: admin-live-console
+    operation: modify
+    source: specs/admin-live-console/spec.md
+  - capability: web-app-shell
+    operation: modify
+    source: specs/web-app-shell/spec.md
+workspace:
+  isolation: current
+  change_branch: main
+  target_branch: main
+  finish: null
+loop:
+  stage: done
+  goal_cycle: 1
+  iteration: 1
+  attempt: 1
+  retry_epoch: 0
+  failed_iteration_count: 0
+  no_progress_count: 0
+  execution_failure_count: 0
+  previous_unresolved_ids: []
+  next_action: null
+acceptance:
+  - id: A1
+    source: brief.md
+    text: A1：已连接时可开始/停止麦克风；未连接时麦克风不可用
+    result: passed
+    reason:
+      text: 说话框有开始说话/停止识别；未连接时按钮禁用；startMic 另要求 sessionid。
+      truncated: false
+  - id: A2
+    source: brief.md
+    text: A2：停止识别后，非空文本按当前 Echo/Chat 调用 `POST /human`（含当前 `sessionid`）
+    result: passed
+    reason:
+      text: stopMic 经 /api/asr 取文本后 sendHuman，POST /human 带当前 talkType 与 sessionid。
+      truncated: false
+  - id: A3
+    source: brief.md
+    text: A3：空识别或失败只在本页提示、不发送；页面没有 FunASR 地址栏
+    result: passed
+    reason:
+      text: 空识别提示未识别到语音且不发送；失败提示在本页；无 FunASR 地址栏/2pass。
+      truncated: false
+  - id: A4
+    source: brief.md
+    text: A4：演示连麦不再出现「打开 /index.html」；`web/` 无改动
+    result: passed
+    reason:
+      text: Live.vue 无打开 /index.html；git diff --exit-code -- web/ 通过。
+      truncated: false
+builder_handoff:
+  candidate_id: 367efdb5-e9cc-4688-bd4d-81f1667438b6
+  identity_provider: skill-coordinated
+  builder_execution_ref: skill-coordinated:builder:e728cd21-e0e4-4c18-ae40-f0958c58a288
+  iteration: 1
+  summary:
+    text: 管理员演示连麦「说话」框增加开始说话/停止识别；连麦后经 /api/asr 识别，非空文本按当前 Echo/Chat 自动 POST
+      /human。去掉打开 /index.html。web/ 未改。
+    truncated: false
+  addressed_acceptance_ids:
+    - A1
+    - A2
+    - A3
+    - A4
+  checks:
+    - name:
+        text: unittest tests.test_admin_live_asr tests.test_gallery_admin_pages
+          tests.test_admin_live_console tests.test_user_live
+          tests.test_default_app_entry
+        truncated: false
+      result: passed
+      note:
+        text: 25 tests OK
+        truncated: false
+    - name:
+        text: git diff --exit-code -- web/
+        truncated: false
+      result: passed
+      note:
+        text: web/ 无改动
+        truncated: false
+  checks_truncated: false
+  known_limits:
+    - text: 8010 未在听，未用浏览器点麦克风
+      truncated: false
+    - text: funasr 未安装时 /api/asr 不注册，页面提示本机 ASR 不可用
+      truncated: false
+    - text: 生产 /app/ 需 npm run build
+      truncated: false
+  known_limits_truncated: false
+  review:
+    status: passed
+    summary:
+      text: 对照 brief A1–A4：未连接禁用麦克风、停止后 /human 带 talkType 与 sessionid、空结果不发送且无 FunASR
+        面板、去掉 /index.html 链接且 web/ 未改。
+      truncated: false
+    reviewer_execution_ref: unittest tests.test_admin_live_asr
+      tests.test_gallery_admin_pages tests.test_admin_live_console
+      tests.test_user_live tests.test_default_app_entry
+  submitted_at: 2026-09-15T12:46:52.946Z
+blockers: []
+verification:
+  candidate_id: 367efdb5-e9cc-4688-bd4d-81f1667438b6
+  identity_provider: skill-coordinated
+  verifier_execution_ref: skill-coordinated:verifier:4bfdf7f3-6700-4f85-bcd4-748db97037a5
+  iteration: 1
+  attempt: 1
+  assurance: skill-coordinated
+  verdict: pass
+  checks:
+    - id: unittest-admin-live-asr
+      name:
+        text: Admin live ASR and related unit tests
+        truncated: false
+      argv_display:
+        - text: -m
+          truncated: false
+        - text: unittest
+          truncated: false
+        - text: tests.test_admin_live_asr
+          truncated: false
+        - text: tests.test_gallery_admin_pages
+          truncated: false
+        - text: tests.test_admin_live_console
+          truncated: false
+        - text: tests.test_user_live
+          truncated: false
+        - text: tests.test_default_app_entry
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 3680
+    - id: web-untouched
+      name:
+        text: Original web/ unchanged
+        truncated: false
+      argv_display:
+        - text: diff
+          truncated: false
+        - text: --exit-code
+          truncated: false
+        - text: --
+          truncated: false
+        - text: web/
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 2
+  summary:
+    text: 管理员演示连麦麦克风 ASR 按 brief A1–A4 落地。
+    truncated: false
+  risks:
+    - text: 8010 未在听，未做浏览器点麦克风；funasr 未装时 /api/asr 不注册。
+      truncated: false
+  risks_truncated: false
+  completed_at: 2026-09-15T12:49:15.452Z
+history:
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 1
+    outcome: pass
+    unresolved_ids: []
+    summary:
+      text: 管理员演示连麦麦克风 ASR 按 brief A1–A4 落地。
+      truncated: false
+    completed_at: 2026-09-15T12:49:15.452Z
+history_overflow:
+  dropped_entries: 0
+  first_dropped_at: null
+  last_dropped_at: null
+  outcome_counts:
+    pass: 0
+    fail: 0
+    blocked: 0
+    execution-error: 0
+    recovery: 0
+verification_result: pass
+verification_report: verification.md
+archived: true
+created_at: 2026-09-15T12:34:53.583Z

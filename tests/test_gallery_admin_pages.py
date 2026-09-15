@@ -11,7 +11,7 @@ class GalleryAdminPagesTests(unittest.TestCase):
         src = (ADMIN / "Live.vue").read_text(encoding="utf-8")
         self.assertIn("monitor-panel", src)
         self.assertIn("开始连接", src)
-        self.assertIn("打开 /index.html", src)
+        self.assertIn("开始说话", src)
         self.assertNotIn("glass card", src)
 
     def test_a2_avatar_uses_monitor_panels(self):
