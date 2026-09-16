@@ -71,6 +71,12 @@
                   type="button"
                   @click.stop="disableUser(u)"
                 >禁用</button>
+                <button
+                  v-if="u.role === 'user' && u.status === 'disabled'"
+                  class="btn"
+                  type="button"
+                  @click.stop="enableUser(u)"
+                >启用</button>
               </td>
             </tr>
           </tbody>
@@ -181,6 +187,13 @@ async function disableUser(u) {
   if (!window.confirm(`禁用用户 ${u.username}？禁用后将无法登录。`)) return
   await api(`/api/v1/admin/users/${u.id}/disable`, { method: 'POST', body: '{}' })
   if (selected.value?.id === u.id) selected.value = { ...selected.value, status: 'disabled' }
+  await load()
+}
+
+async function enableUser(u) {
+  if (!window.confirm(`启用用户 ${u.username}？启用后可用原密码登录。`)) return
+  await api(`/api/v1/admin/users/${u.id}/enable`, { method: 'POST', body: '{}' })
+  if (selected.value?.id === u.id) selected.value = { ...selected.value, status: 'active' }
   await load()
 }
 </script>

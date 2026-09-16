@@ -1,0 +1,215 @@
+schema: comet.native.v4
+name: admin-enable-user
+language: zh-CN
+phase: archive
+status: done
+state_version: 7
+brief: brief.md
+spec_changes:
+  - capability: auth-rbac
+    operation: modify
+    source: specs/auth-rbac/spec.md
+  - capability: web-app-shell
+    operation: modify
+    source: specs/web-app-shell/spec.md
+workspace:
+  isolation: current
+  change_branch: main
+  target_branch: main
+  finish: null
+loop:
+  stage: done
+  goal_cycle: 1
+  iteration: 1
+  attempt: 1
+  retry_epoch: 0
+  failed_iteration_count: 0
+  no_progress_count: 0
+  execution_failure_count: 0
+  previous_unresolved_ids: []
+  next_action: null
+acceptance:
+  - id: A1
+    source: brief.md
+    text: A1：管理员对已禁用普通用户点启用（经确认）后，该行状态为 `active`，再用原密码可以登录
+    result: passed
+    reason:
+      text: 启用把 disabled 普通用户改为 active，密码不变；Ops 经 confirm 后 POST enable；test_a1 原密码登录
+        200。
+      truncated: false
+  - id: A2
+    source: brief.md
+    text: A2：对活跃用户、管理员或当前登录账号调用启用失败；未登录 401，普通用户 403
+    result: passed
+    reason:
+      text: 启用自身/管理员 400、活跃用户 400、未登录 401、普通用户 403；test_a2 覆盖。
+      truncated: false
+  - id: A3
+    source: brief.md
+    text: A3：活跃行仍有禁用、已禁用行有启用；管理员行没有这两个按钮
+    result: passed
+    reason:
+      text: 活跃普通用户显示禁用，已禁用显示启用，管理员行无两按钮；test_a3 覆盖。
+      truncated: false
+  - id: A4
+    source: brief.md
+    text: A4：`README.md` 写明默认入口 `/app/`、本机 `./start.sh` 与 Omni 克隆；不再把 `/index.html`
+      写成唯一客户端入口
+    result: passed
+    reason:
+      text: README 含 /app/、./start.sh、0.6B-Base；/index.html 为原站入口而非唯一客户端；web/ 与
+        README-EN 未改。
+      truncated: false
+builder_handoff:
+  candidate_id: f7cc50ff-669b-40ba-b58e-9b4447324b00
+  identity_provider: skill-coordinated
+  builder_execution_ref: skill-coordinated:builder:5a650a04-77a0-423d-8603-f3f08ca17d2f
+  iteration: 1
+  summary:
+    text: 管理后台可为已禁用普通用户启用：POST
+      /api/v1/admin/users/{id}/enable，启用后原密码可登录。活跃行仍禁用、已禁用行显示启用。README.md 同步默认
+      /app/、./start.sh、Omni CustomVoice 与 0.6B-Base 克隆。web/ 与 README-EN 未改。
+    truncated: false
+  addressed_acceptance_ids:
+    - A1
+    - A2
+    - A3
+    - A4
+  checks:
+    - name:
+        text: unittest tests.test_admin_enable_user tests.test_admin_disable_user
+          tests.test_gallery_admin_pages tests.test_user_change_password
+          tests.test_platform_v1
+        truncated: false
+      result: passed
+      note:
+        text: 24 tests OK
+        truncated: false
+    - name:
+        text: git diff --exit-code -- web/ README-EN.md
+        truncated: false
+      result: passed
+      note:
+        text: web/ 与 README-EN 无改动
+        truncated: false
+  checks_truncated: false
+  known_limits:
+    - text: 未在浏览器点启用按钮
+      truncated: false
+    - text: 生产 /app/ 需 npm run build 后才看到 Ops.vue 启用按钮
+      truncated: false
+  known_limits_truncated: false
+  review:
+    status: passed
+    summary:
+      text: 对照 brief A1–A4：启用后可登录；活跃/管理员/未登录/普通用户失败；按钮按 active/disabled 分流；README 含
+        /app/、start.sh、0.6B-Base。web/ 未改。
+      truncated: false
+    reviewer_execution_ref: unittest tests.test_admin_enable_user
+      tests.test_admin_disable_user tests.test_gallery_admin_pages
+      tests.test_user_change_password tests.test_platform_v1
+  submitted_at: 2026-09-16T03:44:23.955Z
+blockers: []
+verification:
+  candidate_id: f7cc50ff-669b-40ba-b58e-9b4447324b00
+  identity_provider: skill-coordinated
+  verifier_execution_ref: skill-coordinated:verifier:5f0e6b92-72d8-4600-81a0-a617208cc17c
+  iteration: 1
+  attempt: 1
+  assurance: skill-coordinated
+  verdict: pass
+  checks:
+    - id: unittest-admin-enable-user
+      name:
+        text: Enable user and related unit tests
+        truncated: false
+      argv_display:
+        - text: -m
+          truncated: false
+        - text: unittest
+          truncated: false
+        - text: tests.test_admin_enable_user
+          truncated: false
+        - text: tests.test_admin_disable_user
+          truncated: false
+        - text: tests.test_gallery_admin_pages
+          truncated: false
+        - text: tests.test_user_change_password
+          truncated: false
+        - text: tests.test_platform_v1
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 4141
+    - id: web-and-readme-en-untouched
+      name:
+        text: web/ and README-EN.md unchanged
+        truncated: false
+      argv_display:
+        - text: diff
+          truncated: false
+        - text: --exit-code
+          truncated: false
+        - text: --
+          truncated: false
+        - text: web/
+          truncated: false
+        - text: README-EN.md
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 29
+    - id: readme-app-entry
+      name:
+        text: README covers /app/ and Omni Base clone
+        truncated: false
+      argv_display:
+        - text: -E
+          truncated: false
+        - text: /app/|./start.sh|OMNI_MODEL=Qwen/Qwen3-TTS-12Hz-0.6B-Base
+          truncated: false
+        - text: README.md
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 8
+  summary:
+    text: A1–A4 均通过：已禁用普通用户可启用并原密码登录；README 已同步默认 /app/ 与 Omni 克隆。
+    truncated: false
+  risks:
+    - text: 生产 /app/ 需 npm run build 后才看到启用按钮
+      truncated: false
+    - text: 未在浏览器实点启用确认框
+      truncated: false
+  risks_truncated: false
+  completed_at: 2026-09-16T03:46:31.653Z
+history:
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 1
+    outcome: pass
+    unresolved_ids: []
+    summary:
+      text: A1–A4 均通过：已禁用普通用户可启用并原密码登录；README 已同步默认 /app/ 与 Omni 克隆。
+      truncated: false
+    completed_at: 2026-09-16T03:46:31.653Z
+history_overflow:
+  dropped_entries: 0
+  first_dropped_at: null
+  last_dropped_at: null
+  outcome_counts:
+    pass: 0
+    fail: 0
+    blocked: 0
+    execution-error: 0
+    recovery: 0
+verification_result: pass
+verification_report: verification.md
+archived: true
+created_at: 2026-09-16T03:33:39.550Z

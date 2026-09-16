@@ -92,19 +92,39 @@ Linux CUDA 环境搭建参考: <https://zhuanlan.zhihu.com/p/674972886>
 
 ### 2.2 启动服务
 
+本仓库推荐先起 Omni TTS，再起数字人：
+
+```bash
+./start-omni.sh
+export LIVETALKING_BOOTSTRAP_ADMIN=admin
+export LIVETALKING_BOOTSTRAP_PASSWORD='你的密码'
+./start.sh
+```
+
+`./start.sh` 默认 WebRTC + wav2lip，监听约 **8010**。引导管理员只在用户表为空时创建。Omni 默认模型 `Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice`，监听 **8091**。详见 [本机 Omni TTS](docs/omni_tts.md)。
+
+声音克隆须换 Base 检查点并重启 8091（首次无缓存时打开下载）：
+
+```bash
+HF_HUB_OFFLINE=0 HF_HUB_DISABLE_XET=1 OMNI_MODEL=Qwen/Qwen3-TTS-12Hz-0.6B-Base ./start-omni.sh
+```
+
+然后在 `/app/admin/tts` 上传参考音频。数字人要用克隆音色时，把 `config.yaml` 的 `REF_FILE` 设为克隆名，并设 `omni_tts_task_type: Base`，再重启 `./start.sh`。切回预设音色用默认 `./start-omni.sh` 与 `omni_tts_task_type: CustomVoice`。
+
+不经脚本时也可：
+
 ```bash
 python app.py --transport webrtc --model wav2lip --avatar_id wav2lip256_avatar1
 ```
 
-
->  **注意**: 服务端需开放端口 TCP:8010, UDP:1-65536  
-
+>  **注意**: 服务端需开放端口 TCP:8010, UDP:1-65536
 
 ### 2.3 客户端接入
 
 | 方式 | 说明 |
 |------|------|
-| 浏览器 | 打开 `http://serverip:8010/index.html`，点击"开始连接"播放数字人视频，在文本框输入文字提交即可 |
+| 浏览器（默认） | 打开 `http://serverip:8010/` 或 `/app/`。未登录进入登录页；管理员/普通用户进入各自工作台 |
+| 原站控制台 | `http://serverip:8010/index.html`，匿名 WebRTC 演示 |
 | API 调用 | 参考 [API 文档](docs/api.md) 通过 HTTP 接口驱动 |
 | 桌面客户端 | 下载地址: <https://pan.quark.cn/s/d7192d8ac19b> |
 
@@ -112,10 +132,13 @@ python app.py --transport webrtc --model wav2lip --avatar_id wav2lip256_avatar1
 
 | 页面 | 地址 | 说明 |
 |------|------|------|
-| 首页 | `/index.html` | WebRTC 连接 + 文本/音频驱动 + 录制控制 |
-| Avatar 生成 | `/avatar.html` | 上传视频自动生成数字人形象 |
-| 管理后台 | `/admin.html` | 实时监控会话状态与全局配置 |
-| TTS 语音管理 | `/tts/` | 直连本机 Omni（8091），见 [本机 Omni TTS](docs/omni_tts.md) |
+| 工作台 | `/app/` | **默认入口**。登录后的双角色 Vue 工作台 |
+| 管理员 | `/app/admin` | 待办、演示连麦、Avatar 生成、用户（禁用/启用）、TTS（8010 代理 Omni） |
+| 普通用户 | `/app/user` | 已发布形象连麦、资产、定制订单 |
+| 原站首页 | `/index.html` | 匿名 WebRTC 连接 + 文本/音频驱动 + 录制控制 |
+| Avatar 生成（原站） | `/avatar.html` | 上传视频自动生成数字人形象 |
+| 管理后台（原站） | `/admin.html` | 实时监控会话状态与全局配置 |
+| TTS 语音管理（直连） | `/tts/` | 直连本机 Omni（8091），见 [本机 Omni TTS](docs/omni_tts.md) |
 
 <img src="./assets/index.jpg" align="middle"/>
 
