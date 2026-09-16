@@ -82,7 +82,7 @@
           <label>参考文本</label>
           <textarea v-model="refText" placeholder="与音频内容一致的文本"></textarea>
         </div>
-        <p class="muted">上游若未部署 Base 克隆模型，上传会失败并显示原因。</p>
+        <p class="muted">克隆须 Omni 已切到 0.6B-Base。默认 CustomVoice 上上传会失败并显示上游原因。</p>
         <button class="btn" type="button" :disabled="busy" @click="upload">上传</button>
       </div>
     </section>
@@ -108,6 +108,9 @@ const refText = ref('')
 
 const presetVoices = computed(() => voices.value)
 const uploadedVoices = computed(() => uploaded.value)
+const uploadedNames = computed(() =>
+  uploaded.value.map((v) => (typeof v === 'string' ? v : v.name)),
+)
 const statusText = computed(() => {
   if (busy.value) return '处理中…'
   if (connected.value) return '上游已连接'
@@ -161,7 +164,7 @@ async function synthesize() {
         response_format: 'mp3',
         speed: speed.value || 1,
         language: 'Auto',
-        task_type: 'CustomVoice',
+        task_type: uploadedNames.value.includes(voice.value) ? 'Base' : 'CustomVoice',
       }),
     })
     audioUrl.value = URL.createObjectURL(blob)

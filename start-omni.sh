@@ -3,7 +3,8 @@
 #
 # 用法：
 #   ./start-omni.sh
-#   OMNI_MODEL=Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice ./start-omni.sh
+#   OMNI_MODEL=Qwen/Qwen3-TTS-12Hz-0.6B-Base ./start-omni.sh
+#   HF_HUB_OFFLINE=0 HF_HUB_DISABLE_XET=1 OMNI_MODEL=Qwen/Qwen3-TTS-12Hz-0.6B-Base ./start-omni.sh
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

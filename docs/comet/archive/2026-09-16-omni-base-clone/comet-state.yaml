@@ -1,0 +1,240 @@
+schema: comet.native.v4
+name: omni-base-clone
+language: zh-CN
+phase: archive
+status: done
+state_version: 7
+brief: brief.md
+spec_changes:
+  - capability: admin-tts-proxy
+    operation: modify
+    source: specs/admin-tts-proxy/spec.md
+  - capability: omni-tts-serving
+    operation: modify
+    source: specs/omni-tts-serving/spec.md
+workspace:
+  isolation: current
+  change_branch: main
+  target_branch: main
+  finish: null
+loop:
+  stage: done
+  goal_cycle: 1
+  iteration: 1
+  attempt: 1
+  retry_epoch: 0
+  failed_iteration_count: 0
+  no_progress_count: 0
+  execution_failure_count: 0
+  previous_unresolved_ids: []
+  next_action: null
+acceptance:
+  - id: A1
+    source: brief.md
+    text: A1：`start-omni.sh` 不设 `OMNI_MODEL` 时仍启动
+      `Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice`
+    result: passed
+    reason:
+      text: start-omni.sh MODEL 默认为 Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice；Runtime grep
+        -F 与 test_a1 通过。
+      truncated: false
+  - id: A2
+    source: brief.md
+    text: A2：文档给出 Base 启动命令与首次下载方式；管理页去掉「未部署 Base」的过时说明
+    result: passed
+    reason:
+      text: docs/omni_tts.md 含 OMNI_MODEL=…-0.6B-Base 与 HF_HUB_OFFLINE=0；Tts.vue 为「克隆须
+        Omni 已切到 0.6B-Base」，无「未部署 Base」。
+      truncated: false
+  - id: A3
+    source: brief.md
+    text: A3：管理页对克隆（已上传）音色试听使用 `task_type=Base`，对预设音色使用 `CustomVoice`
+    result: passed
+    reason:
+      text: Tts.vue 对 uploadedNames 发 task_type=Base，否则 CustomVoice；platform_tts 原样转发
+        JSON；test_a3 通过；web/ 未改。
+      truncated: false
+  - id: A4
+    source: brief.md
+    text: A4：配置可设 `omni_tts_task_type`（默认 `CustomVoice`）；数字人客户端把该值发给
+      `/v1/audio/speech`
+    result: passed
+    reason:
+      text: config.yaml/config.py 默认 omni_tts_task_type=CustomVoice；OmniTTS POST
+        /v1/audio/speech 带该 task_type；test_a4 假上游断言 Base。
+      truncated: false
+builder_handoff:
+  candidate_id: f900b9a4-f37c-46ba-a5d5-c47006114fe3
+  identity_provider: skill-coordinated
+  builder_execution_ref: skill-coordinated:builder:fd425d0c-7c88-4f08-a13c-26d1711d2e0b
+  iteration: 1
+  summary:
+    text: 默认 8091 仍 CustomVoice。文档与 start-omni.sh 注释给出 OMNI_MODEL=0.6B-Base 与首次
+      HF_HUB_OFFLINE=0 下载。管理页克隆试听发 task_type=Base，预设仍 CustomVoice；去掉未部署 Base
+      文案。config.yaml/config.py 增加 omni_tts_task_type（默认 CustomVoice），OmniTTS
+      把它发给 /v1/audio/speech。web/ 未改。
+    truncated: false
+  addressed_acceptance_ids:
+    - A1
+    - A2
+    - A3
+    - A4
+  checks:
+    - name:
+        text: unittest tests.test_omni_base_clone tests.test_default_omnitts
+          tests.test_gallery_admin_pages tests.test_platform_hardening
+        truncated: false
+      result: passed
+      note:
+        text: 21 tests OK
+        truncated: false
+    - name:
+        text: git diff --exit-code -- web/
+        truncated: false
+      result: passed
+      note:
+        text: web/ 无改动
+        truncated: false
+  checks_truncated: false
+  known_limits:
+    - text: 本机未下载 0.6B-Base 权重，未对真实 8091 做克隆上传/试听
+      truncated: false
+    - text: 未切 Omni 检查点、未用浏览器走管理页克隆流程
+      truncated: false
+    - text: 生产 /app/ 需 npm run build 后才看到 Tts.vue 的 task_type 分支
+      truncated: false
+  known_limits_truncated: false
+  review:
+    status: passed
+    summary:
+      text: 对照 brief A1–A4：start-omni.sh 默认仍 CustomVoice；docs/omni_tts.md 含 Base 启动与
+        HF_HUB_OFFLINE=0；Tts.vue 按 uploadedNames 发 Base/CustomVoice 且无「未部署
+        Base」；omni_tts_task_type 默认 CustomVoice 且 OmniTTS POST 含该字段。web/ 未改。
+      truncated: false
+    reviewer_execution_ref: unittest tests.test_omni_base_clone
+      tests.test_default_omnitts tests.test_gallery_admin_pages
+      tests.test_platform_hardening
+  submitted_at: 2026-09-16T02:29:09.582Z
+blockers: []
+verification:
+  candidate_id: f900b9a4-f37c-46ba-a5d5-c47006114fe3
+  identity_provider: skill-coordinated
+  verifier_execution_ref: skill-coordinated:verifier:6e83ec7e-3b86-443c-a2cf-e2c0f11b3d6d
+  iteration: 1
+  attempt: 1
+  assurance: skill-coordinated
+  verdict: pass
+  checks:
+    - id: unittest-omni-base-clone
+      name:
+        text: Omni base clone and related unit tests
+        truncated: false
+      argv_display:
+        - text: -m
+          truncated: false
+        - text: unittest
+          truncated: false
+        - text: tests.test_omni_base_clone
+          truncated: false
+        - text: tests.test_default_omnitts
+          truncated: false
+        - text: tests.test_gallery_admin_pages
+          truncated: false
+        - text: tests.test_platform_hardening
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 2187
+    - id: web-untouched
+      name:
+        text: Original web/ unchanged
+        truncated: false
+      argv_display:
+        - text: diff
+          truncated: false
+        - text: --exit-code
+          truncated: false
+        - text: --
+          truncated: false
+        - text: web/
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 62
+    - id: start-omni-default-customvoice
+      name:
+        text: start-omni.sh default remains CustomVoice
+        truncated: false
+      argv_display:
+        - text: -F
+          truncated: false
+        - text: MODEL="${OMNI_MODEL:-Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice}"
+          truncated: false
+        - text: start-omni.sh
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 7
+    - id: docs-base-clone
+      name:
+        text: docs cover Base clone start and first download
+        truncated: false
+      argv_display:
+        - text: -E
+          truncated: false
+        - text: "OMNI_MODEL=Qwen/Qwen3-TTS-12Hz-0.6B-Base|HF_HUB_OFFLINE=0|omni_tts_task_\
+            type: Base"
+          truncated: false
+        - text: docs/omni_tts.md
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 6
+  summary:
+    text: A1–A4 均通过：默认仍 CustomVoice，文档与管理页已接通 0.6B-Base 克隆路径，数字人通过
+      omni_tts_task_type 发给 speech。
+    truncated: false
+  risks:
+    - text: 生产 /app/ 需 npm run build 后才看到 Tts.vue 的 task_type 分支
+      truncated: false
+    - text: 本机未下载 0.6B-Base，未对真实 8091 做克隆上传/试听
+      truncated: false
+    - text: 管理页手工输入不在 uploaded_voices 中的克隆名会走 CustomVoice
+      truncated: false
+    - text: 数字人不会按音色自动切 task_type，须改配置并重启 8010
+      truncated: false
+  risks_truncated: false
+  completed_at: 2026-09-16T02:32:28.239Z
+history:
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 1
+    outcome: pass
+    unresolved_ids: []
+    summary:
+      text: A1–A4 均通过：默认仍 CustomVoice，文档与管理页已接通 0.6B-Base 克隆路径，数字人通过
+        omni_tts_task_type 发给 speech。
+      truncated: false
+    completed_at: 2026-09-16T02:32:28.239Z
+history_overflow:
+  dropped_entries: 0
+  first_dropped_at: null
+  last_dropped_at: null
+  outcome_counts:
+    pass: 0
+    fail: 0
+    blocked: 0
+    execution-error: 0
+    recovery: 0
+verification_result: pass
+verification_report: verification.md
+archived: true
+created_at: 2026-09-16T02:23:24.213Z

@@ -77,6 +77,8 @@ def parse_args():
                         help="参考文件名或语音模型ID")
     parser.add_argument('--REF_TEXT', type=str, default=None)
     parser.add_argument('--TTS_SERVER', type=str, default='http://127.0.0.1:8091')
+    parser.add_argument('--omni_tts_task_type', type=str, default='CustomVoice',
+                        help="Omni speech task_type: CustomVoice or Base")
 
     # ─── LLM（Chat 模式，OpenAI 兼容接口）──────────────────────────────
     parser.add_argument('--llm_base_url', type=str,

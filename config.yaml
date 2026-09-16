@@ -25,6 +25,7 @@ tts: omnitts                   # edgetts / omnitts / gpt-sovits / cosyvoice / fi
 REF_FILE: vivian               # voice name or reference audio file path (wav, 16kHz, mono)
 REF_TEXT: ''                   # reference text for voice cloning (English or Chinese)
 TTS_SERVER: http://127.0.0.1:8091  # TTS server URL, no trailing slash
+omni_tts_task_type: CustomVoice    # CustomVoice 预设音色；8091 为 Base 且用克隆音色时改为 Base
 
 # -------- LLM (Chat 模式，OpenAI 兼容接口) -----------------------------------
 # 任意兼容 /v1/chat/completions 的服务。示例：

@@ -59,7 +59,7 @@ class OmniTTS(BaseTTS):
 
         logger.info(
             f"OmniTTS init: server={self.server_url}, "
-            f"voice={self.voice}, src_sr={self.src_sr}"
+            f"voice={self.voice}, src_sr={self.src_sr}, task_type={self.task_type}"
         )
 
     # ── main entry ────────────────────────────────────────────

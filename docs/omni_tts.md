@@ -64,7 +64,7 @@ Omni 默认监听 `0.0.0.0:8091`。仅本机可设 `OMNI_HOST=127.0.0.1`。
 3. 连接测试成功，语音列表非空。
 4. 选预设音色合成一段中文，应能播放或下载。
 
-克隆上传需要 **Base** 模型，本轮不部署。见下文换模型。
+声音克隆：先把 8091 换成 Base（见下文），再在 `/app/admin/tts` 上传参考音频。默认 CustomVoice 上上传会失败。
 
 ## 默认配置（Omni）
 
@@ -74,9 +74,19 @@ Omni 默认监听 `0.0.0.0:8091`。仅本机可设 `OMNI_HOST=127.0.0.1`。
 tts: omnitts
 TTS_SERVER: http://127.0.0.1:8091
 REF_FILE: vivian          # 必须是 /v1/audio/voices 里的音色名
+omni_tts_task_type: CustomVoice
 ```
 
 `./start.sh` 会读该文件。8091 须已在听，否则文本驱动没有声音。
+
+8091 已切到 Base、要用克隆音色时：
+
+```yaml
+REF_FILE: <克隆音色名>
+omni_tts_task_type: Base
+```
+
+然后重启 `./start.sh`。
 
 ## 切回 EdgeTTS
 
@@ -122,10 +132,16 @@ nvidia-smi --query-gpu=memory.used,memory.free,utilization.gpu --format=csv -l 1
 | 声音克隆 | `Qwen/Qwen3-TTS-12Hz-0.6B-Base` | 可先保持 0.15，不够再升 | 管理页上传克隆；`task_type=Base` |
 | 更高音质 | `Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice` | 升到 0.25–0.30 或单独 GPU | 同卡更容易 OOM |
 
-示例：
+示例（首次无本地缓存时加上下载开关）：
+
+```bash
+HF_HUB_OFFLINE=0 HF_HUB_DISABLE_XET=1 OMNI_MODEL=Qwen/Qwen3-TTS-12Hz-0.6B-Base ./start-omni.sh
+```
+
+已缓存后：
 
 ```bash
 OMNI_MODEL=Qwen/Qwen3-TTS-12Hz-0.6B-Base ./start-omni.sh
 ```
 
-CustomVoice 检查点不能处理 Base 克隆请求，必须换对应模型并重启 8091。数字人侧仍是 `tts: omnitts` + `TTS_SERVER` + 音色名。
+CustomVoice 检查点不能处理 Base 克隆请求，必须换对应模型并重启 8091。数字人侧：`tts: omnitts` + `TTS_SERVER` + 克隆音色名 + `omni_tts_task_type: Base`。切回预设音色则重新用默认 `./start-omni.sh`（CustomVoice），`omni_tts_task_type: CustomVoice`，`REF_FILE: vivian`。
