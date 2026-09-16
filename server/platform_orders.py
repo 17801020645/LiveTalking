@@ -19,12 +19,41 @@ AUDIO_EXT = {".wav", ".mp3", ".m4a", ".aac"}
 OPEN_STATUSES = ("submitted", "accepted", "generating")
 
 
+STILL_LOOP_FRAMES = 25
+STILL_LOOP_FPS = 25
+
+
 def _write_dummy_frame(path: Path) -> None:
     import numpy as np
     import cv2
 
     path.parent.mkdir(parents=True, exist_ok=True)
     cv2.imwrite(str(path), np.zeros((64, 64, 3), dtype=np.uint8))
+
+
+def still_image_to_silent_video(image_path, dest: Path, frames=STILL_LOOP_FRAMES, fps=STILL_LOOP_FPS) -> str:
+    import cv2
+
+    img = cv2.imread(str(image_path))
+    if img is None:
+        raise ValueError("无法读取图片")
+    h, w = img.shape[:2]
+    if w < 2 or h < 2:
+        raise ValueError("图片尺寸过小")
+    if w % 2 or h % 2:
+        img = cv2.resize(img, (w + (w % 2), h + (h % 2)))
+        h, w = img.shape[:2]
+    dest = Path(dest)
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    writer = cv2.VideoWriter(str(dest), cv2.VideoWriter_fourcc(*"mp4v"), fps, (w, h))
+    if not writer.isOpened():
+        raise ValueError("无法写出静图视频")
+    for _ in range(max(1, int(frames))):
+        writer.write(img)
+    writer.release()
+    if not dest.is_file() or dest.stat().st_size <= 0:
+        raise ValueError("无法写出静图视频")
+    return str(dest)
 
 
 def _uploads_root(app):
@@ -284,7 +313,13 @@ async def admin_generate_order(request):
         return json_error("订单不存在", status=404)
     if row["status"] != "accepted":
         return json_error("只有已接单的订单可以生成")
-    if not row["video_path"] or not os.path.isfile(row["video_path"]):
+    material = row["material_type"] or "video"
+    image_ok = bool(row["image_path"] and os.path.isfile(row["image_path"]))
+    video_ok = bool(row["video_path"] and os.path.isfile(row["video_path"]))
+    if material == "image_audio":
+        if not image_ok:
+            return json_error("该订单没有图片，无法生成")
+    elif not video_ok:
         return json_error("该订单没有视频，无法走现有生成管线")
 
     async with db.execute("SELECT avatar_id FROM avatars WHERE avatar_id = ?", (avatar_id,)) as cur:
@@ -308,8 +343,17 @@ async def admin_generate_order(request):
 
     from server.task_manager import task_manager
 
+    try:
+        if material == "image_audio":
+            loop_path = Path(row["image_path"]).with_name("still_loop.mp4")
+            video_path = still_image_to_silent_video(row["image_path"], loop_path)
+        else:
+            video_path = row["video_path"]
+    except ValueError as e:
+        return json_error(str(e))
+
     task_params = {
-        "video_path": row["video_path"],
+        "video_path": video_path,
         "save_path": request.app["avatars_dir"],
         "img_size": int(body.get("img_size", 256)),
         "nosmooth": False,

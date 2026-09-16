@@ -136,7 +136,7 @@ class OrderFlowTests(unittest.IsolatedAsyncioTestCase):
         home = await self.client.get("/api/v1/me/home")
         self.assertIsNone((await home.json())["data"]["published"])
 
-    async def test_a5_image_audio_cannot_generate(self):
+    async def test_a5_image_audio_generates_unpublished(self):
         await self.make_user()
         await self.login("alice", "alice12")
         created = await self.client.post("/api/v1/me/orders", data=self.image_audio_form())
@@ -144,14 +144,48 @@ class OrderFlowTests(unittest.IsolatedAsyncioTestCase):
         oid = (await created.json())["data"]["id"]
         await self.client.post("/api/v1/auth/logout")
         await self.login("admin", "secret12")
+        early = await self.client.post(
+            f"/api/v1/admin/orders/{oid}/generate",
+            json={"avatar_id": "too_soon", "model": "wav2lip"},
+        )
+        self.assertEqual(early.status, 400)
+        self.assertIn("接单", (await early.json())["msg"])
         acc = await self.client.post(f"/api/v1/admin/orders/{oid}/accept")
         self.assertEqual(acc.status, 200)
+        listed = await self.client.get("/api/v1/admin/orders")
+        row = [o for o in (await listed.json())["data"]["orders"] if o["id"] == oid][0]
+        self.assertTrue(row["has_image"])
+        self.assertFalse(row["has_video"])
         gen = await self.client.post(
             f"/api/v1/admin/orders/{oid}/generate",
-            json={"avatar_id": "nope", "model": "wav2lip"},
+            json={"avatar_id": "alice_photo", "model": "wav2lip"},
         )
-        self.assertEqual(gen.status, 400)
-        self.assertIn("视频", (await gen.json())["msg"])
+        self.assertEqual(gen.status, 200, await gen.text())
+        self.assertNotIn("视频", (await gen.json()).get("msg") or "")
+        await self.client.post("/api/v1/auth/logout")
+        await self.login("alice", "alice12")
+        assets = await self.client.get("/api/v1/me/avatars")
+        avatars = (await assets.json())["data"]["avatars"]
+        self.assertEqual([a["avatar_id"] for a in avatars], ["alice_photo"])
+        self.assertFalse(avatars[0]["is_published"])
+        home = await self.client.get("/api/v1/me/home")
+        self.assertIsNone((await home.json())["data"]["published"])
+
+        second = await self.client.post("/api/v1/me/orders", data=self.image_audio_form())
+        oid2 = (await second.json())["data"]["id"]
+        await self.client.post("/api/v1/auth/logout")
+        await self.login("admin", "secret12")
+        await self.client.post(f"/api/v1/admin/orders/{oid2}/accept")
+        uploads = Path(self.tmp.name) / "uploads" / str(oid2)
+        for p in uploads.glob("image*"):
+            p.unlink()
+        missing = await self.client.post(
+            f"/api/v1/admin/orders/{oid2}/generate",
+            json={"avatar_id": "no_image", "model": "wav2lip"},
+        )
+        self.assertEqual(missing.status, 400)
+        self.assertIn("图片", (await missing.json())["msg"])
+        self.assertNotIn("没有视频", (await missing.json())["msg"])
 
     async def test_a6_legacy_and_assets_still_work(self):
         page = await self.client.get("/avatar.html")

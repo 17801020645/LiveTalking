@@ -5,13 +5,13 @@
       <span class="tally" :class="formError ? 'is-fault' : (okMsg ? 'is-live' : 'is-idle')" aria-hidden="true" />
       <p class="monitor-name">启动生成</p>
       <div class="monitor-body">
-        <p class="muted">从已接单的订单启动生成。没有视频的图+音频订单无法走现有抽帧管线。</p>
+        <p class="muted">从已接单的订单启动生成。视频与图+音频订单均可生成。</p>
         <div class="field">
           <label>已接单订单</label>
           <select v-model.number="orderId">
             <option :value="0">请选择</option>
             <option v-for="o in accepted" :key="o.id" :value="o.id">
-              #{{ o.id }} {{ o.username }} {{ o.has_video ? '有视频' : '无视频' }}
+              #{{ o.id }} {{ o.username }} {{ o.has_video ? '视频' : (o.has_image ? '图+音频' : '无素材') }}
             </option>
           </select>
         </div>
