@@ -134,7 +134,7 @@ python app.py --transport webrtc --model wav2lip --avatar_id wav2lip256_avatar1
 |------|------|------|
 | 工作台 | `/app/` | **默认入口**。登录后的双角色 Vue 工作台 |
 | 管理员 | `/app/admin` | 待办、演示连麦、Avatar 生成、用户（禁用/启用）、TTS（8010 代理 Omni） |
-| 普通用户 | `/app/user` | 已发布形象连麦、资产、定制订单 |
+| 普通用户 | `/app/user` | 已发布形象连麦后可用麦克风说话、资产、定制订单 |
 | 原站首页 | `/index.html` | 匿名 WebRTC 连接 + 文本/音频驱动 + 录制控制 |
 | Avatar 生成（原站） | `/avatar.html` | 上传视频自动生成数字人形象 |
 | 管理后台（原站） | `/admin.html` | 实时监控会话状态与全局配置 |

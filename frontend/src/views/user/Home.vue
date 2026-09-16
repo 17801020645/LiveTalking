@@ -45,6 +45,24 @@
             <input v-model="text" @keyup.enter="sendText" placeholder="输入后回车发送" />
             <button class="btn" type="button" style="margin-top: 8px;" @click="sendText">发送</button>
           </div>
+          <div class="row-actions">
+            <button
+              class="btn"
+              type="button"
+              :disabled="!connected || listening || recognizing"
+              @click="startMic"
+            >
+              开始说话
+            </button>
+            <button
+              class="btn-ghost"
+              type="button"
+              :disabled="!connected || !listening || recognizing"
+              @click="stopMic"
+            >
+              {{ recognizing ? '识别中…' : '停止识别' }}
+            </button>
+          </div>
         </template>
         <p v-else class="muted">还没有发布数字人，请到「我的资产」选择一个并发布。</p>
       </div>
@@ -63,7 +81,15 @@ const error = ref('')
 const text = ref('')
 const remoteVideo = ref(null)
 const sessionid = ref('')
+const listening = ref(false)
+const recognizing = ref(false)
 let pc = null
+let asrWs = null
+let asrStream = null
+let asrCtx = null
+let asrProcessor = null
+let asrSource = null
+let asrResultWaiter = null
 
 onMounted(async () => {
   const data = await api('/api/v1/me/home')
@@ -109,6 +135,7 @@ async function start() {
 }
 
 async function stop() {
+  await abortMic()
   connected.value = false
   if (pc) {
     pc.close()
@@ -125,26 +152,202 @@ async function stop() {
   }
 }
 
+function asrWsUrl() {
+  const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+  return proto + '//' + window.location.host + '/api/asr'
+}
+
+function floatToPcm16(float32, inputRate) {
+  const ratio = inputRate / 16000
+  const outLen = Math.max(1, Math.floor(float32.length / ratio))
+  const out = new Int16Array(outLen)
+  for (let i = 0; i < outLen; i++) {
+    const s = Math.max(-1, Math.min(1, float32[Math.floor(i * ratio)] || 0))
+    out[i] = s < 0 ? s * 0x8000 : s * 0x7fff
+  }
+  return out
+}
+
+function closeAsrCapture() {
+  if (asrProcessor) {
+    asrProcessor.onaudioprocess = null
+    try {
+      asrProcessor.disconnect()
+    } catch (e) {
+      /* ignore */
+    }
+    asrProcessor = null
+  }
+  if (asrSource) {
+    try {
+      asrSource.disconnect()
+    } catch (e) {
+      /* ignore */
+    }
+    asrSource = null
+  }
+  if (asrCtx) {
+    asrCtx.close().catch(() => {})
+    asrCtx = null
+  }
+  if (asrStream) {
+    asrStream.getTracks().forEach((t) => t.stop())
+    asrStream = null
+  }
+}
+
+async function abortMic() {
+  listening.value = false
+  recognizing.value = false
+  closeAsrCapture()
+  if (asrResultWaiter) {
+    asrResultWaiter.reject(new Error('已取消'))
+    asrResultWaiter = null
+  }
+  if (asrWs) {
+    try {
+      asrWs.close()
+    } catch (e) {
+      /* ignore */
+    }
+    asrWs = null
+  }
+}
+
+async function startMic() {
+  if (!connected.value || !sessionid.value || listening.value || recognizing.value) return
+  error.value = ''
+  try {
+    asrStream = await navigator.mediaDevices.getUserMedia({ audio: true })
+    asrWs = new WebSocket(asrWsUrl())
+    await new Promise((resolve, reject) => {
+      asrWs.onopen = resolve
+      asrWs.onerror = () => reject(new Error('本机 ASR 不可用'))
+    })
+    asrWs.send(
+      JSON.stringify({
+        chunk_size: [5, 10, 5],
+        wav_name: 'h5',
+        is_speaking: true,
+        chunk_interval: 10,
+        itn: false,
+        mode: 'offline',
+      }),
+    )
+    asrCtx = new AudioContext({ sampleRate: 16000 })
+    asrSource = asrCtx.createMediaStreamSource(asrStream)
+    asrProcessor = asrCtx.createScriptProcessor(4096, 1, 1)
+    asrProcessor.onaudioprocess = (evt) => {
+      if (!asrWs || asrWs.readyState !== WebSocket.OPEN) return
+      const input = evt.inputBuffer.getChannelData(0)
+      const pcm = floatToPcm16(input, asrCtx.sampleRate || 16000)
+      asrWs.send(pcm.buffer)
+    }
+    const mute = asrCtx.createGain()
+    mute.gain.value = 0
+    asrSource.connect(asrProcessor)
+    asrProcessor.connect(mute)
+    mute.connect(asrCtx.destination)
+    listening.value = true
+  } catch (e) {
+    await abortMic()
+    error.value = e.message || '无法使用麦克风'
+  }
+}
+
+async function stopMic() {
+  if (!listening.value || recognizing.value) return
+  listening.value = false
+  recognizing.value = true
+  error.value = ''
+  closeAsrCapture()
+  try {
+    if (!asrWs || asrWs.readyState !== WebSocket.OPEN) {
+      throw new Error('本机 ASR 不可用')
+    }
+    const resultPromise = new Promise((resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error('识别超时')), 20000)
+      asrResultWaiter = {
+        resolve: (text) => {
+          clearTimeout(timer)
+          asrResultWaiter = null
+          resolve(text)
+        },
+        reject: (err) => {
+          clearTimeout(timer)
+          asrResultWaiter = null
+          reject(err)
+        },
+      }
+      asrWs.onmessage = (evt) => {
+        let payload = {}
+        try {
+          payload = JSON.parse(evt.data)
+        } catch (e) {
+          return
+        }
+        if (asrResultWaiter) asrResultWaiter.resolve(payload.text || '')
+      }
+      asrWs.onerror = () => {
+        if (asrResultWaiter) asrResultWaiter.reject(new Error('本机 ASR 不可用'))
+      }
+    })
+    asrWs.send(
+      JSON.stringify({
+        chunk_size: [5, 10, 5],
+        wav_name: 'h5',
+        is_speaking: false,
+        chunk_interval: 10,
+        mode: 'offline',
+      }),
+    )
+    const recognized = String(await resultPromise).trim()
+    if (!recognized) {
+      error.value = '未识别到语音'
+      return
+    }
+    text.value = recognized
+    await sendHuman(recognized)
+  } catch (e) {
+    if (e.message !== '已取消') error.value = e.message || '识别失败'
+  } finally {
+    recognizing.value = false
+    if (asrWs) {
+      try {
+        asrWs.close()
+      } catch (e) {
+        /* ignore */
+      }
+      asrWs = null
+    }
+  }
+}
+
+async function sendHuman(t) {
+  if (!t || !sessionid.value) return
+  const res = await fetch('/human', {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      text: t,
+      type: 'echo',
+      interrupt: true,
+      sessionid: sessionid.value,
+    }),
+  })
+  const body = await res.json().catch(() => ({}))
+  if (!res.ok || (typeof body.code === 'number' && body.code !== 0)) {
+    throw new Error(body.msg || '发送失败')
+  }
+}
+
 async function sendText() {
   const t = text.value.trim()
   if (!t || !sessionid.value) return
   error.value = ''
   try {
-    const res = await fetch('/human', {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        text: t,
-        type: 'echo',
-        interrupt: true,
-        sessionid: sessionid.value,
-      }),
-    })
-    const body = await res.json().catch(() => ({}))
-    if (!res.ok || (typeof body.code === 'number' && body.code !== 0)) {
-      throw new Error(body.msg || '发送失败')
-    }
+    await sendHuman(t)
     text.value = ''
   } catch (e) {
     error.value = e.message

@@ -1,0 +1,223 @@
+schema: comet.native.v4
+name: user-home-asr
+language: zh-CN
+phase: archive
+status: done
+state_version: 7
+brief: brief.md
+spec_changes:
+  - capability: user-live
+    operation: modify
+    source: specs/user-live/spec.md
+  - capability: web-app-shell
+    operation: modify
+    source: specs/web-app-shell/spec.md
+workspace:
+  isolation: current
+  change_branch: main
+  target_branch: main
+  finish: null
+loop:
+  stage: done
+  goal_cycle: 1
+  iteration: 1
+  attempt: 1
+  retry_epoch: 0
+  failed_iteration_count: 0
+  no_progress_count: 0
+  execution_failure_count: 0
+  previous_unresolved_ids: []
+  next_action: null
+acceptance:
+  - id: A1
+    source: brief.md
+    text: A1：已连接时可开始/停止麦克风；未连接时麦克风不可用
+    result: passed
+    reason:
+      text: Home.vue 连麦框有开始说话/停止识别；按钮 disabled 含 !connected，startMic 未连接或无 sessionid
+        直接 return。
+      truncated: false
+  - id: A2
+    source: brief.md
+    text: A2：停止识别后，非空文本 `POST /human`，`type=echo`，带当前 `sessionid`
+    result: passed
+    reason:
+      text: stopMic 非空文本调用 sendHuman；POST /human 固定 type=echo 且带 sessionid.value，无
+        talkType/chat。
+      truncated: false
+  - id: A3
+    source: brief.md
+    text: A3：空识别或失败只在本页提示、不发送；页面没有 FunASR 地址栏
+    result: passed
+    reason:
+      text: 空结果本页提示未识别到语音并 return，不发送；失败只写本页错误。无 wssip/2pass/asr_mode/FunASR 地址栏。
+      truncated: false
+  - id: A4
+    source: brief.md
+    text: A4：`web/` 无改动；README 用户入口提到麦克风说话
+    result: passed
+    reason:
+      text: git diff web/ 与 README-EN 无改动；README 普通用户行写有麦克风说话。
+      truncated: false
+builder_handoff:
+  candidate_id: 9706b011-dd5d-4bfd-8798-01ef1268d2d8
+  identity_provider: skill-coordinated
+  builder_execution_ref: skill-coordinated:builder:f3c65afc-2d12-4f19-9d9e-3f4ff8b46644
+  iteration: 1
+  summary:
+    text: 用户首页连麦框增加开始说话/停止识别，走本机 /api/asr；停止后非空文本 POST /human type=echo 带
+      sessionid。未连接按钮禁用；空结果提示未识别到语音且不发送。README 用户入口补麦克风说话。旧 admin ASR 测试改为允许用户首页
+      ASR。web/ 未改。
+    truncated: false
+  addressed_acceptance_ids:
+    - A1
+    - A2
+    - A3
+    - A4
+  checks:
+    - name:
+        text: unittest tests.test_user_home_asr tests.test_admin_live_asr
+          tests.test_user_live tests.test_admin_live_console
+          tests.test_gallery_user_shell tests.test_default_app_entry
+        truncated: false
+      result: passed
+      note:
+        text: 30 tests OK
+        truncated: false
+    - name:
+        text: git diff --exit-code -- web/ README-EN.md
+        truncated: false
+      result: passed
+      note:
+        text: web/ 与 README-EN 无改动
+        truncated: false
+  checks_truncated: false
+  known_limits:
+    - text: 8010 未在听，未用浏览器点麦克风
+      truncated: false
+    - text: funasr 未安装时 /api/asr 不注册，页面提示本机 ASR 不可用
+      truncated: false
+    - text: 生产 /app/ 需 npm run build 后才看到用户首页麦克风按钮
+      truncated: false
+  known_limits_truncated: false
+  review:
+    status: passed
+    summary:
+      text: 对照 brief A1–A4：未连接禁用麦克风、停止后 /human 为 echo 带 sessionid、空结果不发送且无 FunASR
+        面板、README 提到麦克风说话且 web/ 未改。
+      truncated: false
+    reviewer_execution_ref: unittest tests.test_user_home_asr
+      tests.test_admin_live_asr tests.test_user_live
+      tests.test_admin_live_console tests.test_gallery_user_shell
+      tests.test_default_app_entry
+  submitted_at: 2026-09-16T09:11:42.125Z
+blockers: []
+verification:
+  candidate_id: 9706b011-dd5d-4bfd-8798-01ef1268d2d8
+  identity_provider: skill-coordinated
+  verifier_execution_ref: skill-coordinated:verifier:12dc1743-54e1-4c79-b44a-ccded08654cc
+  iteration: 1
+  attempt: 1
+  assurance: skill-coordinated
+  verdict: pass
+  checks:
+    - id: unittest-user-home-asr
+      name:
+        text: User home ASR and related unit tests
+        truncated: false
+      argv_display:
+        - text: -m
+          truncated: false
+        - text: unittest
+          truncated: false
+        - text: tests.test_user_home_asr
+          truncated: false
+        - text: tests.test_admin_live_asr
+          truncated: false
+        - text: tests.test_user_live
+          truncated: false
+        - text: tests.test_admin_live_console
+          truncated: false
+        - text: tests.test_gallery_user_shell
+          truncated: false
+        - text: tests.test_default_app_entry
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 3652
+    - id: web-and-readme-en-untouched
+      name:
+        text: web/ and README-EN.md unchanged
+        truncated: false
+      argv_display:
+        - text: diff
+          truncated: false
+        - text: --exit-code
+          truncated: false
+        - text: --
+          truncated: false
+        - text: web/
+          truncated: false
+        - text: README-EN.md
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 27
+    - id: readme-user-mic
+      name:
+        text: README user entry mentions microphone
+        truncated: false
+      argv_display:
+        - text: -E
+          truncated: false
+        - text: 麦克风说话
+          truncated: false
+        - text: README.md
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 7
+  summary:
+    text: A1–A4 均通过：用户首页连麦后可用麦克风经 /api/asr 识别，停止后非空文本按 echo 带 sessionid
+      发送；空/失败只提示不发；README 已写麦克风说话且 web/ 未改。
+    truncated: false
+  risks:
+    - text: 未在浏览器实点麦克风；8010 当时未监听；funasr 未安装时 /api/asr 不注册
+      truncated: false
+    - text: 生产 /app/ 需 npm run build 后才会看到 Home.vue 改动
+      truncated: false
+    - text: 验收测试是源码静态断言，不是真实 WebRTC/ASR 运行时
+      truncated: false
+  risks_truncated: false
+  completed_at: 2026-09-16T09:15:17.587Z
+history:
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 1
+    outcome: pass
+    unresolved_ids: []
+    summary:
+      text: A1–A4 均通过：用户首页连麦后可用麦克风经 /api/asr 识别，停止后非空文本按 echo 带 sessionid
+        发送；空/失败只提示不发；README 已写麦克风说话且 web/ 未改。
+      truncated: false
+    completed_at: 2026-09-16T09:15:17.587Z
+history_overflow:
+  dropped_entries: 0
+  first_dropped_at: null
+  last_dropped_at: null
+  outcome_counts:
+    pass: 0
+    fail: 0
+    blocked: 0
+    execution-error: 0
+    recovery: 0
+verification_result: pass
+verification_report: verification.md
+archived: true
+created_at: 2026-09-16T08:31:19.118Z
