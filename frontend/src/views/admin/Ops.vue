@@ -83,6 +83,12 @@
                   type="button"
                   @click.stop="deleteUser(u)"
                 >删除</button>
+                <button
+                  v-if="u.role === 'user'"
+                  class="btn"
+                  type="button"
+                  @click.stop="resetPassword(u)"
+                >改密</button>
               </td>
             </tr>
           </tbody>
@@ -208,5 +214,15 @@ async function deleteUser(u) {
   await api(`/api/v1/admin/users/${u.id}/delete`, { method: 'POST', body: '{}' })
   if (selected.value?.id === u.id) selected.value = null
   await load()
+}
+
+async function resetPassword(u) {
+  if (!window.confirm(`为用户 ${u.username} 设置新密码？`)) return
+  const password = window.prompt('新密码（至少 6 位）')
+  if (!password) return
+  await api(`/api/v1/admin/users/${u.id}/password`, {
+    method: 'POST',
+    body: JSON.stringify({ password }),
+  })
 }
 </script>

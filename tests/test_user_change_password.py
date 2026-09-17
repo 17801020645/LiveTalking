@@ -87,7 +87,7 @@ class UserChangePasswordTests(unittest.IsolatedAsyncioTestCase):
         )
         self.assertEqual(anon.status, 401)
 
-    async def test_a4_both_shells_and_no_admin_reset_others(self):
+    async def test_a4_both_shells_keep_self_password_form(self):
         admin_layout = (FRONTEND_SRC / "layouts" / "AdminLayout.vue").read_text()
         user_layout = (FRONTEND_SRC / "layouts" / "UserLayout.vue").read_text()
         form = (FRONTEND_SRC / "components" / "PasswordForm.vue").read_text()
@@ -96,7 +96,7 @@ class UserChangePasswordTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("PasswordForm", user_layout)
         self.assertIn("改密", form)
         self.assertIn("初始密码", ops)
-        self.assertNotIn("改密", ops)
+        self.assertIn("resetPassword", ops)
         await self.login("admin", "secret12")
         changed = await self.client.post(
             "/api/v1/auth/password",

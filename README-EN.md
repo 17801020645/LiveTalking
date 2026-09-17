@@ -132,7 +132,7 @@ python app.py --transport webrtc --model wav2lip --avatar_id wav2lip256_avatar1
 | Page | URL | Description |
 |------|-----|-------------|
 | Workspace | `/app/` | **Default entry**. Dual-role Vue workspace after login |
-| Admin | `/app/admin` | Ops, live demo, Avatar generation, users (disable/enable/delete), TTS (8010 proxies Omni) |
+| Admin | `/app/admin` | Ops, live demo, Avatar generation, users (disable/enable/delete/reset password), TTS (8010 proxies Omni) |
 | User | `/app/user` | Published avatar live session with mic, echo/chat, interrupt, audio upload, recording, and actions; assets; custom orders |
 | Legacy home | `/index.html` | Anonymous WebRTC + text/audio driver + recording |
 | Avatar Creator (legacy) | `/avatar.html` | Upload video to auto-generate digital human avatars |

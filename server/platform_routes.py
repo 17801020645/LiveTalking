@@ -264,6 +264,39 @@ async def admin_delete_user(request):
     return json_ok()
 
 
+async def admin_reset_password(request):
+    denied = require_admin(request)
+    if denied:
+        return denied
+    try:
+        body = await request.json()
+    except Exception:
+        return json_error("无效请求")
+    password = body.get("password") or ""
+    if len(password) < 6:
+        return json_error("密码至少 6 个字符")
+    user_id = int(request.match_info["user_id"])
+    if request["user"]["id"] == user_id:
+        return json_error("不能给当前登录账号改密")
+    db = request.app["platform_db"]
+    async with db.execute(
+        "SELECT id, role FROM users WHERE id = ?",
+        (user_id,),
+    ) as cur:
+        row = await cur.fetchone()
+    if row is None:
+        return json_error("用户不存在", status=404)
+    if row["role"] != "user":
+        return json_error("只能给普通用户改密")
+    await db.execute(
+        "UPDATE users SET password_hash = ? WHERE id = ?",
+        (hash_password(password), user_id),
+    )
+    await db.execute("DELETE FROM sessions WHERE user_id = ?", (user_id,))
+    await db.commit()
+    return json_ok()
+
+
 async def admin_home(request):
     denied = require_admin(request)
     if denied:
@@ -574,6 +607,7 @@ def setup_v1_routes(app):
     app.router.add_post("/api/v1/admin/users/{user_id}/disable", admin_disable_user)
     app.router.add_post("/api/v1/admin/users/{user_id}/enable", admin_enable_user)
     app.router.add_post("/api/v1/admin/users/{user_id}/delete", admin_delete_user)
+    app.router.add_post("/api/v1/admin/users/{user_id}/password", admin_reset_password)
     app.router.add_get("/api/v1/admin/avatars", admin_list_avatars)
     app.router.add_get("/api/v1/admin/users/{user_id}/subscriptions", admin_list_user_subs)
     app.router.add_post("/api/v1/admin/users/{user_id}/subscriptions", admin_bind)

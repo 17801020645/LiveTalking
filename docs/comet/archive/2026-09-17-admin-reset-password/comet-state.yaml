@@ -1,0 +1,233 @@
+schema: comet.native.v4
+name: admin-reset-password
+language: zh-CN
+phase: archive
+status: done
+state_version: 7
+brief: brief.md
+spec_changes:
+  - capability: auth-rbac
+    operation: modify
+    source: specs/auth-rbac/spec.md
+  - capability: web-app-shell
+    operation: modify
+    source: specs/web-app-shell/spec.md
+workspace:
+  isolation: current
+  change_branch: main
+  target_branch: main
+  finish: null
+loop:
+  stage: done
+  goal_cycle: 1
+  iteration: 1
+  attempt: 1
+  retry_epoch: 0
+  failed_iteration_count: 0
+  no_progress_count: 0
+  execution_failure_count: 0
+  previous_unresolved_ids: []
+  next_action: null
+acceptance:
+  - id: A1
+    source: brief.md
+    text: A1：管理员为活跃普通用户设新密码后，旧密码登录失败（与错误密码同一文案），新密码可以；该用户原有会话失效
+    result: passed
+    reason:
+      text: POST /api/v1/admin/users/{id}/password 更新哈希并 DELETE 该用户全部 sessions。test_a1
+        覆盖：旧密码登录 401 且 msg 为 LOGIN_ERROR（与错误密码相同），新密码可登录；预先 create_session 的
+        token 已从 sessions 表删除。
+      truncated: false
+  - id: A2
+    source: brief.md
+    text: A2：已禁用用户也可改密；启用后须用新密码登录。改管理员、当前登录账号或不存在的 id 失败；未登录 401，普通用户 403；新密码少于 6
+      位被拒绝且哈希不变
+    result: passed
+    reason:
+      text: 已禁用用户改密 200，登录仍 401（LOGIN_ERROR），启用后旧密码 401、新密码 200。改当前管理员账号 400、不存在 id
+        404；未登录 401、普通用户 403；密码短于 6 位 400 且原密码仍可登录（哈希未变）。role!=user
+        时返回「只能给普通用户改密」。
+      truncated: false
+  - id: A3
+    source: brief.md
+    text: A3：普通用户行有改密按钮并经确认后输入新密码；管理员行没有
+    result: passed
+    reason:
+      text: Ops.vue 普通用户行 v-if="u.role === 'user'" 显示「改密」，resetPassword 先
+        window.confirm 再 window.prompt 后 POST
+        {password}；管理员行无该按钮。README/README-EN 管理员说明已含改密。
+      truncated: false
+  - id: A4
+    source: brief.md
+    text: A4：原 `web/` 无改动；顶栏自己改密行为不变
+    result: passed
+    reason:
+      text: git diff --exit-code -- web/ 通过。PasswordForm 仍走 POST
+        /api/v1/auth/password（current_password/new_password），change_password
+        未改；test_user_change_password 仍覆盖顶栏自己改密。
+      truncated: false
+builder_handoff:
+  candidate_id: 878a0c5d-092b-468c-9e7e-764fc495a747
+  identity_provider: skill-coordinated
+  builder_execution_ref: skill-coordinated:builder:45a17d68-56bc-4ffa-bd7f-1ca44b98b564
+  iteration: 1
+  summary:
+    text: 管理员可为普通用户代人改密：POST /api/v1/admin/users/{id}/password，Ops
+      行内改密经确认后输入新密码；成功后旧密码失效并删除该用户全部会话。活跃与已禁用均可；不能改管理员或自己。
+    truncated: false
+  addressed_acceptance_ids:
+    - A1
+    - A2
+    - A3
+    - A4
+  checks:
+    - name:
+        text: unittest tests.test_admin_reset_password tests.test_user_change_password
+          tests.test_admin_delete_user tests.test_admin_enable_user
+          tests.test_admin_disable_user
+        truncated: false
+      result: passed
+      note:
+        text: 21 tests OK
+        truncated: false
+    - name:
+        text: git diff --exit-code -- web/
+        truncated: false
+      result: passed
+      note:
+        text: web/ 无改动
+        truncated: false
+  checks_truncated: false
+  known_limits:
+    - text: 未在浏览器点过管理后台改密按钮；单测覆盖接口与源码
+      truncated: false
+    - text: 生产 /app/ 需重新 npm run build
+      truncated: false
+  known_limits_truncated: false
+  review:
+    status: passed
+    summary:
+      text: 对照 brief
+        A1–A4：活跃用户改密后旧密码失败新密码可登录且会话失效；已禁用可改、启用后用新密码；禁改管理员/自己、过短、401/403；Ops
+        行内改密；web/ 与顶栏自己改密不变。
+      truncated: false
+    reviewer_execution_ref: unittest tests.test_admin_reset_password
+      tests.test_user_change_password tests.test_admin_delete_user
+  submitted_at: 2026-09-17T13:02:52.829Z
+blockers: []
+verification:
+  candidate_id: 878a0c5d-092b-468c-9e7e-764fc495a747
+  identity_provider: skill-coordinated
+  verifier_execution_ref: skill-coordinated:verifier:325a1f7f-807d-44c3-ae3c-cb790a4bd2da
+  iteration: 1
+  attempt: 1
+  assurance: skill-coordinated
+  verdict: pass
+  checks:
+    - id: unittest-admin-reset-password
+      name:
+        text: Admin reset password and related unit tests
+        truncated: false
+      argv_display:
+        - text: -m
+          truncated: false
+        - text: unittest
+          truncated: false
+        - text: tests.test_admin_reset_password
+          truncated: false
+        - text: tests.test_user_change_password
+          truncated: false
+        - text: tests.test_admin_delete_user
+          truncated: false
+        - text: tests.test_admin_disable_user
+          truncated: false
+        - text: tests.test_admin_enable_user
+          truncated: false
+        - text: tests.test_gallery_admin_pages
+          truncated: false
+        - text: tests.test_platform_v1
+          truncated: false
+        - text: tests.test_orders
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 7742
+    - id: web-untouched
+      name:
+        text: web/ unchanged
+        truncated: false
+      argv_display:
+        - text: diff
+          truncated: false
+        - text: --exit-code
+          truncated: false
+        - text: --
+          truncated: false
+        - text: web/
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 27
+    - id: reset-route-ui-readme
+      name:
+        text: Reset route, Ops button, README
+        truncated: false
+      argv_display:
+        - text: -n
+          truncated: false
+        - text: admin/users/.*/password\|resetPassword\|/api/v1/admin/users/{user_id}/password\|用户（禁用/启用/删除/改密）\|disable/enable/delete/reset
+            password
+          truncated: false
+        - text: server/platform_routes.py
+          truncated: false
+        - text: frontend/src/views/admin/Ops.vue
+          truncated: false
+        - text: README.md
+          truncated: false
+        - text: README-EN.md
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 8
+  summary:
+    text: A1–A4 均通过：活跃用户改密后旧密码失败、新密码可登录且会话失效；禁用用户可改密、启用后须用新密码，禁改管理员/自己、过短、401/403
+      均符合；普通用户行有确认后改密、管理员行没有；web/ 与顶栏自己改密未改。
+    truncated: false
+  risks:
+    - text: 未在浏览器点过改密按钮（brief 约定单测不连浏览器；源码与 grep 已覆盖 A3）
+      truncated: false
+    - text: 生产 /app/ 需重新 npm run build 后才有已构建产物
+      truncated: false
+  risks_truncated: false
+  completed_at: 2026-09-17T13:07:23.467Z
+history:
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 1
+    outcome: pass
+    unresolved_ids: []
+    summary:
+      text: A1–A4 均通过：活跃用户改密后旧密码失败、新密码可登录且会话失效；禁用用户可改密、启用后须用新密码，禁改管理员/自己、过短、401/403
+        均符合；普通用户行有确认后改密、管理员行没有；web/ 与顶栏自己改密未改。
+      truncated: false
+    completed_at: 2026-09-17T13:07:23.467Z
+history_overflow:
+  dropped_entries: 0
+  first_dropped_at: null
+  last_dropped_at: null
+  outcome_counts:
+    pass: 0
+    fail: 0
+    blocked: 0
+    execution-error: 0
+    recovery: 0
+verification_result: pass
+verification_report: verification.md
+archived: true
+created_at: 2026-09-17T10:18:48.673Z

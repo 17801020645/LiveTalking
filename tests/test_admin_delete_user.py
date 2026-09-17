@@ -131,7 +131,7 @@ class AdminDeleteUserTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue((self.avatars / "alice").is_dir())
 
         text = README.read_text(encoding="utf-8")
-        self.assertIn("用户（禁用/启用/删除）", text)
+        self.assertIn("禁用/启用/删除", text)
 
     async def test_a4_web_untouched(self):
         self.assertTrue((WEB / "index.html").is_file())
