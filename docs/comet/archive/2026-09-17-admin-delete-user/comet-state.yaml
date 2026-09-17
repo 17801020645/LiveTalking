@@ -1,0 +1,221 @@
+schema: comet.native.v4
+name: admin-delete-user
+language: zh-CN
+phase: archive
+status: done
+state_version: 7
+brief: brief.md
+spec_changes:
+  - capability: auth-rbac
+    operation: modify
+    source: specs/auth-rbac/spec.md
+  - capability: web-app-shell
+    operation: modify
+    source: specs/web-app-shell/spec.md
+workspace:
+  isolation: current
+  change_branch: main
+  target_branch: main
+  finish: null
+loop:
+  stage: done
+  goal_cycle: 1
+  iteration: 1
+  attempt: 1
+  retry_epoch: 0
+  failed_iteration_count: 0
+  no_progress_count: 0
+  execution_failure_count: 0
+  previous_unresolved_ids: []
+  next_action: null
+acceptance:
+  - id: A1
+    source: brief.md
+    text: A1：管理员删除活跃或已禁用普通用户后，用户列表不再有该行；用原密码登录失败（与错误密码同一文案）
+    result: passed
+    reason:
+      text: POST /api/v1/admin/users/{id}/delete 仅 role=user，活跃与已禁用均可删；列表 API
+        不再含该用户名；原密码登录 401 且文案为 LOGIN_ERROR「用户名或密码错误」，与 login() 错误密码同一分支。unittest
+        已通过。
+      truncated: false
+  - id: A2
+    source: brief.md
+    text: A2：删除管理员、当前登录账号或不存在的 id 失败；未登录 401，普通用户 403
+    result: passed
+    reason:
+      text: 删当前管理员返回 400「不能删除当前登录账号」；不存在 id 404「用户不存在」；role!=user 另有
+        400「只能删除普通用户」。未登录走中间件 401，普通用户 require_admin 403。对应单测已通过。
+      truncated: false
+  - id: A3
+    source: brief.md
+    text: A3：普通用户行有删除按钮并经确认；管理员行没有。删除后该用户订单不再出现在管理员订单表
+    result: passed
+    reason:
+      text: Ops.vue 删除按钮 v-if="u.role === 'user'"，经 window.confirm 后 POST .../delete 并
+        load()；管理员行无该按钮。删用户前清 orders，管理员订单列表不再含该单；形象目录保留。单测不连浏览器，源码+接口覆盖符合约束。
+      truncated: false
+  - id: A4
+    source: brief.md
+    text: A4：原 `web/` 无改动
+    result: passed
+    reason:
+      text: Runtime git diff --exit-code -- web/ 为 0；实现只改
+        platform_routes.py、Ops.vue、README 管理员行与测试，未改 web/。
+      truncated: false
+builder_handoff:
+  candidate_id: a2627b12-af10-41da-9418-c53723a06696
+  identity_provider: skill-coordinated
+  builder_execution_ref: skill-coordinated:builder:e89f09c5-4cb2-4a3e-bbbe-6a4bff0acc02
+  iteration: 1
+  summary:
+    text: 管理员可删除普通用户：POST /api/v1/admin/users/{id}/delete 仅 role=user，级联清
+      sessions/subscriptions/orders，不删磁盘形象目录。不能删管理员或当前登录账号。Ops.vue
+      普通用户行有删除+confirm；README 管理员说明含删除。
+    truncated: false
+  addressed_acceptance_ids:
+    - A1
+    - A2
+    - A3
+    - A4
+  checks:
+    - name:
+        text: unittest tests.test_admin_delete_user tests.test_admin_disable_user
+          tests.test_admin_enable_user tests.test_gallery_admin_pages
+          tests.test_user_change_password tests.test_platform_v1
+          tests.test_orders
+        truncated: false
+      result: passed
+      note:
+        text: 34 tests OK
+        truncated: false
+    - name:
+        text: git diff --exit-code -- web/
+        truncated: false
+      result: passed
+      note:
+        text: web/ 无改动
+        truncated: false
+  checks_truncated: false
+  known_limits:
+    - text: 未在浏览器点删除确认框；单测覆盖接口、列表、订单级联与 Ops.vue 源码
+      truncated: false
+    - text: 生产 /app/ 需 npm run build
+      truncated: false
+    - text: 不清理订单上传文件与形象目录（非目标）
+      truncated: false
+  known_limits_truncated: false
+  review:
+    status: passed
+    summary:
+      text: 对照 brief A1–A4：可删活跃/已禁用普通用户、禁删管理员/自己、订单一并消失、web/ 无改动。
+      truncated: false
+    reviewer_execution_ref: unittest tests.test_admin_delete_user
+  submitted_at: 2026-09-17T04:23:12.058Z
+blockers: []
+verification:
+  candidate_id: a2627b12-af10-41da-9418-c53723a06696
+  identity_provider: skill-coordinated
+  verifier_execution_ref: skill-coordinated:verifier:2186744f-c90b-4417-870e-4a6c4630a197
+  iteration: 1
+  attempt: 1
+  assurance: skill-coordinated
+  verdict: pass
+  checks:
+    - id: unittest-admin-delete-user
+      name:
+        text: Admin delete user and related unit tests
+        truncated: false
+      argv_display:
+        - text: -m
+          truncated: false
+        - text: unittest
+          truncated: false
+        - text: tests.test_admin_delete_user
+          truncated: false
+        - text: tests.test_admin_disable_user
+          truncated: false
+        - text: tests.test_admin_enable_user
+          truncated: false
+        - text: tests.test_gallery_admin_pages
+          truncated: false
+        - text: tests.test_user_change_password
+          truncated: false
+        - text: tests.test_platform_v1
+          truncated: false
+        - text: tests.test_orders
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 7084
+    - id: web-untouched
+      name:
+        text: web/ unchanged
+        truncated: false
+      argv_display:
+        - text: diff
+          truncated: false
+        - text: --exit-code
+          truncated: false
+        - text: --
+          truncated: false
+        - text: web/
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 25
+    - id: delete-route-and-ui
+      name:
+        text: Delete route, Ops button, README
+        truncated: false
+      argv_display:
+        - text: -n
+          truncated: false
+        - text: admin/users/.*/delete|deleteUser|/api/v1/admin/users/\{user_id\}/delete|用户（禁用/启用/删除）
+          truncated: false
+        - text: server/platform_routes.py
+          truncated: false
+        - text: frontend/src/views/admin/Ops.vue
+          truncated: false
+        - text: README.md
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 25
+  summary:
+    text: A1–A4 均通过：可删活跃/已禁用普通用户且无法再登录，禁删管理员/自己/不存在 id 及 401/403
+      成立，后台删除确认与订单级联正确，web/ 无改动。
+    truncated: false
+  risks: []
+  risks_truncated: false
+  completed_at: 2026-09-17T04:26:17.134Z
+history:
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 1
+    outcome: pass
+    unresolved_ids: []
+    summary:
+      text: A1–A4 均通过：可删活跃/已禁用普通用户且无法再登录，禁删管理员/自己/不存在 id 及 401/403
+        成立，后台删除确认与订单级联正确，web/ 无改动。
+      truncated: false
+    completed_at: 2026-09-17T04:26:17.134Z
+history_overflow:
+  dropped_entries: 0
+  first_dropped_at: null
+  last_dropped_at: null
+  outcome_counts:
+    pass: 0
+    fail: 0
+    blocked: 0
+    execution-error: 0
+    recovery: 0
+verification_result: pass
+verification_report: verification.md
+archived: true
+created_at: 2026-09-17T03:59:00.805Z

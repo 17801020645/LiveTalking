@@ -77,6 +77,12 @@
                   type="button"
                   @click.stop="enableUser(u)"
                 >启用</button>
+                <button
+                  v-if="u.role === 'user'"
+                  class="btn-danger"
+                  type="button"
+                  @click.stop="deleteUser(u)"
+                >删除</button>
               </td>
             </tr>
           </tbody>
@@ -194,6 +200,13 @@ async function enableUser(u) {
   if (!window.confirm(`启用用户 ${u.username}？启用后可用原密码登录。`)) return
   await api(`/api/v1/admin/users/${u.id}/enable`, { method: 'POST', body: '{}' })
   if (selected.value?.id === u.id) selected.value = { ...selected.value, status: 'active' }
+  await load()
+}
+
+async function deleteUser(u) {
+  if (!window.confirm(`删除用户 ${u.username}？删除后无法登录，其订单一并删除。`)) return
+  await api(`/api/v1/admin/users/${u.id}/delete`, { method: 'POST', body: '{}' })
+  if (selected.value?.id === u.id) selected.value = null
   await load()
 }
 </script>
