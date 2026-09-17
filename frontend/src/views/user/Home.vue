@@ -86,6 +86,36 @@
               {{ recognizing ? '识别中…' : '停止识别' }}
             </button>
           </div>
+          <div class="field">
+            <label>音频文件</label>
+            <input ref="audioInput" type="file" accept="audio/*" :disabled="!connected" />
+          </div>
+          <div class="row-actions">
+            <button class="btn" type="button" :disabled="!connected || uploading" @click="uploadAudio">
+              {{ uploading ? '上传中…' : '上传并播放' }}
+            </button>
+          </div>
+          <div class="row-actions">
+            <button
+              class="btn"
+              :class="{ 'btn-danger': recording }"
+              type="button"
+              :disabled="!connected"
+              @click="toggleRecord"
+            >
+              {{ recording ? '停止录制' : '开始录制' }}
+            </button>
+            <button class="btn-ghost" type="button" :disabled="!sessionid || recording || !recReady" @click="downloadRecord">
+              下载录像
+            </button>
+          </div>
+          <div class="field">
+            <label>Audiotype 索引</label>
+            <input v-model.number="audiotype" type="number" min="2" :disabled="!connected" />
+          </div>
+          <div class="row-actions">
+            <button class="btn" type="button" :disabled="!connected" @click="setAudiotype">切换状态</button>
+          </div>
         </template>
         <p v-else class="muted">还没有发布数字人，请到「我的资产」选择一个并发布。</p>
       </div>
@@ -108,6 +138,11 @@ const remoteVideo = ref(null)
 const sessionid = ref('')
 const listening = ref(false)
 const recognizing = ref(false)
+const audioInput = ref(null)
+const uploading = ref(false)
+const recording = ref(false)
+const recReady = ref(false)
+const audiotype = ref(2)
 let pc = null
 let interruptFlashTimer = null
 let asrWs = null
@@ -177,6 +212,8 @@ async function stop() {
     }
     sessionid.value = ''
   }
+  recording.value = false
+  recReady.value = false
 }
 
 function asrWsUrl() {
@@ -366,6 +403,77 @@ async function sendHuman(t) {
   const body = await res.json().catch(() => ({}))
   if (!res.ok || (typeof body.code === 'number' && body.code !== 0)) {
     throw new Error(body.msg || '发送失败')
+  }
+}
+
+async function postJson(path, payload, failMsg) {
+  const res = await fetch(path, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  const body = await res.json().catch(() => ({}))
+  if (!res.ok || (typeof body.code === 'number' && body.code !== 0)) {
+    throw new Error(body.msg || failMsg)
+  }
+  return body
+}
+
+async function uploadAudio() {
+  const file = audioInput.value && audioInput.value.files && audioInput.value.files[0]
+  if (!file || !sessionid.value || uploading.value) return
+  uploading.value = true
+  error.value = ''
+  try {
+    const form = new FormData()
+    form.append('file', file)
+    form.append('sessionid', String(sessionid.value))
+    const res = await fetch('/humanaudio', {
+      method: 'POST',
+      credentials: 'include',
+      body: form,
+    })
+    const body = await res.json().catch(() => ({}))
+    if (!res.ok || (typeof body.code === 'number' && body.code !== 0)) {
+      throw new Error(body.msg || '上传失败')
+    }
+  } catch (e) {
+    error.value = e.message
+  } finally {
+    uploading.value = false
+  }
+}
+
+async function toggleRecord() {
+  if (!sessionid.value) return
+  error.value = ''
+  const type = recording.value ? 'end_record' : 'start_record'
+  try {
+    await postJson('/record', { type, sessionid: sessionid.value }, '录制失败')
+    recording.value = !recording.value
+    recReady.value = !recording.value
+  } catch (e) {
+    error.value = e.message
+  }
+}
+
+function downloadRecord() {
+  if (!sessionid.value) return
+  window.open('/record/' + sessionid.value, '_blank', 'noopener')
+}
+
+async function setAudiotype() {
+  if (!sessionid.value) return
+  error.value = ''
+  try {
+    await postJson(
+      '/set_audiotype',
+      { audiotype: Number(audiotype.value) || 2, sessionid: sessionid.value },
+      '切换失败',
+    )
+  } catch (e) {
+    error.value = e.message
   }
 }
 

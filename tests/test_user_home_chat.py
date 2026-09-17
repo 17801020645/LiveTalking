@@ -34,12 +34,7 @@ class UserHomeChatTests(unittest.TestCase):
         self.assertIn("type: talkType.value", src)
         self.assertIn("未识别到语音", src)
 
-    def test_a4_web_untouched_no_admin_extras(self):
-        src = USER_HOME.read_text(encoding="utf-8")
-        self.assertNotIn("/humanaudio", src)
-        self.assertNotIn("开始录制", src)
-        self.assertNotIn("Audiotype", src)
-        self.assertNotIn("setAudiotype", src)
+    def test_a4_web_untouched_readme_echo_chat(self):
         readme = README.read_text(encoding="utf-8")
         self.assertIn("echo/chat 与打断", readme)
         result = subprocess.run(

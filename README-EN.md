@@ -89,6 +89,29 @@ Linux CUDA environment setup: <https://zhuanlan.zhihu.com/p/674972886>
 
 ### 2.2 Start the Server
 
+This repo starts Omni TTS first, then the digital human:
+
+```bash
+./start-omni.sh
+export LIVETALKING_BOOTSTRAP_ADMIN=admin
+export LIVETALKING_BOOTSTRAP_PASSWORD='your-password'
+./start.sh
+```
+
+`./start.sh` defaults to WebRTC + wav2lip on port **8010**. The bootstrap admin is created only when the user table is empty. Omni defaults to `Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice` on **8091**. See [local Omni TTS](docs/omni_tts.md).
+
+Voice cloning uses the Base checkpoint (set `HF_HUB_OFFLINE=0` on first download):
+
+```bash
+HF_HUB_OFFLINE=0 HF_HUB_DISABLE_XET=1 OMNI_MODEL=Qwen/Qwen3-TTS-12Hz-0.6B-Base ./start-omni.sh
+```
+
+Upload a reference clip at `/app/admin/tts`. To use a cloned voice, set `REF_FILE` to the clone name and `omni_tts_task_type: Base` in `config.yaml`, then restart `./start.sh`. Switch back with the default `./start-omni.sh` and `omni_tts_task_type: CustomVoice`.
+
+Higher quality: `OMNI_MODEL=Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice ./start-omni.sh` (same GPU is more likely to OOM). The digital human still uses preset `vivian` with `omni_tts_task_type: CustomVoice`.
+
+Without the scripts:
+
 ```bash
 python app.py --transport webrtc --model wav2lip --avatar_id wav2lip256_avatar1
 ```
@@ -99,7 +122,8 @@ python app.py --transport webrtc --model wav2lip --avatar_id wav2lip256_avatar1
 
 | Method | Description |
 |--------|-------------|
-| Browser | Open `http://serverip:8010/index.html`, click "Start Connection" to play the digital human video, then enter text and submit |
+| Browser (default) | Open `http://serverip:8010/` or `/app/`. Unauthenticated users see the login page; admins and users enter their workspaces |
+| Legacy console | `http://serverip:8010/index.html`, anonymous WebRTC demo |
 | API | See [API Docs](docs/api.md) for HTTP-based integration |
 | Desktop App | Download: <https://pan.quark.cn/s/d7192d8ac19b> |
 
@@ -107,9 +131,13 @@ python app.py --transport webrtc --model wav2lip --avatar_id wav2lip256_avatar1
 
 | Page | URL | Description |
 |------|-----|-------------|
-| Home | `/index.html` | WebRTC connection + text/audio driver + recording control |
-| Avatar Creator | `/avatar.html` | Upload video to auto-generate digital human avatars |
-| Admin Console | `/admin.html` | Real-time session monitoring & global configuration |
+| Workspace | `/app/` | **Default entry**. Dual-role Vue workspace after login |
+| Admin | `/app/admin` | Ops, live demo, Avatar generation, users (disable/enable/delete), TTS (8010 proxies Omni) |
+| User | `/app/user` | Published avatar live session with mic, echo/chat, interrupt, audio upload, recording, and actions; assets; custom orders |
+| Legacy home | `/index.html` | Anonymous WebRTC + text/audio driver + recording |
+| Avatar Creator (legacy) | `/avatar.html` | Upload video to auto-generate digital human avatars |
+| Admin Console (legacy) | `/admin.html` | Real-time session monitoring & global configuration |
+| TTS (direct) | `/tts/` | Direct Omni on 8091, see [local Omni TTS](docs/omni_tts.md) |
 
 <img src="./assets/index.jpg" align="middle"/>
 
