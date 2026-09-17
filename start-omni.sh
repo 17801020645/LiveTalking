@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 启动本机 vLLM-Omni TTS（默认 8091）。与 ./start.sh（8010）分进程，互不影响。
+# 启动本机 vLLM-Omni TTS（默认 8091）。与数字人分进程；./start.sh 会在 8091 未就绪时调用本脚本。
 #
 # 用法：
 #   ./start-omni.sh

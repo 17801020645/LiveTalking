@@ -89,16 +89,15 @@ Linux CUDA environment setup: <https://zhuanlan.zhihu.com/p/674972886>
 
 ### 2.2 Start the Server
 
-This repo starts Omni TTS first, then the digital human:
+`./start.sh` starts Omni TTS (8091) first, then the digital human (8010):
 
 ```bash
-./start-omni.sh
 export LIVETALKING_BOOTSTRAP_ADMIN=admin
 export LIVETALKING_BOOTSTRAP_PASSWORD='your-password'
 ./start.sh
 ```
 
-`./start.sh` defaults to WebRTC + wav2lip on port **8010**. The bootstrap admin is created only when the user table is empty. Omni defaults to `Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice` on **8091**. See [local Omni TTS](docs/omni_tts.md).
+`./start.sh` defaults to WebRTC + wav2lip on port **8010**. If 8091 is already up it will not start a second Omni. Digital human only: `SKIP_OMNI=1 ./start.sh`. The bootstrap admin is created only when the user table is empty. Omni defaults to `Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice` on **8091**. Switch models or start Omni alone with `./start-omni.sh`. See [local Omni TTS](docs/omni_tts.md).
 
 Voice cloning uses the Base checkpoint (set `HF_HUB_OFFLINE=0` on first download):
 

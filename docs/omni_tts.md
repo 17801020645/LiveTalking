@@ -2,14 +2,20 @@
 
 独立进程在 **8091** 提供 OpenAI 兼容语音接口。LiveTalking（8010）只当客户端。数字人**默认** `tts: omnitts`，文本驱动走 Omni 预设音色 `vivian`。
 
-仅支持 **Ubuntu + NVIDIA CUDA**。不要把 vLLM 装进 `.venv`。先起 Omni 再起数字人：
+仅支持 **Ubuntu + NVIDIA CUDA**。不要把 vLLM 装进 `.venv`。`./start.sh` 会先拉起 Omni 再起数字人：
 
 ```bash
-./start-omni.sh
 ./start.sh
 ```
 
-8091 未启动时首页会失声，**不会**自动改回 EdgeTTS。Omni 崩溃不会拖垮 8010。
+8091 已在听时不会再拉起第二个 Omni。只起数字人：`SKIP_OMNI=1 ./start.sh`。换模型或单独起 8091 仍用 `./start-omni.sh`。也可分两步：
+
+```bash
+./start-omni.sh
+SKIP_OMNI=1 ./start.sh
+```
+
+8091 未就绪时首页会失声，**不会**自动改回 EdgeTTS。Omni 崩溃不会拖垮 8010。
 
 ## 一次性安装
 
@@ -31,6 +37,14 @@ HF_HUB_OFFLINE=0 HF_HUB_DISABLE_XET=1 ./start-omni.sh
 ```
 
 ## 启动
+
+推荐一次拉起两进程：
+
+```bash
+./start.sh
+```
+
+只起 Omni / 换模型：
 
 ```bash
 ./start-omni.sh
@@ -77,7 +91,7 @@ REF_FILE: vivian          # 必须是 /v1/audio/voices 里的音色名
 omni_tts_task_type: CustomVoice
 ```
 
-`./start.sh` 会读该文件。8091 须已在听，否则文本驱动没有声音。
+`./start.sh` 会读该文件，并尝试先拉起 8091。若仍未就绪，文本驱动没有声音，不会自动改回 EdgeTTS。
 
 8091 已切到 Base、要用克隆音色时：
 

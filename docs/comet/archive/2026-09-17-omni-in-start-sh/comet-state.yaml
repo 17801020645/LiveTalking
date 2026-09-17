@@ -1,0 +1,227 @@
+schema: comet.native.v4
+name: omni-in-start-sh
+language: zh-CN
+phase: archive
+status: done
+state_version: 7
+brief: brief.md
+spec_changes:
+  - capability: admin-tts-proxy
+    operation: modify
+    source: specs/admin-tts-proxy/spec.md
+  - capability: omni-tts-serving
+    operation: modify
+    source: specs/omni-tts-serving/spec.md
+  - capability: web-app-shell
+    operation: modify
+    source: specs/web-app-shell/spec.md
+workspace:
+  isolation: current
+  change_branch: main
+  target_branch: main
+  finish: null
+loop:
+  stage: done
+  goal_cycle: 1
+  iteration: 1
+  attempt: 1
+  retry_epoch: 0
+  failed_iteration_count: 0
+  no_progress_count: 0
+  execution_failure_count: 0
+  previous_unresolved_ids: []
+  next_action: null
+acceptance:
+  - id: A1
+    source: brief.md
+    text: A1：`start.sh` 在 8091 未就绪时会调用 `start-omni.sh`；8091 已响应 `/v1/audio/voices`
+      时不再拉起第二个；`SKIP_OMNI=1` 不调用 `start-omni.sh`
+    result: passed
+    reason:
+      text: ensure_omni 先探测 /v1/audio/voices，失败才后台调用
+        start-omni.sh；探测成功打印跳过且不拉起；SKIP_OMNI=1 直接 return。单测 test_a1 与 Runtime
+        unittest 均覆盖这三条。
+      truncated: false
+  - id: A2
+    source: brief.md
+    text: A2：Omni 环境缺失或启动失败时 `start.sh` 仍会启动 `app.py`（8010），并打出可观察的错误；不把 `tts` 改成
+      `edgetts`
+    result: passed
+    reason:
+      text: 脚本缺失、子进程退出、等待超时三条路径都 return 0 后仍执行 app.py，stderr 含「仍启动 8010」；start.sh 无
+        --tts/edgetts。test_a2 确认 app 仍被拉起。
+      truncated: false
+  - id: A3
+    source: brief.md
+    text: A3：`README.md` / `README-EN.md` / `docs/omni_tts.md` 写明 `./start.sh` 会先起
+      Omni 再起数字人；换模型仍用 `./start-omni.sh`
+    result: passed
+    reason:
+      text: README.md 写明 ./start.sh 先起 Omni（8091）再起数字人（8010），换模型仍用
+        ./start-omni.sh；README-EN.md 与 docs/omni_tts.md 对应表述齐全。Runtime 文档 grep 与
+        test_a3 通过。
+      truncated: false
+  - id: A4
+    source: brief.md
+    text: A4：原 `web/` 无改动；`start-omni.sh` 默认模型与双进程边界不变
+    result: passed
+    reason:
+      text: git diff --exit-code -- web/ 通过。start-omni.sh 仅改注释，默认仍是
+        Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice，独立 .venv-omni + exec vllm serve，与
+        8010 仍是双进程。
+      truncated: false
+builder_handoff:
+  candidate_id: 4dff5db9-176a-48ad-a16f-5053ee6fc95e
+  identity_provider: skill-coordinated
+  builder_execution_ref: skill-coordinated:builder:608ca1ba-4b75-4609-9272-d186336c3f42
+  iteration: 1
+  summary:
+    text: ./start.sh 在 8091 未就绪时后台调用 start-omni.sh，等到 voices 成功或超时后再起 app.py；已在听或
+      SKIP_OMNI=1 则跳过。失败/超时仍起 8010，不改 tts。Ctrl+C 停本脚本拉起的 Omni。文档改为一次启动。
+    truncated: false
+  addressed_acceptance_ids:
+    - A1
+    - A2
+    - A3
+    - A4
+  checks:
+    - name:
+        text: unittest tests.test_omni_in_start_sh tests.test_omni_tts_1_7b
+          tests.test_omni_base_clone tests.test_user_home_media
+          tests.test_admin_enable_user
+        truncated: false
+      result: passed
+      note:
+        text: 20 tests OK
+        truncated: false
+    - name:
+        text: git diff --exit-code -- web/
+        truncated: false
+      result: passed
+      note:
+        text: web/ 无改动
+        truncated: false
+  checks_truncated: false
+  known_limits:
+    - text: 单测用假 python/curl/start-omni，未真正拉起 vLLM 或探测本机 8091
+      truncated: false
+  known_limits_truncated: false
+  review:
+    status: passed
+    summary:
+      text: 对照 brief A1–A4：未就绪会调 start-omni、已就绪/SKIP_OMNI 跳过；失败仍起 app.py 且无
+        edgetts；README 写明一次启动；web/ 与 start-omni 默认模型不变。
+      truncated: false
+    reviewer_execution_ref: unittest tests.test_omni_in_start_sh tests.test_omni_tts_1_7b
+  submitted_at: 2026-09-17T14:22:00.565Z
+blockers: []
+verification:
+  candidate_id: 4dff5db9-176a-48ad-a16f-5053ee6fc95e
+  identity_provider: skill-coordinated
+  verifier_execution_ref: skill-coordinated:verifier:c889f22d-cdef-423e-abda-76ba33982387
+  iteration: 1
+  attempt: 1
+  assurance: skill-coordinated
+  verdict: pass
+  checks:
+    - id: unittest-omni-in-start-sh
+      name:
+        text: Omni-in-start.sh and related unit tests
+        truncated: false
+      argv_display:
+        - text: -m
+          truncated: false
+        - text: unittest
+          truncated: false
+        - text: tests.test_omni_in_start_sh
+          truncated: false
+        - text: tests.test_omni_tts_1_7b
+          truncated: false
+        - text: tests.test_omni_base_clone
+          truncated: false
+        - text: tests.test_user_home_media
+          truncated: false
+        - text: tests.test_admin_enable_user
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 1679
+    - id: web-untouched
+      name:
+        text: web/ unchanged
+        truncated: false
+      argv_display:
+        - text: diff
+          truncated: false
+        - text: --exit-code
+          truncated: false
+        - text: --
+          truncated: false
+        - text: web/
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 9
+    - id: start-sh-omni-docs
+      name:
+        text: start.sh calls start-omni; README one-command start
+        truncated: false
+      argv_display:
+        - text: -n
+          truncated: false
+        - text: START_OMNI\|SKIP_OMNI\|先起 Omni TTS\|starts Omni TTS (8091) first\|会先拉起
+            Omni 再起数字人
+          truncated: false
+        - text: start.sh
+          truncated: false
+        - text: README.md
+          truncated: false
+        - text: README-EN.md
+          truncated: false
+        - text: docs/omni_tts.md
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 8
+  summary:
+    text: A1–A4 均通过：未就绪才调 start-omni.sh，已就绪或 SKIP_OMNI=1 则跳过；Omni 失败仍起 8010 且不改
+      EdgeTTS。文档与 web/、默认模型边界均符合。
+    truncated: false
+  risks:
+    - text: 单测用假 python/curl，未连真实 8091（brief 允许）
+      truncated: false
+    - text: 无 curl 时 omni_ready 恒失败，可能对已在听的 8091 再拉起一次
+      truncated: false
+  risks_truncated: false
+  completed_at: 2026-09-17T14:25:08.214Z
+history:
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 1
+    outcome: pass
+    unresolved_ids: []
+    summary:
+      text: A1–A4 均通过：未就绪才调 start-omni.sh，已就绪或 SKIP_OMNI=1 则跳过；Omni 失败仍起 8010 且不改
+        EdgeTTS。文档与 web/、默认模型边界均符合。
+      truncated: false
+    completed_at: 2026-09-17T14:25:08.214Z
+history_overflow:
+  dropped_entries: 0
+  first_dropped_at: null
+  last_dropped_at: null
+  outcome_counts:
+    pass: 0
+    fail: 0
+    blocked: 0
+    execution-error: 0
+    recovery: 0
+verification_result: pass
+verification_report: verification.md
+archived: true
+created_at: 2026-09-17T14:11:52.989Z

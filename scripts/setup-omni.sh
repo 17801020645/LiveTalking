@@ -33,4 +33,4 @@ echo "安装 vllm-omni..."
 uv pip install --python "$VENV/bin/python" vllm-omni
 
 echo "完成。LiveTalking .venv 未被修改。"
-echo "启动: ./start-omni.sh"
+echo "启动: ./start.sh （换模型或单独起 8091: ./start-omni.sh）"

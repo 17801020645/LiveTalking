@@ -92,16 +92,15 @@ Linux CUDA 环境搭建参考: <https://zhuanlan.zhihu.com/p/674972886>
 
 ### 2.2 启动服务
 
-本仓库推荐先起 Omni TTS，再起数字人：
+本仓库推荐 `./start.sh`：先起 Omni TTS（8091），再起数字人（8010）。
 
 ```bash
-./start-omni.sh
 export LIVETALKING_BOOTSTRAP_ADMIN=admin
 export LIVETALKING_BOOTSTRAP_PASSWORD='你的密码'
 ./start.sh
 ```
 
-`./start.sh` 默认 WebRTC + wav2lip，监听约 **8010**。引导管理员只在用户表为空时创建。Omni 默认模型 `Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice`，监听 **8091**。详见 [本机 Omni TTS](docs/omni_tts.md)。
+`./start.sh` 默认 WebRTC + wav2lip，监听约 **8010**。8091 已在听时不会再拉起第二个 Omni。只起数字人：`SKIP_OMNI=1 ./start.sh`。引导管理员只在用户表为空时创建。Omni 默认模型 `Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice`，监听 **8091**。换模型或单独起 Omni 仍用 `./start-omni.sh`。详见 [本机 Omni TTS](docs/omni_tts.md)。
 
 声音克隆须换 Base 检查点并重启 8091（首次无缓存时打开下载）：
 
