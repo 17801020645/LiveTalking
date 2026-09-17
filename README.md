@@ -111,6 +111,14 @@ HF_HUB_OFFLINE=0 HF_HUB_DISABLE_XET=1 OMNI_MODEL=Qwen/Qwen3-TTS-12Hz-0.6B-Base .
 
 然后在 `/app/admin/tts` 上传参考音频。数字人要用克隆音色时，把 `config.yaml` 的 `REF_FILE` 设为克隆名，并设 `omni_tts_task_type: Base`，再重启 `./start.sh`。切回预设音色用默认 `./start-omni.sh` 与 `omni_tts_task_type: CustomVoice`。
 
+更高音质可换 1.7B-CustomVoice（同卡更容易 OOM；首次无缓存时打开下载）：
+
+```bash
+HF_HUB_OFFLINE=0 HF_HUB_DISABLE_XET=1 OMNI_MODEL=Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice ./start-omni.sh
+```
+
+数字人仍用预设音色 `vivian` 与 `omni_tts_task_type: CustomVoice`。详见 [本机 Omni TTS](docs/omni_tts.md)。
+
 不经脚本时也可：
 
 ```bash

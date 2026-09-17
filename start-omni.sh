@@ -4,7 +4,8 @@
 # 用法：
 #   ./start-omni.sh
 #   OMNI_MODEL=Qwen/Qwen3-TTS-12Hz-0.6B-Base ./start-omni.sh
-#   HF_HUB_OFFLINE=0 HF_HUB_DISABLE_XET=1 OMNI_MODEL=Qwen/Qwen3-TTS-12Hz-0.6B-Base ./start-omni.sh
+#   OMNI_MODEL=Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice ./start-omni.sh
+#   HF_HUB_OFFLINE=0 HF_HUB_DISABLE_XET=1 OMNI_MODEL=Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice ./start-omni.sh
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -32,7 +33,13 @@ mkdir -p "$HF_HOME"
 MODEL="${OMNI_MODEL:-Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice}"
 HOST="${OMNI_HOST:-0.0.0.0}"
 PORT="${OMNI_PORT:-8091}"
-DEPLOY_CONFIG="${OMNI_DEPLOY_CONFIG:-$ROOT/deploy/qwen3_tts_0.6b.yaml}"
+if [[ -n "${OMNI_DEPLOY_CONFIG:-}" ]]; then
+  DEPLOY_CONFIG="$OMNI_DEPLOY_CONFIG"
+elif [[ "$MODEL" == *1.7B* ]]; then
+  DEPLOY_CONFIG="$ROOT/deploy/qwen3_tts_1.7b.yaml"
+else
+  DEPLOY_CONFIG="$ROOT/deploy/qwen3_tts_0.6b.yaml"
+fi
 
 # 默认模型已在 HF_HOME 时离线启动，避免每次启动再打 Hub。
 # 缺文件时：HF_HUB_OFFLINE=0 HF_HUB_DISABLE_XET=1 ./start-omni.sh

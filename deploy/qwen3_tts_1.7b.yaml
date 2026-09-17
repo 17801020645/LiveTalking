@@ -1,6 +1,6 @@
-# LiveTalking 本机 4090 配方：基于 vLLM-Omni 官方 qwen3_tts.yaml，
-# 将两阶段 gpu_memory_utilization 从 0.3 降到 0.15，给 Wav2Lip 留显存。
-# 空闲约 5GiB、推理峰值约 10GiB。1.7B 用 deploy/qwen3_tts_1.7b.yaml（两阶段 0.25）。
+# LiveTalking 本机 4090 配方：1.7B-CustomVoice。
+# 两阶段 gpu_memory_utilization 各 0.25（高于 0.6B 的 0.15）。
+# 同卡再加 Wav2Lip 更容易 OOM；不够可升到 0.30 或单独 GPU。
 #
 # Qwen3-TTS deploy: talker → code2wav via shared-memory chunk streaming.
 # Verified on 1x H100.
@@ -65,7 +65,7 @@ connectors:
 stages:
   - stage_id: 0
     max_num_seqs: 64
-    gpu_memory_utilization: 0.15
+    gpu_memory_utilization: 0.25
     trust_remote_code: true
     # Prefix caching on by default. The HS opt-out (talker only consumes the
     # last token's hidden state) and deferred mm-output writes added in this
@@ -101,7 +101,7 @@ stages:
   - stage_id: 1
     # Tuned for Base voice clone; CustomVoice / VoiceDesign are TTFA-optimal at 1.
     max_num_seqs: 64
-    gpu_memory_utilization: 0.15
+    gpu_memory_utilization: 0.25
     enforce_eager: false
     trust_remote_code: true
     enable_prefix_caching: false

@@ -106,12 +106,13 @@ tts: edgetts
 
 ## 同卡显存（4090 24GB）
 
-[`deploy/qwen3_tts_0.6b.yaml`](../deploy/qwen3_tts_0.6b.yaml) 把官方两阶段 `gpu_memory_utilization` 从 **0.3 改为 0.15**。
+[`deploy/qwen3_tts_0.6b.yaml`](../deploy/qwen3_tts_0.6b.yaml) 把官方两阶段 `gpu_memory_utilization` 从 **0.3 改为 0.15**。1.7B 用 [`deploy/qwen3_tts_1.7b.yaml`](../deploy/qwen3_tts_1.7b.yaml)（两阶段 **0.25**），同卡更容易 OOM。
 
 | 状态 | 大约占用 | 说明 |
 |------|----------|------|
 | 默认官方 0.3+0.3 | 空闲 ~13.5GB | 再加 Wav2Lip 容易挤爆 |
-| 本仓库 0.15+0.15 | 空闲 ~5GB，推理峰值 ~10GB | 给数字人留余量 |
+| 本仓库 0.6B 0.15+0.15 | 空闲 ~5GB，推理峰值 ~10GB | 给数字人留余量 |
+| 本仓库 1.7B 0.25+0.25 | 高于 0.6B | 同卡更容易 OOM |
 | Wav2Lip256 | 约 2–6GB | `batch_size` 越大越高 |
 
 同时说话时另开终端：
@@ -120,19 +121,19 @@ tts: edgetts
 nvidia-smi --query-gpu=memory.used,memory.free,utilization.gpu --format=csv -l 1
 ```
 
-若 OOM：先把 yaml 里两阶段再降到 `0.12`，或降低 LiveTalking `batch_size`。改完 yaml 后重启 `./start-omni.sh`。
+若 OOM：0.6B 可把 yaml 两阶段再降到 `0.12`，或降低 LiveTalking `batch_size`；1.7B 可升到 0.30 或换独立 GPU。改完 yaml 后重启 `./start-omni.sh`。
 
 ## 换模型（不必改渲染代码）
 
-一个 `vllm serve` 只挂一个检查点。换模型只改启动参数，**不要**改 Wav2Lip / WebRTC。
+一个 `vllm serve` 只挂一个检查点。换模型只改启动参数，**不要**改 Wav2Lip / WebRTC。`start-omni.sh` 看到模型名含 `1.7B` 时自动用 1.7B yaml；`OMNI_DEPLOY_CONFIG` 可覆盖。
 
 | 目标 | `OMNI_MODEL` | 显存建议 | 说明 |
 |------|----------------|----------|------|
 | 预设音色（本轮默认） | `Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice` | 两阶段 0.15 | 管理页列表 / 合成 |
 | 声音克隆 | `Qwen/Qwen3-TTS-12Hz-0.6B-Base` | 可先保持 0.15，不够再升 | 管理页上传克隆；`task_type=Base` |
-| 更高音质 | `Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice` | 升到 0.25–0.30 或单独 GPU | 同卡更容易 OOM |
+| 更高音质 | `Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice` | 两阶段 0.25；不够再升到 0.30 或单独 GPU | 同卡更容易 OOM |
 
-示例（首次无本地缓存时加上下载开关）：
+声音克隆（首次无本地缓存时加上下载开关）：
 
 ```bash
 HF_HUB_OFFLINE=0 HF_HUB_DISABLE_XET=1 OMNI_MODEL=Qwen/Qwen3-TTS-12Hz-0.6B-Base ./start-omni.sh
@@ -142,6 +143,18 @@ HF_HUB_OFFLINE=0 HF_HUB_DISABLE_XET=1 OMNI_MODEL=Qwen/Qwen3-TTS-12Hz-0.6B-Base .
 
 ```bash
 OMNI_MODEL=Qwen/Qwen3-TTS-12Hz-0.6B-Base ./start-omni.sh
+```
+
+更高音质 1.7B-CustomVoice（首次无本地缓存时打开下载；数字人仍用 `vivian` + `omni_tts_task_type: CustomVoice`）：
+
+```bash
+HF_HUB_OFFLINE=0 HF_HUB_DISABLE_XET=1 OMNI_MODEL=Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice ./start-omni.sh
+```
+
+已缓存后：
+
+```bash
+OMNI_MODEL=Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice ./start-omni.sh
 ```
 
 CustomVoice 检查点不能处理 Base 克隆请求，必须换对应模型并重启 8091。数字人侧：`tts: omnitts` + `TTS_SERVER` + 克隆音色名 + `omni_tts_task_type: Base`。切回预设音色则重新用默认 `./start-omni.sh`（CustomVoice），`omni_tts_task_type: CustomVoice`，`REF_FILE: vivian`。
