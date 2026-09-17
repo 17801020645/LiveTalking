@@ -23,10 +23,9 @@ class UserHomeAsrTests(unittest.TestCase):
         self.assertIn("is_speaking: false", src)
         self.assertIn("await sendHuman(recognized)", src)
         self.assertIn("fetch('/human'", src)
-        self.assertIn("type: 'echo'", src)
+        self.assertIn("type: talkType.value", src)
         self.assertIn("sessionid: sessionid.value", src)
-        self.assertNotIn("talkType", src)
-        self.assertNotIn("type: 'chat'", src)
+        self.assertIn("talkType", src)
 
     def test_a3_empty_result_and_no_funasr_panel(self):
         src = USER_HOME.read_text(encoding="utf-8")

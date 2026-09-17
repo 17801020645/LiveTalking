@@ -1,0 +1,210 @@
+schema: comet.native.v4
+name: user-home-chat
+language: zh-CN
+phase: archive
+status: done
+state_version: 7
+brief: brief.md
+spec_changes:
+  - capability: user-live
+    operation: modify
+    source: specs/user-live/spec.md
+  - capability: web-app-shell
+    operation: modify
+    source: specs/web-app-shell/spec.md
+workspace:
+  isolation: current
+  change_branch: main
+  target_branch: main
+  finish: null
+loop:
+  stage: done
+  goal_cycle: 1
+  iteration: 1
+  attempt: 1
+  retry_epoch: 0
+  failed_iteration_count: 0
+  no_progress_count: 0
+  execution_failure_count: 0
+  previous_unresolved_ids: []
+  next_action: null
+acceptance:
+  - id: A1
+    source: brief.md
+    text: A1：连接后可把文字以 `type=echo` 或 `type=chat` 发到 `/human`，并带本次 `sessionid`；未连接不能发送
+    result: passed
+    reason:
+      text: "Home.vue 默认 talkType=echo，发送按钮与输入在 !connected 时禁用；sendText 无 sessionid 直接
+        return。sendHuman 以 POST /human 发送 {text, type: talkType.value,
+        interrupt: true, sessionid}。unittest 与 grep 均命中 talkType.value。"
+      truncated: false
+  - id: A2
+    source: brief.md
+    text: A2：连接后点打断请求 `/interrupt_talk` 并带本次 `sessionid`；未连接不能打断
+    result: passed
+    reason:
+      text: 打断按钮 :disabled="!connected"；interrupt() 无 sessionid 不发，否则 POST
+        /interrupt_talk 且 body 含本次 sessionid。Runtime grep /interrupt_talk
+        命中，相关单测通过。
+      truncated: false
+  - id: A3
+    source: brief.md
+    text: A3：麦克风停止后非空识别按当前模式发送；切到 chat 则 `type=chat`。空结果不发送
+    result: passed
+    reason:
+      text: "stopMic 非空识别走 sendHuman(recognized)，与文字发送共用 type: talkType.value，切到 chat
+        即为 type=chat；空/空白只提示「未识别到语音」并 return。无硬编码 type echo。ASR 单测已改为跟随
+        talkType。"
+      truncated: false
+  - id: A4
+    source: brief.md
+    text: A4：原 `web/` 无改动；用户首页仍无音频上传/录制/动作编排
+    result: passed
+    reason:
+      text: git diff --exit-code -- web/ 为 0；Home.vue 无
+        /humanaudio、开始录制、Audiotype/setAudiotype；README 用户工作台已写麦克风说话与 echo/chat
+        与打断。
+      truncated: false
+builder_handoff:
+  candidate_id: fe7b9406-ef26-4f56-8c4a-4e6f58b31d3e
+  identity_provider: skill-coordinated
+  builder_execution_ref: skill-coordinated:builder:14e9e8a8-e15d-4e31-8720-4cf7b1038b72
+  iteration: 1
+  summary:
+    text: 用户首页已加 echo/chat 模式与打断：发送走 /human 的 talkType，打断走
+      /interrupt_talk；麦克风识别按当前模式发送。未连接时发送/打断/麦克风禁用。未迁音频上传/录制/动作。README 已同步。web/
+      未改。
+    truncated: false
+  addressed_acceptance_ids:
+    - A1
+    - A2
+    - A3
+    - A4
+  checks:
+    - name:
+        text: unittest tests.test_user_home_chat tests.test_user_home_asr
+          tests.test_user_live tests.test_admin_live_console
+        truncated: false
+      result: passed
+      note:
+        text: 20 tests OK
+        truncated: false
+    - name:
+        text: git diff --exit-code -- web/
+        truncated: false
+      result: passed
+      note:
+        text: web/ 无改动
+        truncated: false
+  checks_truncated: false
+  known_limits:
+    - text: 未在浏览器连真实 WebRTC/LLM 点 Chat 与打断；单测断言源码与假 RTC
+      truncated: false
+    - text: 生产 /app/ 需 npm run build
+      truncated: false
+  known_limits_truncated: false
+  review:
+    status: passed
+    summary:
+      text: 对照 brief A1–A4：echo/chat、打断、麦克风跟模式、web/ 无管理员音频/录制/动作。
+      truncated: false
+    reviewer_execution_ref: unittest tests.test_user_home_chat
+  submitted_at: 2026-09-17T02:41:16.751Z
+blockers: []
+verification:
+  candidate_id: fe7b9406-ef26-4f56-8c4a-4e6f58b31d3e
+  identity_provider: skill-coordinated
+  verifier_execution_ref: skill-coordinated:verifier:40aa143a-de95-422c-891c-518b31c7434e
+  iteration: 1
+  attempt: 1
+  assurance: skill-coordinated
+  verdict: pass
+  checks:
+    - id: unittest-user-home-chat
+      name:
+        text: User home chat and related unit tests
+        truncated: false
+      argv_display:
+        - text: -m
+          truncated: false
+        - text: unittest
+          truncated: false
+        - text: tests.test_user_home_chat
+          truncated: false
+        - text: tests.test_user_home_asr
+          truncated: false
+        - text: tests.test_user_live
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 1988
+    - id: web-untouched
+      name:
+        text: web/ unchanged
+        truncated: false
+      argv_display:
+        - text: diff
+          truncated: false
+        - text: --exit-code
+          truncated: false
+        - text: --
+          truncated: false
+        - text: web/
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 7
+    - id: home-chat-interrupt
+      name:
+        text: User home has talkType and interrupt_talk
+        truncated: false
+      argv_display:
+        - text: -E
+          truncated: false
+        - text: talkType.value|/interrupt_talk|Echo 复读
+          truncated: false
+        - text: frontend/src/views/user/Home.vue
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 7
+  summary:
+    text: 用户首页已对齐管理员说话区：连接后可按 echo/chat 带本次 sessionid 发
+      /human，可打断，麦克风停止后按当前模式发送且空结果不发；web/ 未改且未迁音频上传/录制/动作。A1–A4 全部通过。
+    truncated: false
+  risks:
+    - text: 未在浏览器连真实 WebRTC/LLM；本切片明确不要求，源码断言加 Runtime 检查已覆盖 A1–A4。
+      truncated: false
+  risks_truncated: false
+  completed_at: 2026-09-17T02:43:09.661Z
+history:
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 1
+    outcome: pass
+    unresolved_ids: []
+    summary:
+      text: 用户首页已对齐管理员说话区：连接后可按 echo/chat 带本次 sessionid 发
+        /human，可打断，麦克风停止后按当前模式发送且空结果不发；web/ 未改且未迁音频上传/录制/动作。A1–A4 全部通过。
+      truncated: false
+    completed_at: 2026-09-17T02:43:09.661Z
+history_overflow:
+  dropped_entries: 0
+  first_dropped_at: null
+  last_dropped_at: null
+  outcome_counts:
+    pass: 0
+    fail: 0
+    blocked: 0
+    execution-error: 0
+    recovery: 0
+verification_result: pass
+verification_report: verification.md
+archived: true
+created_at: 2026-09-17T02:28:35.432Z

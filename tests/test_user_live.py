@@ -104,6 +104,8 @@ class UserLiveTests(unittest.IsolatedAsyncioTestCase):
         home = (FRONTEND_SRC / "views" / "user" / "Home.vue").read_text()
         self.assertIn("/human", home)
         self.assertIn("sessionid", home)
+        self.assertIn("talkType", home)
+        self.assertIn("/interrupt_talk", home)
 
     async def test_a5_legacy_offer_and_web(self):
         offer = await self.client.post("/offer", json={})

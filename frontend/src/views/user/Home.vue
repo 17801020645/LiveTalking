@@ -40,10 +40,33 @@
             </button>
             <button v-else class="btn-ghost" type="button" @click="stop">断开</button>
           </div>
-          <div v-if="connected" class="field" style="margin-top: 12px;">
+          <div class="field" style="margin-top: 12px;">
             <label>发送文字</label>
-            <input v-model="text" @keyup.enter="sendText" placeholder="输入后回车发送" />
-            <button class="btn" type="button" style="margin-top: 8px;" @click="sendText">发送</button>
+            <input
+              v-model="text"
+              :disabled="!connected"
+              @keyup.enter="sendText"
+              placeholder="输入后回车发送"
+            />
+          </div>
+          <div class="field">
+            <label>模式</label>
+            <select v-model="talkType" :disabled="!connected">
+              <option value="echo">Echo 复读</option>
+              <option value="chat">Chat LLM</option>
+            </select>
+          </div>
+          <div class="row-actions">
+            <button class="btn" type="button" :disabled="!connected" @click="sendText">发送</button>
+            <button
+              class="btn-interrupt"
+              type="button"
+              :disabled="!connected"
+              :class="{ 'is-fired': interrupting }"
+              @click="interrupt"
+            >
+              打断
+            </button>
           </div>
           <div class="row-actions">
             <button
@@ -79,11 +102,14 @@ const connected = ref(false)
 const starting = ref(false)
 const error = ref('')
 const text = ref('')
+const talkType = ref('echo')
+const interrupting = ref(false)
 const remoteVideo = ref(null)
 const sessionid = ref('')
 const listening = ref(false)
 const recognizing = ref(false)
 let pc = null
+let interruptFlashTimer = null
 let asrWs = null
 let asrStream = null
 let asrCtx = null
@@ -97,6 +123,7 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+  if (interruptFlashTimer) clearTimeout(interruptFlashTimer)
   stop()
 })
 
@@ -331,7 +358,7 @@ async function sendHuman(t) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       text: t,
-      type: 'echo',
+      type: talkType.value,
       interrupt: true,
       sessionid: sessionid.value,
     }),
@@ -351,6 +378,32 @@ async function sendText() {
     text.value = ''
   } catch (e) {
     error.value = e.message
+  }
+}
+
+async function interrupt() {
+  if (!sessionid.value || interrupting.value) return
+  interrupting.value = true
+  error.value = ''
+  try {
+    const res = await fetch('/interrupt_talk', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionid: sessionid.value }),
+    })
+    const body = await res.json().catch(() => ({}))
+    if (!res.ok || (typeof body.code === 'number' && body.code !== 0)) {
+      throw new Error(body.msg || '打断失败')
+    }
+  } catch (e) {
+    error.value = e.message
+  } finally {
+    if (interruptFlashTimer) clearTimeout(interruptFlashTimer)
+    interruptFlashTimer = setTimeout(() => {
+      interrupting.value = false
+      interruptFlashTimer = null
+    }, 450)
   }
 }
 
