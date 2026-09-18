@@ -2,37 +2,37 @@
   <div class="gallery login-wrap">
     <section class="monitor-panel login-monitor" :class="{ 'is-fault': Boolean(error), 'is-program': loading }">
       <span class="tally" :class="error ? 'is-fault' : (loading ? 'is-program' : 'is-idle')" aria-hidden="true" />
-      <p class="monitor-name">LiveTalking</p>
+      <h1 class="monitor-name">LiveTalking</h1>
       <form v-if="!forgot" class="monitor-body" @submit.prevent="submit">
         <p class="muted">登录后进入数字人工作台</p>
         <div class="field">
-          <label>用户名</label>
-          <input v-model="username" autocomplete="username" />
+          <label for="login-username">用户名</label>
+          <input id="login-username" v-model="username" autocomplete="username" :aria-invalid="Boolean(error)" :aria-describedby="error ? 'login-status' : undefined" />
         </div>
         <div class="field">
-          <label>密码</label>
-          <input v-model="password" type="password" autocomplete="current-password" />
+          <label for="login-password">密码</label>
+          <input id="login-password" v-model="password" type="password" autocomplete="current-password" :aria-invalid="Boolean(error)" :aria-describedby="error ? 'login-status' : undefined" />
         </div>
-        <p v-if="error" class="error">{{ error }}</p>
+        <p v-if="error" id="login-status" class="error" role="alert">{{ error }}</p>
         <button class="btn" type="submit" :disabled="loading">{{ loading ? '登录中…' : '登录' }}</button>
         <button class="btn-ghost" type="button" :disabled="loading" @click="openForgot">忘记密码</button>
       </form>
       <form v-else class="monitor-body" @submit.prevent="submitForgot">
         <p class="muted">凭管理员发放的一次性令牌重设密码</p>
         <div class="field">
-          <label>用户名</label>
-          <input v-model="username" autocomplete="username" />
+          <label for="forgot-username">用户名</label>
+          <input id="forgot-username" v-model="username" autocomplete="username" :aria-invalid="Boolean(error)" :aria-describedby="error || success ? 'forgot-status' : undefined" />
         </div>
         <div class="field">
-          <label>一次性令牌</label>
-          <input v-model="token" autocomplete="one-time-code" />
+          <label for="forgot-token">一次性令牌</label>
+          <input id="forgot-token" v-model="token" autocomplete="one-time-code" :aria-invalid="Boolean(error)" :aria-describedby="error || success ? 'forgot-status' : undefined" />
         </div>
         <div class="field">
-          <label>新密码</label>
-          <input v-model="newPassword" type="password" autocomplete="new-password" />
+          <label for="forgot-password">新密码</label>
+          <input id="forgot-password" v-model="newPassword" type="password" autocomplete="new-password" :aria-invalid="Boolean(error)" :aria-describedby="error || success ? 'forgot-status' : undefined" />
         </div>
-        <p v-if="error" class="error">{{ error }}</p>
-        <p v-if="success" class="muted">{{ success }}</p>
+        <p v-if="error" id="forgot-status" class="error" role="alert">{{ error }}</p>
+        <p v-else-if="success" id="forgot-status" class="muted" role="status">{{ success }}</p>
         <button class="btn" type="submit" :disabled="loading">{{ loading ? '提交中…' : '重设密码' }}</button>
         <button class="btn-ghost" type="button" :disabled="loading" @click="closeForgot">返回登录</button>
       </form>

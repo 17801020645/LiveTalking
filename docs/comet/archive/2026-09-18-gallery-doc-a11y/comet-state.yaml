@@ -1,0 +1,200 @@
+schema: comet.native.v4
+name: gallery-doc-a11y
+language: zh-CN
+phase: archive
+status: done
+state_version: 7
+brief: brief.md
+spec_changes:
+  - capability: web-app-shell
+    operation: modify
+    source: specs/web-app-shell/spec.md
+workspace:
+  isolation: current
+  change_branch: main
+  target_branch: main
+  finish: null
+loop:
+  stage: done
+  goal_cycle: 1
+  iteration: 1
+  attempt: 1
+  retry_epoch: 0
+  failed_iteration_count: 0
+  no_progress_count: 0
+  execution_failure_count: 0
+  previous_unresolved_ids: []
+  next_action: null
+acceptance:
+  - id: A1
+    source: brief.md
+    text: A1：`DESIGN.md` 不再是 seed；颜色/字体/半径与 `.gallery` 已上线 token 一致；sidecar 存在；浅色
+      `:root` 变量不是规范色
+    result: passed
+    reason:
+      text: DESIGN.md 已无 seed 占位，墙/Indigo/Noto/Barlow/22px 与 .gallery token 一致，sidecar
+        存在，浅色 :root 仅作反例而非规范色。
+      truncated: false
+  - id: A2
+    source: brief.md
+    text: A2：`PRODUCT.md` 写明 `/app/` 目标 WCAG 2.2 AA；定价/许可仍未决
+    result: passed
+    reason:
+      text: PRODUCT.md 写明 /app/ 目标 WCAG 2.2 AA，并保留「未决：无定价/许可对外主张」。
+      truncated: false
+  - id: A3
+    source: brief.md
+    text: A3：登录（含忘记密码）、顶栏改密、管理后台开户的 `label` 关联对应控件；管理员与用户壳有「跳到主内容」
+    result: passed
+    reason:
+      text: 登录、忘记密码、顶栏改密、开户均有 label/for 对应控件；管理员与用户壳均有「跳到主内容」与 main。
+      truncated: false
+  - id: A4
+    source: brief.md
+    text: A4：管理后台用户表可用键盘选中一行；选中态不只有颜色
+    result: passed
+    reason:
+      text: 用户表行可 Tab 聚焦并用 Enter/Space 选中；选中态有「选中」文案与 aria-selected，不只靠颜色。
+      truncated: false
+  - id: A5
+    source: brief.md
+    text: A5：`git diff --exit-code -- web/`；监视器框、近黑墙、Indigo 强调仍在
+    result: passed
+    reason:
+      text: "Runtime git diff --exit-code -- web/ 为 0；监视器框、近黑墙 #111318 与 Indigo
+        #4361ee 仍在。"
+      truncated: false
+builder_handoff:
+  candidate_id: f4ff84d3-08a9-47dc-a434-9650bf90fbb4
+  identity_provider: skill-coordinated
+  builder_execution_ref: skill-coordinated:builder:2fe4463c-4da0-47a6-8136-5b6a9b39206e
+  iteration: 1
+  summary:
+    text: 从已上线 .gallery CSS 重扫 DESIGN.md 与 sidecar；PRODUCT.md 写明 /app WCAG 2.2
+      AA。登录/改密/开户 label 关联；管理与用户壳 skip link 与 main；Ops 用户表键盘选中并带「选中」文案。web/
+      未改，Gallery 配色布局未换。
+    truncated: false
+  addressed_acceptance_ids:
+    - A1
+    - A2
+    - A3
+    - A4
+    - A5
+  checks:
+    - name:
+        text: unittest tests.test_gallery_doc_a11y tests.test_gallery_user_shell
+          tests.test_gallery_admin_pages tests.test_user_change_password
+          tests.test_forgot_password_token
+        truncated: false
+      result: passed
+      note:
+        text: 25 tests OK
+        truncated: false
+    - name:
+        text: git diff --exit-code -- web/
+        truncated: false
+      result: passed
+      note:
+        text: web/ 无改动
+        truncated: false
+  checks_truncated: false
+  known_limits:
+    - text: 未在浏览器做键盘/读屏走查；单测为源码断言
+      truncated: false
+    - text: 不覆盖连麦媒体控件与旧 web/ 无障碍
+      truncated: false
+  known_limits_truncated: false
+  review:
+    status: passed
+    summary:
+      text: 对照 brief A1–A5：DESIGN 不再是 seed；PRODUCT 写了 /app AA；表单 label 与
+        skip；用户表键盘选中；web/ 与 Gallery 材料仍在。
+      truncated: false
+    reviewer_execution_ref: unittest tests.test_gallery_doc_a11y
+  submitted_at: 2026-09-18T12:30:20.057Z
+blockers: []
+verification:
+  candidate_id: f4ff84d3-08a9-47dc-a434-9650bf90fbb4
+  identity_provider: skill-coordinated
+  verifier_execution_ref: skill-coordinated:verifier:0ef40c20-a5e8-4ef2-92b3-d4b89a1122bf
+  iteration: 1
+  attempt: 1
+  assurance: skill-coordinated
+  verdict: pass
+  checks:
+    - id: unittest-gallery-doc-a11y
+      name:
+        text: Gallery DESIGN/a11y and related unit tests
+        truncated: false
+      argv_display:
+        - text: -m
+          truncated: false
+        - text: unittest
+          truncated: false
+        - text: tests.test_gallery_doc_a11y
+          truncated: false
+        - text: tests.test_gallery_user_shell
+          truncated: false
+        - text: tests.test_gallery_admin_pages
+          truncated: false
+        - text: tests.test_user_change_password
+          truncated: false
+        - text: tests.test_forgot_password_token
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 3499
+    - id: web-untouched
+      name:
+        text: Original web/ unchanged
+        truncated: false
+      argv_display:
+        - text: diff
+          truncated: false
+        - text: --exit-code
+          truncated: false
+        - text: --
+          truncated: false
+        - text: web/
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 9
+  summary:
+    text: A1–A5 与 brief/spec 一致，实现与 Runtime 检查均通过。已知限制不构成失败。
+    truncated: false
+  risks:
+    - text: 未在浏览器做键盘/读屏走查；本轮验收依据源码与已通过单测。
+      truncated: false
+    - text: 连麦媒体控件与旧 web/ 不在本刀 AA 范围内。
+      truncated: false
+  risks_truncated: false
+  completed_at: 2026-09-18T12:33:01.272Z
+history:
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 1
+    outcome: pass
+    unresolved_ids: []
+    summary:
+      text: A1–A5 与 brief/spec 一致，实现与 Runtime 检查均通过。已知限制不构成失败。
+      truncated: false
+    completed_at: 2026-09-18T12:33:01.272Z
+history_overflow:
+  dropped_entries: 0
+  first_dropped_at: null
+  last_dropped_at: null
+  outcome_counts:
+    pass: 0
+    fail: 0
+    blocked: 0
+    execution-error: 0
+    recovery: 0
+verification_result: pass
+verification_report: verification.md
+archived: true
+created_at: 2026-09-18T12:19:37.585Z

@@ -1,5 +1,6 @@
 <template>
   <div class="shell gallery">
+    <a class="skip-link" href="#main-content">跳到主内容</a>
     <aside class="sidebar" aria-label="管理导航">
       <div class="brand">LiveTalking</div>
       <nav class="rail-nav">
@@ -46,7 +47,9 @@
         <button class="btn-ghost" type="button" @click="logout">退出</button>
       </header>
       <div class="content">
-        <router-view />
+        <main id="main-content" tabindex="-1">
+          <router-view />
+        </main>
       </div>
     </div>
   </div>

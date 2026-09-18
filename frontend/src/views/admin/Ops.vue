@@ -32,14 +32,14 @@
       <p class="monitor-name">创建普通用户</p>
       <div class="monitor-body">
         <div class="field">
-          <label>用户名</label>
-          <input v-model="newUser" />
+          <label for="ops-new-user">用户名</label>
+          <input id="ops-new-user" v-model="newUser" :aria-invalid="Boolean(formError)" :aria-describedby="formError ? 'ops-form-error' : undefined" />
         </div>
         <div class="field">
-          <label>初始密码</label>
-          <input v-model="newPass" type="password" />
+          <label for="ops-new-pass">初始密码</label>
+          <input id="ops-new-pass" v-model="newPass" type="password" :aria-invalid="Boolean(formError)" :aria-describedby="formError ? 'ops-form-error' : undefined" />
         </div>
-        <p v-if="formError" class="error">{{ formError }}</p>
+        <p v-if="formError" id="ops-form-error" class="error" role="alert">{{ formError }}</p>
         <button class="btn" type="button" @click="createUser">创建</button>
       </div>
     </section>
@@ -57,10 +57,16 @@
               v-for="u in users"
               :key="u.id"
               :class="{ 'is-selected': selected?.id === u.id }"
+              tabindex="0"
+              :aria-selected="selected?.id === u.id ? 'true' : 'false'"
               @click="select(u)"
-              style="cursor: pointer"
+              @keydown.enter.prevent="select(u)"
+              @keydown.space.prevent="select(u)"
             >
-              <td>{{ u.username }}</td>
+              <td>
+                {{ u.username }}
+                <span v-if="selected?.id === u.id" class="row-selected-mark">选中</span>
+              </td>
               <td>{{ u.role }}</td>
               <td>{{ u.status }}</td>
               <td>{{ (subs[u.id] || []).map(s => s.avatar_id).join(', ') || '—' }}</td>

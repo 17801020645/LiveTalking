@@ -6,15 +6,15 @@
       <p class="monitor-name">改密</p>
       <div class="monitor-body">
         <div class="field">
-          <label>当前密码</label>
-          <input v-model="currentPassword" type="password" autocomplete="current-password" />
+          <label for="pw-current">当前密码</label>
+          <input id="pw-current" v-model="currentPassword" type="password" autocomplete="current-password" :aria-invalid="Boolean(error)" :aria-describedby="error || ok ? 'pw-status' : undefined" />
         </div>
         <div class="field">
-          <label>新密码</label>
-          <input v-model="newPassword" type="password" autocomplete="new-password" />
+          <label for="pw-new">新密码</label>
+          <input id="pw-new" v-model="newPassword" type="password" autocomplete="new-password" :aria-invalid="Boolean(error)" :aria-describedby="error || ok ? 'pw-status' : undefined" />
         </div>
-        <p v-if="error" class="error">{{ error }}</p>
-        <p v-if="ok" class="muted">已更新</p>
+        <p v-if="error" id="pw-status" class="error" role="alert">{{ error }}</p>
+        <p v-else-if="ok" id="pw-status" class="muted" role="status">已更新</p>
         <div class="row-actions">
           <button class="btn" type="submit" :disabled="saving">{{ saving ? '保存中…' : '保存' }}</button>
           <button class="btn-ghost" type="button" @click="open = false">取消</button>

@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-18T12:30:00.000Z",
+  "title": "Design System: LiveTalking",
+  "extensions": {
+    "colorMeta": {
+      "gallery-wall": { "role": "neutral", "displayName": "Gallery Wall", "canonical": "#111318" },
+      "program-paper": { "role": "neutral", "displayName": "Program Paper", "canonical": "#f8fafc" },
+      "electric-indigo": { "role": "primary", "displayName": "Electric Indigo", "canonical": "#4361ee" },
+      "indigo-deep": { "role": "primary", "displayName": "Indigo Deep", "canonical": "#3f37c9" },
+      "bezel": { "role": "neutral", "displayName": "Bezel", "canonical": "#16181f" },
+      "screen": { "role": "neutral", "displayName": "Screen", "canonical": "#07080c" },
+      "ink-quiet": { "role": "neutral", "displayName": "Ink Quiet", "canonical": "#c5cdd8" },
+      "tally-live": { "role": "tally", "displayName": "Tally Live", "canonical": "#22c55e" },
+      "tally-fault": { "role": "tally", "displayName": "Tally Fault", "canonical": "#ef4444" },
+      "tally-idle": { "role": "tally", "displayName": "Tally Idle", "canonical": "#8d95a3" },
+      "tally-warn": { "role": "tally", "displayName": "Tally Warn", "canonical": "#f59e0b" }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Admin home program counts." },
+      "body": { "displayName": "Body", "purpose": "Tasks, nav, and forms." },
+      "title": { "displayName": "Title", "purpose": "Monitor names." }
+    },
+    "shadows": [
+      { "name": "monitor", "value": "0 18px 40px rgba(0, 0, 0, 0.45)", "purpose": "Lift the bezel off the flat wall." },
+      { "name": "program-ring", "value": "0 18px 44px rgba(67, 97, 238, 0.22), 0 0 0 1px rgba(67, 97, 238, 0.45)", "purpose": "Active monitor on program." }
+    ],
+    "motion": [
+      { "name": "gallery-snap", "value": "0.2s cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Tally and bezel state changes." }
+    ],
+    "breakpoints": [
+      { "name": "gallery-stack", "value": "900px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Indigo fill for the one committed action in a monitor.",
+      "html": "<button class=\"ds-btn-primary\">登录</button>",
+      "css": ".ds-btn-primary { background: linear-gradient(135deg, #4361ee, #3f37c9); color: #fff; border: none; border-radius: 8px; padding: 8px 16px; font-weight: 600; } .ds-btn-primary:focus-visible { outline: 2px solid #4361ee; outline-offset: 3px; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Quiet secondary action on the dark wall.",
+      "html": "<button class=\"ds-btn-ghost\">忘记密码</button>",
+      "css": ".ds-btn-ghost { background: transparent; border: none; color: #c5cdd8; border-radius: 8px; padding: 8px 12px; font-weight: 500; } .ds-btn-ghost:hover { color: #f8fafc; } .ds-btn-ghost:focus-visible { outline: 2px solid #4361ee; outline-offset: 3px; }"
+    },
+    {
+      "name": "Monitor Frame",
+      "kind": "card",
+      "refersTo": "monitor-frame",
+      "description": "Signature gallery object: tally, name, and the job inside a thick bezel.",
+      "html": "<section class=\"ds-monitor\"><span class=\"ds-tally\"></span><p class=\"ds-monitor-name\">待处理订单</p><p class=\"ds-monitor-count\">3</p></section>",
+      "css": ".ds-monitor { position: relative; background: linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02)), #16181f; color: #f8fafc; border: 1px solid rgba(255,255,255,0.08); border-radius: 22px; padding: 22px 18px 20px; box-shadow: 0 18px 40px rgba(0,0,0,0.45); text-align: center; } .ds-tally { position: absolute; top: 16px; left: 16px; width: 10px; height: 10px; border-radius: 50%; background: #8d95a3; } .ds-monitor-name { margin: 6px 0 8px; font: 600 1.05rem/1.3 \"Noto Sans SC\", sans-serif; } .ds-monitor-count { margin: 12px 0; font: 700 4rem/0.9 \"Barlow Condensed\", sans-serif; }"
+    },
+    {
+      "name": "Rail Nav Active",
+      "kind": "nav",
+      "refersTo": "nav-link-active",
+      "description": "Thin rail item; exact-active gets a local Indigo wash.",
+      "html": "<a class=\"ds-nav-link ds-nav-link-active\" href=\"#\">首页</a>",
+      "css": ".ds-nav-link { display: flex; color: #c5cdd8; text-decoration: none; padding: 11px 12px; border-radius: 10px; font: 500 0.9rem/1.3 \"Noto Sans SC\", sans-serif; } .ds-nav-link-active { background: rgba(67, 97, 238, 0.16); color: #f8fafc; } .ds-nav-link:focus-visible { outline: 2px solid #4361ee; outline-offset: 3px; }"
+    },
+    {
+      "name": "Field",
+      "kind": "input",
+      "refersTo": "field",
+      "description": "Stacked label and dark well on the bezel.",
+      "html": "<label class=\"ds-field\">用户名<input type=\"text\" /></label>",
+      "css": ".ds-field { display: flex; flex-direction: column; gap: 6px; color: #c5cdd8; font: 400 0.9rem/1.4 \"Noto Sans SC\", sans-serif; } .ds-field input { background: #0c0e14; color: #f8fafc; border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; padding: 10px 12px; } .ds-field input:focus-visible { outline: 2px solid #4361ee; outline-offset: 3px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Glass Control Deck as a broadcast gallery",
+    "overview": "Operators sit in a dim machine room and watch live avatars the way a gallery watches previews: framed monitors, tally lights, a thin rail. The wall is matte near-black; glass sits on the bezels, not as a pale SaaS card stack. Electric Indigo is the only brand wash. Green and red are tally, never decoration. Tokens are taken from the shipped .gallery scope; light :root leftovers are not this world.",
+    "keyCharacteristics": [
+      "Dark matte wall, frost glass on frames",
+      "Preview monitors as the reusable signature object",
+      "Electric Indigo as the single brand accent",
+      "Tally lights for live / idle / fault",
+      "Plush scale: thick bezels, large type for counts, strong but local shadows"
+    ],
+    "rules": [
+      { "name": "The Tally Rule", "body": "Green and red are lamps on a bezel. They are not brand colors and not pastel badges.", "section": "colors" },
+      { "name": "The One Wash Rule", "body": "Electric Indigo is the only chromatic brand field. If a screen is mostly indigo, the wash has leaked.", "section": "colors" },
+      { "name": "The Gallery Scope Rule", "body": "Document and extend .gallery tokens. Do not promote :root cool-paper or the 240px indigo slab into this system.", "section": "colors" },
+      { "name": "The No-Inter-Hero Rule", "body": "Inter is not the display face.", "section": "typography" },
+      { "name": "The Wall-Is-Flat Rule", "body": "The page ground does not lift. Only a monitor frame, a toast, or a pressed control casts shadow.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do put the job inside a framed preview with a tally lamp.",
+      "Do keep Electric Indigo rare and the wall dark.",
+      "Do size the three counts so they work as program numbers.",
+      "Do use frost and lift only on frames and pressed controls."
+    ],
+    "donts": [
+      "Don't ship the leftover light cool-paper dashboard as this world.",
+      "Don't scatter neon, void-scrollers, or poster noise over the task.",
+      "Don't turn green/red into brand stripes.",
+      "Don't invent customers, testimonials, or metrics the product does not have."
+    ]
+  }
+}
