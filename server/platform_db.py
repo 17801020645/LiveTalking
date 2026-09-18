@@ -72,6 +72,12 @@ CREATE TABLE IF NOT EXISTS avatar_tasks (
     start_time REAL NOT NULL,
     end_time REAL
 );
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
+    user_id INTEGER PRIMARY KEY,
+    token_hash TEXT NOT NULL,
+    expires_at REAL NOT NULL,
+    FOREIGN KEY(user_id) REFERENCES users(id)
+);
 """
 
 

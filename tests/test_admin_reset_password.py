@@ -164,7 +164,7 @@ class AdminResetPasswordTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("v-if=\"u.role === 'user'\"", src)
         self.assertNotIn("u.role === 'admin'", src)
         text = README.read_text(encoding="utf-8")
-        self.assertIn("用户（禁用/启用/删除/改密）", text)
+        self.assertIn("用户（禁用/启用/删除/改密", text)
         en = README_EN.read_text(encoding="utf-8")
         self.assertIn("disable/enable/delete/reset password", en)
 

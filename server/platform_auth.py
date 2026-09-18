@@ -14,6 +14,8 @@ from server.platform_db import COOKIE_NAME, SESSION_DAYS
 
 PBKDF2_ITERATIONS = 210_000
 LOGIN_ERROR = "用户名或密码错误"
+FORGOT_ERROR = "重置失败"
+RESET_TOKEN_SECS = 24 * 3600
 
 
 def hash_password(password: str) -> str:
@@ -38,6 +40,8 @@ def verify_password(password: str, stored: str) -> bool:
 
 def _public_path(path: str, method: str) -> bool:
     if path == "/api/v1/auth/login" and method == "POST":
+        return True
+    if path == "/api/v1/auth/forgot-password" and method == "POST":
         return True
     if path.startswith("/api/avatar"):
         return False

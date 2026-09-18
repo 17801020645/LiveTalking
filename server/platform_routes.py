@@ -3,6 +3,7 @@
 ###############################################################################
 
 import os
+import secrets
 import sqlite3
 import time
 from pathlib import Path
@@ -11,6 +12,8 @@ from aiohttp import web
 
 from server.avatar_routes import setup_avatar_routes
 from server.platform_auth import (
+    FORGOT_ERROR,
+    RESET_TOKEN_SECS,
     bootstrap_admin,
     create_session,
     delete_other_sessions,
@@ -34,6 +37,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 FRONTEND_DIST = REPO_ROOT / "frontend" / "dist"
 DEFAULT_DB = os.path.join("data", "platform.db")
 DEFAULT_AVATARS = os.path.join("data", "avatars")
+_DUMMY_TOKEN_HASH = hash_password("unused-reset-token")
 
 
 async def init_platform(app):
@@ -258,6 +262,7 @@ async def admin_delete_user(request):
     if row["role"] != "user":
         return json_error("只能删除普通用户")
     await db.execute("DELETE FROM sessions WHERE user_id = ?", (user_id,))
+    await db.execute("DELETE FROM password_reset_tokens WHERE user_id = ?", (user_id,))
     await db.execute("DELETE FROM subscriptions WHERE user_id = ?", (user_id,))
     await db.execute("DELETE FROM orders WHERE user_id = ?", (user_id,))
     await db.execute("DELETE FROM users WHERE id = ?", (user_id,))
@@ -294,6 +299,82 @@ async def admin_reset_password(request):
         (hash_password(password), user_id),
     )
     await db.execute("DELETE FROM sessions WHERE user_id = ?", (user_id,))
+    await db.execute("DELETE FROM password_reset_tokens WHERE user_id = ?", (user_id,))
+    await db.commit()
+    return json_ok()
+
+
+async def admin_issue_reset_token(request):
+    denied = require_admin(request)
+    if denied:
+        return denied
+    user_id = int(request.match_info["user_id"])
+    if request["user"]["id"] == user_id:
+        return json_error("不能给当前登录账号发令牌")
+    db = request.app["platform_db"]
+    async with db.execute(
+        "SELECT id, role FROM users WHERE id = ?",
+        (user_id,),
+    ) as cur:
+        row = await cur.fetchone()
+    if row is None:
+        return json_error("用户不存在", status=404)
+    if row["role"] != "user":
+        return json_error("只能给普通用户发令牌")
+    token = secrets.token_urlsafe(24)
+    expires_at = time.time() + RESET_TOKEN_SECS
+    await db.execute(
+        """
+        INSERT INTO password_reset_tokens (user_id, token_hash, expires_at)
+        VALUES (?, ?, ?)
+        ON CONFLICT(user_id) DO UPDATE SET token_hash = excluded.token_hash, expires_at = excluded.expires_at
+        """,
+        (user_id, hash_password(token), expires_at),
+    )
+    await db.commit()
+    return json_ok({"token": token, "expires_in": RESET_TOKEN_SECS})
+
+
+async def forgot_password(request):
+    try:
+        body = await request.json()
+    except Exception:
+        return json_error("无效请求")
+    username = (body.get("username") or "").strip()
+    token = body.get("token") or ""
+    new_password = body.get("new_password") or ""
+    if len(new_password) < 6:
+        return json_error("密码至少 6 个字符")
+    db = request.app["platform_db"]
+    async with db.execute(
+        "SELECT id, role FROM users WHERE username = ?",
+        (username,),
+    ) as cur:
+        user = await cur.fetchone()
+    stored = None
+    expires_at = 0
+    user_id = None
+    if user is not None and user["role"] == "user":
+        user_id = user["id"]
+        async with db.execute(
+            "SELECT token_hash, expires_at FROM password_reset_tokens WHERE user_id = ?",
+            (user_id,),
+        ) as cur:
+            row = await cur.fetchone()
+        if row is not None:
+            stored = row["token_hash"]
+            expires_at = row["expires_at"]
+    if stored is None:
+        verify_password(token or "x", _DUMMY_TOKEN_HASH)
+        return json_error(FORGOT_ERROR)
+    if time.time() > expires_at or not verify_password(token, stored):
+        return json_error(FORGOT_ERROR)
+    await db.execute(
+        "UPDATE users SET password_hash = ? WHERE id = ?",
+        (hash_password(new_password), user_id),
+    )
+    await db.execute("DELETE FROM sessions WHERE user_id = ?", (user_id,))
+    await db.execute("DELETE FROM password_reset_tokens WHERE user_id = ?", (user_id,))
     await db.commit()
     return json_ok()
 
@@ -658,6 +739,7 @@ def setup_v1_routes(app):
     app.router.add_post("/api/v1/auth/logout", logout)
     app.router.add_get("/api/v1/auth/me", me)
     app.router.add_post("/api/v1/auth/password", change_password)
+    app.router.add_post("/api/v1/auth/forgot-password", forgot_password)
     app.router.add_get("/api/v1/admin/home", admin_home)
     app.router.add_get("/api/v1/admin/users", admin_list_users)
     app.router.add_post("/api/v1/admin/users", admin_create_user)
@@ -665,6 +747,7 @@ def setup_v1_routes(app):
     app.router.add_post("/api/v1/admin/users/{user_id}/enable", admin_enable_user)
     app.router.add_post("/api/v1/admin/users/{user_id}/delete", admin_delete_user)
     app.router.add_post("/api/v1/admin/users/{user_id}/password", admin_reset_password)
+    app.router.add_post("/api/v1/admin/users/{user_id}/reset-token", admin_issue_reset_token)
     app.router.add_get("/api/v1/admin/avatars", admin_list_avatars)
     app.router.add_get("/api/v1/admin/users/{user_id}/subscriptions", admin_list_user_subs)
     app.router.add_post("/api/v1/admin/users/{user_id}/subscriptions", admin_bind)

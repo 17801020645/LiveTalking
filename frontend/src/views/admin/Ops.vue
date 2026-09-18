@@ -89,6 +89,12 @@
                   type="button"
                   @click.stop="resetPassword(u)"
                 >改密</button>
+                <button
+                  v-if="u.role === 'user'"
+                  class="btn"
+                  type="button"
+                  @click.stop="issueResetToken(u)"
+                >发令牌</button>
               </td>
             </tr>
           </tbody>
@@ -224,5 +230,14 @@ async function resetPassword(u) {
     method: 'POST',
     body: JSON.stringify({ password }),
   })
+}
+
+async function issueResetToken(u) {
+  if (!window.confirm(`为用户 ${u.username} 发放一次性重置令牌？`)) return
+  const data = await api(`/api/v1/admin/users/${u.id}/reset-token`, {
+    method: 'POST',
+    body: '{}',
+  })
+  window.prompt('请复制重置令牌（只显示一次）', data.token)
 }
 </script>

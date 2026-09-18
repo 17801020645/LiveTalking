@@ -1,0 +1,216 @@
+schema: comet.native.v4
+name: forgot-password-token
+language: zh-CN
+phase: archive
+status: done
+state_version: 7
+brief: brief.md
+spec_changes:
+  - capability: auth-rbac
+    operation: modify
+    source: specs/auth-rbac/spec.md
+  - capability: web-app-shell
+    operation: modify
+    source: specs/web-app-shell/spec.md
+workspace:
+  isolation: current
+  change_branch: main
+  target_branch: main
+  finish: null
+loop:
+  stage: done
+  goal_cycle: 1
+  iteration: 1
+  attempt: 1
+  retry_epoch: 0
+  failed_iteration_count: 0
+  no_progress_count: 0
+  execution_failure_count: 0
+  previous_unresolved_ids: []
+  next_action: null
+acceptance:
+  - id: A1
+    source: brief.md
+    text: A1：有效令牌可为普通用户设新密码；旧密码失效，该用户原有登录会话失效；成功后须用新密码重新登录
+    result: passed
+    reason:
+      text: forgot_password 校验通过后更新 password_hash、DELETE sessions 与
+        password_reset_tokens，且不写 Cookie；test_a1 覆盖旧密/旧会话 401、新密登录成功、库中无明文令牌
+      truncated: false
+  - id: A2
+    source: brief.md
+    text: A2：错令牌、过期、重复使用、未知用户名均失败，文案不暴露该用户名是否存在
+    result: passed
+    reason:
+      text: 错令牌、过期、复用、未知用户名、管理员名均返回统一「重置失败」；短密码优先拒绝；test_a2 覆盖
+      truncated: false
+  - id: A3
+    source: brief.md
+    text: A3：登录页有忘记密码入口；管理员普通用户行有发令牌；不能给管理员或自己发
+    result: passed
+    reason:
+      text: Login.vue 有忘记密码入口；Ops 仅普通用户行发令牌；不能给管理员或自己发；禁用用户可改密但登录仍失败
+      truncated: false
+  - id: A4
+    source: brief.md
+    text: A4：原 `web/` 无改动；顶栏自己改密与管理员直接改密行为不变
+    result: passed
+    reason:
+      text: web/ 无改动；顶栏 PasswordForm 与管理员直接改密仍在；代人改密作废未用令牌
+      truncated: false
+builder_handoff:
+  candidate_id: 6ab633b6-fe4a-4d0a-bf24-0f68a0b3ef06
+  identity_provider: skill-coordinated
+  builder_execution_ref: skill-coordinated:builder:ca178fdd-0c13-4c46-80b1-4caa679ca400
+  iteration: 1
+  summary:
+    text: 管理员可给普通用户发 24h
+      一次性重置令牌（明文只返回一次、哈希入库）；登录页凭用户名+令牌+新密码公开重设；成功后令牌与该用户会话作废且不自动登录。错令牌/过期/复用/未知用户名统一「重置失败」。Login
+      忘记密码、Ops 发令牌；不能给管理员或自己发。web/ 未改；自己改密与管理员直接改密仍在，代人改密会作废未用令牌。
+    truncated: false
+  addressed_acceptance_ids:
+    - A1
+    - A2
+    - A3
+    - A4
+  checks:
+    - name:
+        text: unittest tests.test_forgot_password_token tests.test_admin_reset_password
+          tests.test_admin_delete_user tests.test_user_change_password
+        truncated: false
+      result: passed
+      note:
+        text: 17 tests OK
+        truncated: false
+    - name:
+        text: git diff --exit-code -- web/
+        truncated: false
+      result: passed
+      note:
+        text: web/ 无改动
+        truncated: false
+  checks_truncated: false
+  known_limits:
+    - text: 未在浏览器点选登录页忘记密码与 Ops 发令牌（8010 常未监听）
+      truncated: false
+    - text: 不接邮箱；明文令牌靠管理员线下交给用户
+      truncated: false
+  known_limits_truncated: false
+  review:
+    status: passed
+    summary:
+      text: 对照 brief A1–A4：有效令牌改密并吊会话；失败文案统一；Login/Ops 入口与鉴权齐全；web/ 与自己改密、管理员直接改密未改行为。
+      truncated: false
+    reviewer_execution_ref: unittest tests.test_forgot_password_token tests.test_admin_reset_password
+  submitted_at: 2026-09-18T10:55:11.255Z
+blockers: []
+verification:
+  candidate_id: 6ab633b6-fe4a-4d0a-bf24-0f68a0b3ef06
+  identity_provider: skill-coordinated
+  verifier_execution_ref: skill-coordinated:verifier:e3a928f7-a530-49a0-8dac-96f807959f0f
+  iteration: 1
+  attempt: 1
+  assurance: skill-coordinated
+  verdict: pass
+  checks:
+    - id: unittest-forgot-password-token
+      name:
+        text: Forgot password token and related unit tests
+        truncated: false
+      argv_display:
+        - text: -m
+          truncated: false
+        - text: unittest
+          truncated: false
+        - text: tests.test_forgot_password_token
+          truncated: false
+        - text: tests.test_admin_reset_password
+          truncated: false
+        - text: tests.test_admin_delete_user
+          truncated: false
+        - text: tests.test_user_change_password
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 4850
+    - id: web-untouched
+      name:
+        text: Original web/ unchanged
+        truncated: false
+      argv_display:
+        - text: diff
+          truncated: false
+        - text: --exit-code
+          truncated: false
+        - text: --
+          truncated: false
+        - text: web/
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 8
+    - id: routes-ui-readme
+      name:
+        text: Reset token route, Login/Ops UI, README
+        truncated: false
+      argv_display:
+        - text: -n
+          truncated: false
+        - text: admin/users/.*/reset-token\|issueResetToken\|/api/v1/auth/forgot-password\|忘记密码\|发令牌\|用户（禁用/启用/删除/改密/重置令牌）\|disable/enable/delete/reset
+            password/reset token
+          truncated: false
+        - text: server/platform_routes.py
+          truncated: false
+        - text: frontend/src/views/Login.vue
+          truncated: false
+        - text: frontend/src/views/admin/Ops.vue
+          truncated: false
+        - text: README.md
+          truncated: false
+        - text: README-EN.md
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 8
+  summary:
+    text: A1–A4 通过：一次性哈希令牌 24h，公开重设成功后作废令牌与会话且不自动登录；失败文案统一；Login/Ops 入口齐全；web/
+      与自改密、代人改密保留。
+    truncated: false
+  risks:
+    - text: 过期令牌在哈希校验前短路，与错令牌存在轻微时序差异（非功能失败）
+      truncated: false
+    - text: 未在浏览器点选登录页忘记密码与 Ops 发令牌
+      truncated: false
+  risks_truncated: false
+  completed_at: 2026-09-18T10:57:12.925Z
+history:
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 1
+    outcome: pass
+    unresolved_ids: []
+    summary:
+      text: A1–A4 通过：一次性哈希令牌 24h，公开重设成功后作废令牌与会话且不自动登录；失败文案统一；Login/Ops 入口齐全；web/
+        与自改密、代人改密保留。
+      truncated: false
+    completed_at: 2026-09-18T10:57:12.925Z
+history_overflow:
+  dropped_entries: 0
+  first_dropped_at: null
+  last_dropped_at: null
+  outcome_counts:
+    pass: 0
+    fail: 0
+    blocked: 0
+    execution-error: 0
+    recovery: 0
+verification_result: pass
+verification_report: verification.md
+archived: true
+created_at: 2026-09-18T10:11:46.469Z
