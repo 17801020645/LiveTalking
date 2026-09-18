@@ -26,7 +26,7 @@ from server.platform_auth import (
 from server.platform_catalog import avatar_public_dict, resolve_media, scan_avatars
 from server.platform_cors import cors_middleware
 from server.platform_db import COOKIE_NAME, SESSION_DAYS, close_db, connect_db
-from server.platform_tts import setup_tts_routes
+from server.platform_tts import omni_voices_ok, setup_tts_routes
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -635,7 +635,8 @@ async def healthz(request):
             await cur.fetchone()
     except Exception:
         return web.json_response({"ok": False, "error": "db unavailable"}, status=503)
-    return web.json_response({"ok": True})
+    omni = await omni_voices_ok(request)
+    return web.json_response({"ok": True, "omni": bool(omni)})
 
 
 def setup_frontend_routes(app):

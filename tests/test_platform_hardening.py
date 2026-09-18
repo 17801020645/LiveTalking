@@ -25,7 +25,7 @@ class PlatformHardeningTests(unittest.IsolatedAsyncioTestCase):
         os.environ["LIVETALKING_BOOTSTRAP_ADMIN"] = "admin"
         os.environ["LIVETALKING_BOOTSTRAP_PASSWORD"] = "secret12"
         os.environ.pop("LIVETALKING_CORS_ORIGINS", None)
-        os.environ.pop("LIVETALKING_TTS_UPSTREAM", None)
+        os.environ["LIVETALKING_TTS_UPSTREAM"] = "http://127.0.0.1:1"
         self.client = None
         self.fake_tts = None
 
@@ -104,15 +104,44 @@ class PlatformHardeningTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(found["error_msg"], INTERRUPTED_MSG)
 
     async def test_a3_healthz_public(self):
+        os.environ["LIVETALKING_TTS_UPSTREAM"] = "http://127.0.0.1:1"
         await self.start_app()
         resp = await self.client.get("/healthz")
         self.assertEqual(resp.status, 200)
         body = await resp.json()
         self.assertTrue(body.get("ok"))
+        self.assertIsInstance(body.get("omni"), bool)
         dumped = json.dumps(body)
         self.assertNotIn("secret12", dumped)
         self.assertNotIn("LIVETALKING_BOOTSTRAP", dumped)
         self.assertNotIn("lt_session", dumped)
+
+    async def test_healthz_omni_reachable(self):
+        await self._start_fake_omni()
+        await self.start_app()
+        resp = await self.client.get("/healthz")
+        self.assertEqual(resp.status, 200)
+        body = await resp.json()
+        self.assertTrue(body["ok"])
+        self.assertIs(body["omni"], True)
+        dumped = json.dumps(body)
+        self.assertNotIn("secret12", dumped)
+        self.assertNotIn("vivian", dumped)
+        self.assertNotIn("Traceback", dumped)
+
+    async def test_healthz_omni_down_still_200(self):
+        os.environ["LIVETALKING_TTS_UPSTREAM"] = "http://127.0.0.1:1"
+        await self.start_app()
+        resp = await self.client.get("/healthz")
+        self.assertEqual(resp.status, 200)
+        body = await resp.json()
+        self.assertTrue(body["ok"])
+        self.assertIs(body["omni"], False)
+        dumped = json.dumps(body)
+        self.assertNotIn("secret12", dumped)
+        self.assertNotIn("LIVETALKING_BOOTSTRAP", dumped)
+        self.assertNotIn("Traceback", dumped)
+        self.assertNotIn("127.0.0.1:1", dumped)
 
     async def test_a4_cors_host_and_deny_star(self):
         await self.start_app()

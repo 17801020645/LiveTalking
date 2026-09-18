@@ -13,6 +13,7 @@ from server.platform_auth import json_error, json_ok, require_admin
 DEFAULT_UPSTREAM = "http://127.0.0.1:8091"
 VOICES_TIMEOUT = aiohttp.ClientTimeout(total=15, connect=10, sock_connect=10)
 SPEECH_TIMEOUT = aiohttp.ClientTimeout(total=60, connect=10, sock_connect=10)
+HEALTHZ_TIMEOUT = aiohttp.ClientTimeout(total=2, connect=1, sock_connect=1)
 UNAVAILABLE = "TTS 上游不可用"
 
 
@@ -25,6 +26,18 @@ def tts_upstream(request) -> str:
     if opt is not None:
         server = (getattr(opt, "TTS_SERVER", None) or "").strip()
     return (server or DEFAULT_UPSTREAM).rstrip("/")
+
+
+async def omni_voices_ok(request) -> bool:
+    """Short probe for GET /healthz. True only on HTTP 2xx; never raises."""
+    url = f"{tts_upstream(request)}/v1/audio/voices"
+    try:
+        async with aiohttp.ClientSession(timeout=HEALTHZ_TIMEOUT) as session:
+            async with session.get(url) as resp:
+                await resp.read()
+                return 200 <= resp.status < 300
+    except (aiohttp.ClientError, TimeoutError, OSError):
+        return False
 
 
 def _json_msg(body: bytes, fallback=UNAVAILABLE):

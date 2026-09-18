@@ -1,0 +1,179 @@
+schema: comet.native.v4
+name: healthz-omni
+language: zh-CN
+phase: archive
+status: done
+state_version: 7
+brief: brief.md
+spec_changes:
+  - capability: omni-tts-serving
+    operation: modify
+    source: specs/omni-tts-serving/spec.md
+  - capability: ops-hardening
+    operation: modify
+    source: specs/ops-hardening/spec.md
+workspace:
+  isolation: current
+  change_branch: main
+  target_branch: main
+  finish: null
+loop:
+  stage: done
+  goal_cycle: 1
+  iteration: 1
+  attempt: 1
+  retry_epoch: 0
+  failed_iteration_count: 0
+  no_progress_count: 0
+  execution_failure_count: 0
+  previous_unresolved_ids: []
+  next_action: null
+acceptance:
+  - id: A1
+    source: brief.md
+    text: A1：数据库可用时，无论 Omni 是否可达，未登录 `GET /healthz` 均为 HTTP 200 且 `ok` 为 true
+    result: passed
+    reason:
+      text: healthz 在数据库 SELECT 1 成功后无论 omni_voices_ok 真假都返回 200 且 ok 为
+        true；未登录测试覆盖可达与不可达。
+      truncated: false
+  - id: A2
+    source: brief.md
+    text: A2：假上游响应 `/v1/audio/voices` 时 `omni` 为 true；指到不可达地址时 `omni` 为
+      false；响应不含密钥、口令、会话 Cookie、上游堆栈
+    result: passed
+    reason:
+      text: 假上游 /v1/audio/voices 时 omni 为 true，死地址时为 false；响应仅为 ok+omni，不含密钥、口令、会话
+        Cookie、堆栈。
+      truncated: false
+  - id: A3
+    source: brief.md
+    text: A3：原 `web/` 无改动；不探测 GPU
+    result: passed
+    reason:
+      text: git diff -- web/ 为空；healthz 只短超时探测 TTS 上游 voices，无 GPU 探测。
+      truncated: false
+builder_handoff:
+  candidate_id: 563a623b-60a0-472d-9b38-39064cfe906c
+  identity_provider: skill-coordinated
+  builder_execution_ref: skill-coordinated:builder:5cf292bc-d03a-472a-be6f-2baa0f774227
+  iteration: 1
+  summary:
+    text: GET /healthz 在 DB 可用时仍 200 且 ok:true；短超时探测 TTS 上游 /v1/audio/voices，写入布尔
+      omni。上游解析与 TTS 代理相同。8091 不可达时 omni:false，不把 8010 判死。不探 GPU，不改 web/。
+    truncated: false
+  addressed_acceptance_ids:
+    - A1
+    - A2
+    - A3
+  checks:
+    - name:
+        text: unittest tests.test_platform_hardening
+        truncated: false
+      result: passed
+      note:
+        text: 10 tests OK，含假上游 omni:true 与死地址 omni:false 仍 200
+        truncated: false
+    - name:
+        text: git diff --exit-code -- web/
+        truncated: false
+      result: passed
+      note:
+        text: web/ 无改动
+        truncated: false
+  checks_truncated: false
+  known_limits:
+    - text: 未连真实 8091 / GPU；单测用假上游与 127.0.0.1:1
+      truncated: false
+    - text: 探活超时 2s，Omni 卡住时 healthz 最多多等约 2 秒
+      truncated: false
+  known_limits_truncated: false
+  review:
+    status: passed
+    summary:
+      text: 对照 brief A1–A3：DB 正常始终 200/ok；假上游 omni true、死地址 omni false 且无密钥；web/ 未改、无
+        GPU 探测。
+      truncated: false
+    reviewer_execution_ref: unittest tests.test_platform_hardening
+  submitted_at: 2026-09-18T02:31:58.406Z
+blockers: []
+verification:
+  candidate_id: 563a623b-60a0-472d-9b38-39064cfe906c
+  identity_provider: skill-coordinated
+  verifier_execution_ref: skill-coordinated:verifier:e208466c-7672-44c5-add6-16fcac1643bb
+  iteration: 1
+  attempt: 1
+  assurance: skill-coordinated
+  verdict: pass
+  checks:
+    - id: unittest-platform-hardening
+      name:
+        text: Platform hardening unit tests including healthz omni
+        truncated: false
+      argv_display:
+        - text: -m
+          truncated: false
+        - text: unittest
+          truncated: false
+        - text: tests.test_platform_hardening
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 2467
+    - id: web-untouched
+      name:
+        text: Original web/ unchanged
+        truncated: false
+      argv_display:
+        - text: diff
+          truncated: false
+        - text: --exit-code
+          truncated: false
+        - text: --
+          truncated: false
+        - text: web/
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 41
+  summary:
+    text: A1–A3 通过：数据库可用时未登录 /healthz 始终 200 且 ok 为 true；omni 短探上游
+      /v1/audio/voices；web/ 无改动且不探 GPU。
+    truncated: false
+  risks:
+    - text: omni_voices_ok 仅捕获 ClientError/TimeoutError/OSError，未覆盖的异常会让 /healthz 变成
+        500 而非仍 200。
+      truncated: false
+    - text: 规格要求非 2xx 为 omni false，实现已按状态码判断，但单测未覆盖上游 4xx/5xx。
+      truncated: false
+  risks_truncated: false
+  completed_at: 2026-09-18T02:34:18.498Z
+history:
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 1
+    outcome: pass
+    unresolved_ids: []
+    summary:
+      text: A1–A3 通过：数据库可用时未登录 /healthz 始终 200 且 ok 为 true；omni 短探上游
+        /v1/audio/voices；web/ 无改动且不探 GPU。
+      truncated: false
+    completed_at: 2026-09-18T02:34:18.498Z
+history_overflow:
+  dropped_entries: 0
+  first_dropped_at: null
+  last_dropped_at: null
+  outcome_counts:
+    pass: 0
+    fail: 0
+    blocked: 0
+    execution-error: 0
+    recovery: 0
+verification_result: pass
+verification_report: verification.md
+archived: true
+created_at: 2026-09-18T02:19:55.420Z
