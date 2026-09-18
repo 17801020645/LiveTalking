@@ -69,12 +69,12 @@ class AdminLiveConsoleTests(unittest.IsolatedAsyncioTestCase):
         ids = [a["avatar_id"] for a in (await listed.json())["data"]["avatars"]]
         self.assertIn("stock", ids)
         offered = await self.client.post(
-            "/offer",
+            "/api/v1/admin/offer",
             json={"sdp": "x", "type": "offer", "avatar": "stock"},
         )
         self.assertEqual(offered.status, 200)
-        self.assertEqual(self.app["last_offer"]["avatar"], "stock")
-        sid = (await offered.json())["sessionid"]
+        self.assertEqual(self.app["last_admin_offer"]["avatar"], "stock")
+        sid = (await offered.json())["data"]["sessionid"]
         human = await self.client.post(
             "/human",
             json={"text": "你好", "type": "echo", "interrupt": True, "sessionid": sid},
@@ -83,7 +83,8 @@ class AdminLiveConsoleTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.app["last_human"]["type"], "echo")
         self.assertEqual(self.app["last_human"]["sessionid"], sid)
         page = ADMIN_LIVE.read_text()
-        self.assertIn("fetch('/offer'", page)
+        self.assertIn("/api/v1/admin/offer", page)
+        self.assertNotIn("fetch('/offer'", page)
         self.assertIn("avatar: avatarId.value", page)
         self.assertIn("type: talkType.value", page)
         self.assertIn("Chat LLM", page)

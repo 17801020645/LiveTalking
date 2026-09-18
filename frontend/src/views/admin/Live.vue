@@ -278,21 +278,15 @@ async function start() {
     }
     if (refAudio.value.trim()) offerBody.refaudio = refAudio.value.trim()
     if (refText.value.trim()) offerBody.reftext = refText.value.trim()
-    const res = await fetch('/offer', {
+    const data = await api('/api/v1/admin/offer', {
       method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(offerBody),
     })
-    const answer = await res.json().catch(() => ({}))
-    if (!res.ok || (answer.code && answer.code !== 0)) {
-      throw new Error(answer.msg || '连接失败')
-    }
-    if (!answer.sdp) {
+    if (!data.sdp) {
       throw new Error('服务端未返回画面')
     }
-    sessionid.value = answer.sessionid || ''
-    await pc.setRemoteDescription({ type: answer.type || 'answer', sdp: answer.sdp })
+    sessionid.value = data.sessionid || ''
+    await pc.setRemoteDescription({ type: data.type || 'answer', sdp: data.sdp })
     connected.value = true
   } catch (e) {
     error.value = e.message || '连接失败'
@@ -311,6 +305,13 @@ async function stop() {
   }
   if (remoteVideo.value) remoteVideo.value.srcObject = null
   if (remoteAudio.value) remoteAudio.value.srcObject = null
+  if (sessionid.value) {
+    try {
+      await api('/api/v1/admin/hangup', { method: 'POST' })
+    } catch {
+      /* ignore */
+    }
+  }
   sessionid.value = ''
   recording.value = false
   recReady.value = false

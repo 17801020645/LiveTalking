@@ -1,0 +1,199 @@
+schema: comet.native.v4
+name: tighten-live-signaling
+language: zh-CN
+phase: archive
+status: done
+state_version: 7
+brief: brief.md
+spec_changes:
+  - capability: admin-live-console
+    operation: modify
+    source: specs/admin-live-console/spec.md
+  - capability: auth-rbac
+    operation: modify
+    source: specs/auth-rbac/spec.md
+  - capability: user-live
+    operation: modify
+    source: specs/user-live/spec.md
+workspace:
+  isolation: current
+  change_branch: main
+  target_branch: main
+  finish: null
+loop:
+  stage: done
+  goal_cycle: 1
+  iteration: 1
+  attempt: 1
+  retry_epoch: 0
+  failed_iteration_count: 0
+  no_progress_count: 0
+  execution_failure_count: 0
+  previous_unresolved_ids: []
+  next_action: null
+acceptance:
+  - id: A1
+    source: brief.md
+    text: A1：未登录 `POST /offer` 仍可用（原站）；原 `web/` 无改动
+    result: passed
+    reason:
+      text: 匿名 POST /offer 仍可用且测试 200；web/ 无改动。
+      truncated: false
+  - id: A2
+    source: brief.md
+    text: A2：管理员演示台用 `/api/v1/admin/offer`；未登录 401，普通用户 403
+    result: passed
+    reason:
+      text: Live.vue 走 /api/v1/admin/offer；未登录 401，普通用户 403。
+      truncated: false
+  - id: A3
+    source: brief.md
+    text: A3：用户 `me/offer` 的 session，别人匿名 `/human`（及打断/音频/录制/动作）失败；本人 Cookie 可以
+    result: passed
+    reason:
+      text: me/offer 绑定会话后匿名驱动 401，主人可 /human，其它用户 403。
+      truncated: false
+  - id: A4
+    source: brief.md
+    text: A4：管理员 `admin/offer` 的 session，未登录或其它用户驱动失败；该管理员可以
+    result: passed
+    reason:
+      text: admin/offer 绑定会话后未登录 401、其它用户 403、该管理员 200。
+      truncated: false
+builder_handoff:
+  candidate_id: 382e7879-e761-4454-b8a7-7092ccbf1bd4
+  identity_provider: skill-coordinated
+  builder_execution_ref: skill-coordinated:builder:e661a353-12cd-431b-9743-8e27266da186
+  iteration: 1
+  summary:
+    text: 管理员演示台改走 POST /api/v1/admin/offer；me/offer 与 admin/offer 把 sessionid
+      绑到当前用户。/human、打断、音频、录制、动作对已绑定会话须同一登录用户；匿名 /offer 仍可匿名驱动。不改 web/。
+    truncated: false
+  addressed_acceptance_ids:
+    - A1
+    - A2
+    - A3
+    - A4
+  checks:
+    - name:
+        text: unittest tests.test_tighten_live_signaling tests.test_admin_live_console
+          tests.test_user_live tests.test_user_home_media
+          tests.test_user_home_chat tests.test_platform_v1
+        truncated: false
+      result: passed
+      note:
+        text: 30 tests OK
+        truncated: false
+    - name:
+        text: git diff --exit-code -- web/
+        truncated: false
+      result: passed
+      note:
+        text: web/ 无改动
+        truncated: false
+  checks_truncated: false
+  known_limits:
+    - text: 会话归属只在进程内存，重启 8010 后绑定丢失
+      truncated: false
+    - text: 未在浏览器点选管理员演示台真 WebRTC
+      truncated: false
+    - text: /sse 与 /whep 仍匿名
+      truncated: false
+  known_limits_truncated: false
+  review:
+    status: passed
+    summary:
+      text: 对照 brief A1–A4：匿名 /offer 仍可用；admin/offer
+        401/403；用户与管理员绑定会话匿名驱动失败、主人成功；web/ 未改。
+      truncated: false
+    reviewer_execution_ref: unittest tests.test_tighten_live_signaling
+      tests.test_admin_live_console tests.test_user_live
+  submitted_at: 2026-09-18T03:49:16.157Z
+blockers: []
+verification:
+  candidate_id: 382e7879-e761-4454-b8a7-7092ccbf1bd4
+  identity_provider: skill-coordinated
+  verifier_execution_ref: skill-coordinated:verifier:754fde5f-80af-494b-a2ca-ec474db9f34d
+  iteration: 1
+  attempt: 1
+  assurance: skill-coordinated
+  verdict: pass
+  checks:
+    - id: unittest-live-signaling
+      name:
+        text: Live signaling and related unit tests
+        truncated: false
+      argv_display:
+        - text: -m
+          truncated: false
+        - text: unittest
+          truncated: false
+        - text: tests.test_tighten_live_signaling
+          truncated: false
+        - text: tests.test_admin_live_console
+          truncated: false
+        - text: tests.test_user_live
+          truncated: false
+        - text: tests.test_user_home_media
+          truncated: false
+        - text: tests.test_user_home_chat
+          truncated: false
+        - text: tests.test_platform_v1
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 4766
+    - id: web-untouched
+      name:
+        text: Original web/ unchanged
+        truncated: false
+      argv_display:
+        - text: diff
+          truncated: false
+        - text: --exit-code
+          truncated: false
+        - text: --
+          truncated: false
+        - text: web/
+          truncated: false
+      argv_truncated: false
+      cwd_ref: .
+      status: passed
+      exit_code: 0
+      duration_ms: 8
+  summary:
+    text: A1–A4 通过：原站匿名 /offer 保留；管理员演示台走 admin/offer；绑定会话须主人 Cookie 驱动。
+    truncated: false
+  risks:
+    - text: 会话归属只在进程内存，重启后绑定丢失。
+      truncated: false
+    - text: A4 单测直接覆盖 /human，打断/音频/录制/动作共用 deny_live_drive。
+      truncated: false
+  risks_truncated: false
+  completed_at: 2026-09-18T03:52:59.712Z
+history:
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 1
+    outcome: pass
+    unresolved_ids: []
+    summary:
+      text: A1–A4 通过：原站匿名 /offer 保留；管理员演示台走 admin/offer；绑定会话须主人 Cookie 驱动。
+      truncated: false
+    completed_at: 2026-09-18T03:52:59.712Z
+history_overflow:
+  dropped_entries: 0
+  first_dropped_at: null
+  last_dropped_at: null
+  outcome_counts:
+    pass: 0
+    fail: 0
+    blocked: 0
+    execution-error: 0
+    recovery: 0
+verification_result: pass
+verification_report: verification.md
+archived: true
+created_at: 2026-09-18T03:31:49.969Z

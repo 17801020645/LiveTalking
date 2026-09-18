@@ -27,6 +27,7 @@ from server.platform_catalog import avatar_public_dict, resolve_media, scan_avat
 from server.platform_cors import cors_middleware
 from server.platform_db import COOKIE_NAME, SESSION_DAYS, close_db, connect_db
 from server.platform_tts import omni_voices_ok, setup_tts_routes
+from server.live_session_auth import bind_live_session, unbind_live_session
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -503,7 +504,7 @@ async def me_offer(request):
     rtc = request.app.get("rtc_manager")
     if rtc is None or request.app.get("fake_avatar_tasks"):
         sid = f"u{user['id']}-{int(time.time() * 1000)}"
-        live[user["id"]] = sid
+        bind_live_session(request.app, user["id"], sid)
         request.app["last_me_offer"] = {
             "avatar": published,
             "client_avatar": body.get("avatar"),
@@ -515,7 +516,7 @@ async def me_offer(request):
     data, err = await rtc.answer_offer(params)
     if err:
         return json_error(err, status=503)
-    live[user["id"]] = data["sessionid"]
+    bind_live_session(request.app, user["id"], data["sessionid"])
     data["avatar_id"] = published
     return json_ok(data)
 
@@ -525,8 +526,64 @@ async def me_hangup(request):
     if denied:
         return denied
     user = request["user"]
+    sid = unbind_live_session(request.app, user["id"])
+    if sid and not request.app.get("fake_avatar_tasks"):
+        from server.session_manager import session_manager
+        session_manager.remove_session(sid)
+    return json_ok()
+
+
+async def admin_offer(request):
+    denied = require_admin(request)
+    if denied:
+        return denied
+    user = request["user"]
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    if not isinstance(body, dict):
+        body = {}
+    avatar = str(body.get("avatar") or "").strip()
+    if not avatar:
+        return json_error("请选择形象")
+    db = request.app["platform_db"]
+    async with db.execute("SELECT avatar_id FROM avatars WHERE avatar_id = ?", (avatar,)) as cur:
+        row = await cur.fetchone()
+    if not row:
+        return json_error("形象不存在", status=404)
     live = request.app.setdefault("user_rtc_sessions", {})
-    sid = live.pop(user["id"], None)
+    if live.get(user["id"]):
+        return json_error("已有进行中的连麦，请先断开")
+    params = dict(body)
+    params["avatar"] = avatar
+    rtc = request.app.get("rtc_manager")
+    if rtc is None or request.app.get("fake_avatar_tasks"):
+        sid = f"a{user['id']}-{int(time.time() * 1000)}"
+        bind_live_session(request.app, user["id"], sid)
+        request.app["last_admin_offer"] = {
+            "avatar": avatar,
+            "user_id": user["id"],
+            "refaudio": body.get("refaudio"),
+            "reftext": body.get("reftext"),
+        }
+        return json_ok({"sdp": "ok", "type": "answer", "sessionid": sid, "avatar_id": avatar})
+    if not params.get("sdp") or not params.get("type"):
+        return json_error("缺少 SDP")
+    data, err = await rtc.answer_offer(params)
+    if err:
+        return json_error(err, status=503)
+    bind_live_session(request.app, user["id"], data["sessionid"])
+    data["avatar_id"] = avatar
+    return json_ok(data)
+
+
+async def admin_hangup(request):
+    denied = require_admin(request)
+    if denied:
+        return denied
+    user = request["user"]
+    sid = unbind_live_session(request.app, user["id"])
     if sid and not request.app.get("fake_avatar_tasks"):
         from server.session_manager import session_manager
         session_manager.remove_session(sid)
@@ -618,6 +675,8 @@ def setup_v1_routes(app):
     app.router.add_post("/api/v1/me/avatars/{avatar_id}/unpublish", me_unpublish)
     app.router.add_post("/api/v1/me/offer", me_offer)
     app.router.add_post("/api/v1/me/hangup", me_hangup)
+    app.router.add_post("/api/v1/admin/offer", admin_offer)
+    app.router.add_post("/api/v1/admin/hangup", admin_hangup)
     app.router.add_get("/api/v1/media/avatars/{avatar_id}/cover", media_cover)
     app.router.add_get("/api/v1/media/avatars/{avatar_id}/preview", media_preview)
     from server.platform_orders import setup_order_routes
@@ -656,6 +715,8 @@ def create_test_application(db_path, avatars_dir, web_dir=None, uploads_dir=None
     setup_v1_routes(app)
     setup_frontend_routes(app)
 
+    from server.live_session_auth import deny_live_drive
+
     async def offer(request):
         try:
             body = await request.json()
@@ -666,6 +727,9 @@ def create_test_application(db_path, avatars_dir, web_dir=None, uploads_dir=None
 
     async def human(request):
         body = await request.json()
+        denied = deny_live_drive(request, body.get("sessionid", ""))
+        if denied:
+            return denied
         request.app["last_human"] = body
         return web.json_response({"code": 0, "msg": "ok"})
 
@@ -674,27 +738,47 @@ def create_test_application(db_path, avatars_dir, web_dir=None, uploads_dir=None
             body = await request.json()
         except Exception:
             body = {}
+        denied = deny_live_drive(request, body.get("sessionid", ""))
+        if denied:
+            return denied
         request.app["last_interrupt"] = body
         return web.json_response({"code": 0, "msg": "ok"})
 
     async def humanaudio(request):
         form = await request.post()
         fileobj = form.get("file")
+        sid = str(form.get("sessionid", ""))
+        denied = deny_live_drive(request, sid)
+        if denied:
+            return denied
         request.app["last_humanaudio"] = {
-            "sessionid": str(form.get("sessionid", "")),
+            "sessionid": sid,
             "filename": getattr(fileobj, "filename", None),
         }
         return web.json_response({"code": 0, "msg": "ok"})
 
     async def record(request):
         body = await request.json()
+        denied = deny_live_drive(request, body.get("sessionid", ""))
+        if denied:
+            return denied
         request.app["last_record"] = body
         return web.json_response({"code": 0, "msg": "ok"})
 
     async def set_audiotype(request):
         body = await request.json()
+        denied = deny_live_drive(request, body.get("sessionid", ""))
+        if denied:
+            return denied
         request.app["last_audiotype"] = body
         return web.json_response({"code": 0, "msg": "ok"})
+
+    async def download_record(request):
+        sid = request.match_info.get("sessionid")
+        denied = deny_live_drive(request, sid)
+        if denied:
+            return denied
+        return web.Response(body=b"fake-record", content_type="video/mp4")
 
     app.router.add_post("/offer", offer)
     setup_avatar_routes(app)
@@ -702,6 +786,7 @@ def create_test_application(db_path, avatars_dir, web_dir=None, uploads_dir=None
     app.router.add_post("/interrupt_talk", interrupt_talk)
     app.router.add_post("/humanaudio", humanaudio)
     app.router.add_post("/record", record)
+    app.router.add_get("/record/{sessionid}", download_record)
     app.router.add_post("/set_audiotype", set_audiotype)
     if web_dir:
         from server.routes import index

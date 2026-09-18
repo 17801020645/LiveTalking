@@ -32,6 +32,7 @@ def json_error(msg: str, code: int = -1):
 
 from server.session_manager import session_manager
 from server.avatar_routes import setup_avatar_routes
+from server.live_session_auth import deny_live_drive
 
 def get_session(request, sessionid: str):
     """从 app 中获取 session 实例"""
@@ -46,6 +47,9 @@ async def human(request):
         params: dict = await request.json()
 
         sessionid: str = params.get('sessionid', '')
+        denied = deny_live_drive(request, sessionid)
+        if denied:
+            return denied
         avatar_session = get_session(request, sessionid)
         if avatar_session is None:
             return json_error("session not found")
@@ -77,6 +81,9 @@ async def interrupt_talk(request):
     try:
         params = await request.json()
         sessionid = params.get('sessionid', '')
+        denied = deny_live_drive(request, sessionid)
+        if denied:
+            return denied
         avatar_session = get_session(request, sessionid)
         if avatar_session is None:
             return json_error("session not found")
@@ -92,6 +99,9 @@ async def humanaudio(request):
     try:
         form = await request.post()
         sessionid = str(form.get('sessionid', ''))
+        denied = deny_live_drive(request, sessionid)
+        if denied:
+            return denied
         fileobj = form["file"]
         filebytes = fileobj.file.read()
 
@@ -112,6 +122,9 @@ async def set_audiotype(request):
     try:
         params = await request.json()
         sessionid = params.get('sessionid', '')
+        denied = deny_live_drive(request, sessionid)
+        if denied:
+            return denied
         avatar_session = get_session(request, sessionid)
         if avatar_session is None:
             return json_error("session not found")
@@ -127,6 +140,9 @@ async def record(request):
     try:
         params = await request.json()
         sessionid = params.get('sessionid', '')
+        denied = deny_live_drive(request, sessionid)
+        if denied:
+            return denied
         avatar_session = get_session(request, sessionid)
         if avatar_session is None:
             return json_error("session not found")

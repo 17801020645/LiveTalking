@@ -78,16 +78,18 @@ def json_ok(data=None, status: int = 200):
 
 @web.middleware
 async def platform_auth_middleware(request, handler):
+    db = request.app.get("platform_db")
+    token = request.cookies.get(COOKIE_NAME, "")
+    if db is not None and token:
+        user = await load_user_by_token(db, token)
+        if user:
+            request["user"] = user
     if _public_path(request.path, request.method):
         return await handler(request)
-    db = request.app.get("platform_db")
     if db is None:
         return json_error("platform not ready", status=503)
-    token = request.cookies.get(COOKIE_NAME, "")
-    user = await load_user_by_token(db, token)
-    if not user:
+    if not request.get("user"):
         return json_error("未登录", status=401)
-    request["user"] = user
     return await handler(request)
 
 

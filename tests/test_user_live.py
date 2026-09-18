@@ -114,7 +114,7 @@ class UserLiveTests(unittest.IsolatedAsyncioTestCase):
         page = await self.client.get("/avatar.html")
         self.assertEqual(page.status, 200)
 
-    async def test_a6_admin_live_uses_legacy_offer(self):
+    async def test_a6_admin_live_uses_admin_offer(self):
         admin_home = (FRONTEND_SRC / "views" / "admin" / "Home.vue").read_text()
         admin_live = (FRONTEND_SRC / "views" / "admin" / "Live.vue").read_text()
         self.assertIn("去演示连麦", admin_home)
@@ -122,6 +122,7 @@ class UserLiveTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("开始说话", admin_live)
         self.assertNotIn("打开 /index.html", admin_live)
         self.assertNotIn("/api/v1/me/offer", admin_live)
+        self.assertIn("/api/v1/admin/offer", admin_live)
         self.assertNotIn("开始连麦", admin_live)
         self.assertIn("开始连接", admin_live)
         await self.login("admin", "secret12")

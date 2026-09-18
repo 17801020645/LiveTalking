@@ -108,10 +108,14 @@ async def on_shutdown(app):
     await rtc_manager.shutdown()
 
 async def download_record(request):
+    from server.live_session_auth import deny_live_drive
     sessionid = request.match_info.get('sessionid')
     if not sessionid:
         return web.Response(status=400, text="sessionid is required")
-    
+    denied = deny_live_drive(request, sessionid)
+    if denied:
+        return denied
+
     record_file = os.path.join('data', 'record', f"{sessionid}.mp4")
     
     if os.path.exists(record_file):
