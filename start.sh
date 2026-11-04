@@ -8,6 +8,13 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$ROOT"
 
+# 载入本地 .env（DEEPSEEK_API_KEY / DASHSCOPE_API_KEY 等）
+if [[ -f "$ROOT/.env" ]]; then
+  set -a
+  . "$ROOT/.env"
+  set +a
+fi
+
 PYTHON="${START_SH_PYTHON:-$ROOT/.venv/bin/python}"
 if [[ ! -x "$PYTHON" ]]; then
   echo "未找到虚拟环境: $PYTHON" >&2

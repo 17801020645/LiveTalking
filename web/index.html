@@ -131,7 +131,7 @@
                     <div class="row g-2 align-items-end mb-3">
                         <div class="col-md-4">
                             <label class="form-label">Avatar ID</label>
-                            <input type="text" class="form-control form-control-sm" id="offerAvatar" placeholder="wav2lip256_avatar1">
+                            <input type="text" class="form-control form-control-sm" id="offerAvatar" placeholder="avatar_ck">
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">参考音频</label>
@@ -185,7 +185,8 @@
                 <div class="card-header"><i class="bi bi-mic-fill"></i> 音频驱动 (POST /humanaudio)</div>
                 <div class="card-body">
                     <input type="file" class="form-control form-control-sm mb-2" id="audioFile" accept="audio/*">
-                    <button class="btn-primary-custom btn-sm" onclick="uploadAudio()"><i class="bi bi-upload"></i> 上传并播放</button>
+                    <button class="btn-primary-custom btn-sm" id="btnUploadAudio" onclick="uploadAudio()"><i class="bi bi-upload"></i> 上传并播放</button>
+                    <div id="audioUploadStatus" class="small mt-2"></div>
                 </div>
             </div>
 
@@ -307,7 +308,14 @@ function start() {
     });
     pc.addEventListener('connectionstatechange', () => {
         if (pc.connectionState === 'connected') updateStatus(true);
-        else if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') { updateStatus(false); setSessionId(null); }
+        else if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
+            updateStatus(false);
+            setSessionId(null);
+            // 连接断开时同步重置按钮，避免页面停在“断开连接”但实际已无会话
+            document.getElementById('btnStart').style.display = 'inline-block';
+            document.getElementById('btnStop').style.display = 'none';
+            showError('WebRTC 连接已断开，请重新点击“开始连接”');
+        }
     });
     negotiate();
     document.getElementById('btnStart').style.display = 'none';
@@ -344,14 +352,31 @@ function sendText() {
 // ─── Audio Upload ──────────────────────────────────────────
 function uploadAudio() {
     const file = document.getElementById('audioFile').files[0];
-    if (!file || !sessionid) return alert('请先连接 WebRTC 并选择音频文件');
+    if (!sessionid) return alert('请先连接 WebRTC');
+    if (!file) return alert('请选择音频文件');
 
     const formData = new FormData();
     formData.append('file', file);
     formData.append('sessionid', String(sessionid));
 
+    const btn = document.getElementById('btnUploadAudio');
+    const statusEl = document.getElementById('audioUploadStatus');
+    btn.disabled = true;
+    statusEl.className = 'small mt-2 text-muted';
+    statusEl.textContent = '上传中…';
+
     fetch('/humanaudio', { method: 'POST', body: formData })
-        .then(r => r.json()).then(d => console.log('humanaudio:', d));
+        .then(async r => {
+            const d = await r.json().catch(() => ({}));
+            if (!r.ok || d.code) throw new Error(d.msg || ('HTTP ' + r.status));
+            statusEl.className = 'small mt-2 text-success';
+            statusEl.textContent = '已上传，开始播放';
+        })
+        .catch(e => {
+            statusEl.className = 'small mt-2 text-danger';
+            statusEl.textContent = '上传失败：' + (e.message || e);
+        })
+        .finally(() => { btn.disabled = false; });
 }
 
 // ─── Interrupt ─────────────────────────────────────────────

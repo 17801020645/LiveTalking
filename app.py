@@ -178,9 +178,18 @@ def main():
     from server.platform_cors import cors_middleware
     from server.platform_routes import attach_platform
 
+    @web.middleware
+    async def no_cache_html_middleware(request, handler):
+        resp = await handler(request)
+        if request.path.endswith(".html") or request.path == "/":
+            resp.headers["Cache-Control"] = "no-store, must-revalidate"
+            resp.headers["Pragma"] = "no-cache"
+            resp.headers["Expires"] = "0"
+        return resp
+
     appasync = web.Application(
         client_max_size=1024**2*100,
-        middlewares=[cors_middleware, platform_auth_middleware],
+        middlewares=[cors_middleware, platform_auth_middleware, no_cache_html_middleware],
     )
     appasync["llm_response"] = llm_response
     appasync["opt"] = opt

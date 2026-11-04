@@ -1,15 +1,43 @@
+import os
 ###############################################################################
 #  服务器路由 — 统一异常处理的 API 路由
 ###############################################################################
 
 import json
 import asyncio
+import subprocess
+import tempfile
 from aiohttp import web
 
 from utils.logger import logger
 
 
 # ─── 路由工具函数 ──────────────────────────────────────────────────────────
+
+
+
+def _normalize_audio(data: bytes) -> bytes:
+    """把上传的任意音频统一转成 16k 单声道 WAV，避开 libsndfile 对部分 mp3 的兼容问题。"""
+    src = tempfile.NamedTemporaryFile(delete=False, suffix=".audio"); src.close()
+    dst = tempfile.NamedTemporaryFile(delete=False, suffix=".wav"); dst.close()
+    try:
+        with open(src.name, "wb") as f:
+            f.write(data)
+        proc = subprocess.run(
+            ["ffmpeg", "-y", "-v", "error", "-i", src.name, "-vn",
+             "-ac", "1", "-ar", "16000", "-f", "wav", dst.name],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=120)
+        if proc.returncode != 0:
+            raise ValueError("音频解码失败，请换 wav/mp3 文件")
+        with open(dst.name, "rb") as f:
+            return f.read()
+    finally:
+        for p in (src.name, dst.name):
+            try:
+                os.remove(p)
+            except OSError:
+                pass
+
 
 def json_ok(data=None):
     """返回成功 JSON 响应"""
@@ -103,7 +131,7 @@ async def humanaudio(request):
         if denied:
             return denied
         fileobj = form["file"]
-        filebytes = fileobj.file.read()
+        filebytes = _normalize_audio(fileobj.file.read())
 
         datainfo = {}
 
@@ -254,6 +282,8 @@ async def index(request):
         raise web.HTTPFound("/rtmpapi.html")
     if transport == "rtcpush":
         raise web.HTTPFound("/rtcpushapi.html")
+    if not os.path.exists("frontend/dist/index.html"):
+        raise web.HTTPFound("/index.html")
     raise web.HTTPFound("/app/")
 
 

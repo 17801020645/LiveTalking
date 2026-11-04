@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>离线数字人 · 任务</title>
+<style>
+  :root { --bg:#f4f7fb; --card:#fff; --text:#1e293b; --muted:#64748b; --line:#e2e8f0; --brand:#4361ee; --ok:#059669; --warn:#d97706; --err:#dc2626; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; background:var(--bg); color:var(--text); }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 28px 20px 60px; }
+  h1 { font-size: 22px; margin: 0 0 6px; }
+  .sub { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px; margin-bottom: 18px; box-shadow: 0 4px 16px rgba(15,23,42,.04); }
+  label { display:block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+  textarea { width:100%; min-height: 120px; resize: vertical; border:1px solid var(--line); border-radius:10px; padding:12px; font-size:14px; line-height:1.6; font-family: inherit; }
+  .row { display:flex; gap:14px; flex-wrap: wrap; margin-top: 14px; }
+  .row > div { flex: 1; min-width: 200px; }
+  select { width:100%; border:1px solid var(--line); border-radius:10px; padding:10px 12px; font-size:14px; background:#fff; }
+  button { border:0; border-radius:10px; padding:10px 18px; font-size:14px; font-weight:600; cursor:pointer; background:var(--brand); color:#fff; }
+  button:disabled { opacity:.55; cursor: not-allowed; }
+  .btn-ghost { background:#fff; color:var(--brand); border:1px solid var(--brand); }
+  .msg { margin-top: 12px; font-size: 13px; color: var(--muted); min-height: 18px; }
+  .msg.err { color: var(--err); }
+  .msg.ok { color: var(--ok); }
+  table { width:100%; border-collapse: collapse; font-size:13px; }
+  th, td { text-align:left; padding:10px 8px; border-bottom:1px solid var(--line); vertical-align: middle; }
+  th { color:var(--muted); font-weight:600; font-size:12px; }
+  .badge { display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px; font-weight:600; }
+  .pending { background:#f1f5f9; color:#475569; }
+  .running { background:#e0f2fe; color:#0369a1; }
+  .success { background:#dcfce7; color:#166534; }
+  .failed { background:#fee2e2; color:#991b1b; }
+  .qc-pass { background:#dcfce7; color:#166534; }
+  .qc-warn { background:#fef3c7; color:#92400e; }
+  .qc-fail, .qc-error { background:#fee2e2; color:#991b1b; }
+  .bar { height:6px; background:#eef2f7; border-radius:999px; overflow:hidden; width:120px; }
+  .bar > i { display:block; height:100%; background:var(--brand); width:0; transition: width .3s; }
+  a { color: var(--brand); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  @media (max-width: 700px) { .hide-sm { display:none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>离线数字人 · 任务</h1>
+  <div class="sub">文案 → TTS → MuseTalk → MP4。提交后由后台常驻 worker 排队渲染。</div>
+
+  <div class="card">
+    <label for="text">文案</label>
+    <textarea id="text" placeholder="输入要播报的文案，建议 30–300 字；长文案会自动按音频时长生成。"></textarea>
+    <div class="row">
+      <div>
+        <label for="avatar">形象</label>
+        <select id="avatar">
+          <option value="avatar_ck">avatar_ck（新形象 720×1280）</option>
+          <option value="mt_test">mt_test（测试形象）</option>
+        </select>
+      </div>
+      <div>
+        <label for="voice">音色</label>
+        <select id="voice">
+          <option value="zh-CN-XiaoxiaoNeural">晓晓 · 女声</option>
+          <option value="zh-CN-YunxiaNeural">云夏 · 男声</option>
+          <option value="zh-CN-YunxiNeural">云希 · 男声</option>
+          <option value="zh-CN-XiaoyiNeural">晓伊 · 女声</option>
+        </select>
+      </div>
+      <div>
+        <label for="bgm">背景音乐</label>
+        <select id="bgm">
+          <option value="">无 BGM</option>
+        </select>
+      </div>
+      <div style="display:flex;align-items:flex-end;gap:14px;">
+        <label style="font-weight:500;margin:0 0 10px;"><input type="checkbox" id="subtitle" checked> 字幕</label>
+        <label style="font-weight:500;margin:0 0 10px;"><input type="checkbox" id="cover" checked> 封面</label>
+        <button id="submit" onclick="submitJob()">提交任务</button>
+      </div>
+    </div>
+    <div id="msg" class="msg"></div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <strong style="font-size:15px;">任务列表</strong>
+      <button class="btn-ghost" onclick="loadJobs()">刷新</button>
+    </div>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>时间</th>
+            <th>文案</th>
+            <th>状态</th>
+            <th>进度</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="jobs">
+          <tr><td colspan="5" style="color:var(--muted);">加载中…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+async function api(path, opts = {}) {
+  const res = await fetch(path, {
+    headers: { 'Content-Type': 'application/json' },
+    ...opts,
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok || (typeof body.code === 'number' && body.code !== 0)) {
+    throw new Error(body.msg || ('HTTP ' + res.status));
+  }
+  return body.data;
+}
+
+function fmtTime(ts) {
+  if (!ts) return '-';
+  const d = new Date(ts * 1000);
+  return d.toLocaleString('zh-CN', { hour12: false });
+}
+
+function statusBadge(s) {
+  const names = { pending: '排队中', running: '渲染中', success: '完成', failed: '失败' };
+  return `<span class="badge ${s}">${names[s] || s}</span>`;
+}
+
+function qcBadge(status, raw) {
+  if (!status) return '';
+  const names = { pass: '质检✓', warn: '质检!', fail: '质检✗', error: '质检ERR' };
+  let title = '';
+  try {
+    const d = JSON.parse(raw || '{}');
+    title = (d.reasons || []).concat(d.warnings || []).join('; ');
+  } catch (e) { /* ignore */ }
+  return `<span class="badge qc-${status}" title="${esc(title)}">${names[status] || status}</span>`;
+}
+
+async function loadJobs() {
+  try {
+    const jobs = await api('/api/offline/jobs');
+    if (!jobs.length) {
+      $('jobs').innerHTML = '<tr><td colspan="5" style="color:var(--muted);">暂无任务</td></tr>';
+      return;
+    }
+    $('jobs').innerHTML = jobs.map((j) => {
+      const pct = Math.max(0, Math.min(100, j.progress || 0));
+      const download = j.status === 'success'
+        ? `<a href="/api/offline/jobs/${j.id}/download">下载</a>`
+        : '';
+      const cover = j.cover_path
+        ? `<a href="/api/offline/jobs/${j.id}/cover">封面</a>`
+        : '';
+      const subs = j.srt_path
+        ? `<a href="/api/offline/jobs/${j.id}/subtitle">字幕</a>`
+        : '';
+      const retry = j.status === 'failed' || j.status === 'success'
+        ? `<a href="javascript:retryJob('${j.id}')">重试</a>`
+        : '';
+      return `<tr>
+        <td class="hide-sm">${esc(fmtTime(j.created_at))}</td>
+        <td>${esc((j.text || '').slice(0, 40))}${(j.text || '').length > 40 ? '…' : ''}
+          ${j.error ? `<div style="color:var(--err);font-size:12px;margin-top:4px;">${esc(j.error)}</div>` : ''}
+        </td>
+        <td>${statusBadge(j.status)} ${qcBadge(j.qc_status, j.qc_json)}</td>
+        <td><div class="bar"><i style="width:${pct}%"></i></div><div style="color:var(--muted);font-size:12px;margin-top:3px;">${pct}%</div></td>
+        <td>${download} ${cover} ${subs} ${retry}</td>
+      </tr>`;
+    }).join('');
+  } catch (e) {
+    $('jobs').innerHTML = `<tr><td colspan="5" style="color:var(--err);">${esc(e.message)}</td></tr>`;
+  }
+}
+
+async function submitJob() {
+  const text = $('text').value.trim();
+  if (!text) { setMsg('请先输入文案', 'err'); return; }
+  $('submit').disabled = true;
+  setMsg('提交中…');
+  try {
+    const data = await api('/api/offline/jobs', {
+      method: 'POST',
+      body: JSON.stringify({
+        text,
+        avatar_id: $('avatar').value,
+        voice: $('voice').value,
+        bgm: $('bgm').value,
+        subtitle: $('subtitle').checked,
+        cover: $('cover').checked,
+      }),
+    });
+    setMsg('已提交：' + data.id, 'ok');
+    $('text').value = '';
+    loadJobs();
+  } catch (e) {
+    setMsg('提交失败：' + e.message, 'err');
+  } finally {
+    $('submit').disabled = false;
+  }
+}
+
+async function retryJob(id) {
+  try {
+    await api(`/api/offline/jobs/${id}/retry`, { method: 'POST' });
+    loadJobs();
+  } catch (e) {
+    setMsg('重试失败：' + e.message, 'err');
+  }
+}
+
+function setMsg(text, cls = '') {
+  const el = $('msg');
+  el.textContent = text;
+  el.className = 'msg ' + cls;
+}
+
+async function loadBgm() {
+  try {
+    const list = await api('/api/offline/bgm');
+    const sel = $('bgm');
+    for (const f of list) {
+      const o = document.createElement('option');
+      o.value = f;
+      o.textContent = f;
+      sel.appendChild(o);
+    }
+  } catch (e) { /* ignore */ }
+}
+
+loadBgm();
+loadJobs();
+setInterval(loadJobs, 2000);
+</script>
+</body>
+</html>

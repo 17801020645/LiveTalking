@@ -1,5 +1,5 @@
 import sys
-from face_detection import FaceAlignment,LandmarksType
+# patched: use face_recognition for bbox (face_alignment 1.5 API changed)
 from os import listdir, path
 import subprocess
 import numpy as np
@@ -21,7 +21,7 @@ from tqdm import tqdm
 
 # initialize the face detection model
 device = "cuda" if torch.cuda.is_available() else "cpu"
-fa = FaceAlignment(LandmarksType._2D, flip_input=False,device=device)
+fa = None  # patched: bbox via face_recognition
 
 # maker if the bbox is not sufficient 
 coord_placeholder = (0.0,0.0,0.0,0.0)
@@ -61,6 +61,7 @@ def read_imgs(img_list):
 #         face_land_mark = face_land_mark.astype(np.int32)
         
 #         # get bounding boxes by face detetion
+#         _locs = face_recognition.face_locations(img_rgb)
 #         bbox = fa.get_detections_for_batch(np.asarray(fb))
         
 #         # adjust the bounding box refer to landmark
@@ -120,7 +121,8 @@ def get_landmark_and_bbox(img_list,upperbondrange =0):
             face_land_mark = np.zeros((68, 2), dtype=np.int32)
         
         # get bounding boxes by face detetion
-        bbox = fa.get_detections_for_batch(np.asarray(fb))
+        _locs = face_recognition.face_locations(img_rgb)
+        bbox = [(l, t, r, b) for (t, r, b, l) in _locs] or [None]
         
         # adjust the bounding box refer to landmark
         # Add the bounding box to a tuple and append it to the coordinates list
