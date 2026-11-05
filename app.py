@@ -125,6 +125,19 @@ async def download_record(request):
         return web.Response(status=404, text="Record not found")
 
 
+async def close_live(request):
+    """显式关闭 WebRTC 会话；用于浏览器关闭/结束按钮。"""
+    try:
+        body = await request.json()
+    except Exception:
+        return web.json_response({"code": -1, "msg": "invalid json"}, status=400)
+    sessionid = (body.get("sessionid") or "").strip()
+    if not sessionid:
+        return web.json_response({"code": -1, "msg": "sessionid is required"}, status=400)
+    await rtc_manager.close_session(sessionid)
+    return web.json_response({"code": 0, "msg": "ok"})
+
+
 async def live_status(request):
     """供离线 worker 判断实时是否繁忙；只读，不影响会话。"""
     active = session_manager.active_count()
@@ -241,6 +254,7 @@ def main():
     appasync.router.add_post("/offer", offer)
     appasync.router.add_get("/record/{sessionid}", download_record)
     appasync.router.add_get("/api/live/status", live_status)
+    appasync.router.add_post("/api/live/close", close_live)
 
     # /api/v1 与 /app 必须在 web/ 静态路由之前注册
     attach_platform(appasync)

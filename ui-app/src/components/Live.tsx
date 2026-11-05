@@ -35,6 +35,18 @@ export default function Live({ live, avatars, voices, notify }: {
 
   useEffect(() => () => { cleanup() }, [])
 
+  useEffect(() => {
+    if (!sessionId) return
+    const onUnload = () => {
+      try {
+        const blob = new Blob([JSON.stringify({ sessionid: sessionId })], { type: 'application/json' })
+        navigator.sendBeacon('/api/live/close', blob)
+      } catch { /* ignore */ }
+    }
+    window.addEventListener('beforeunload', onUnload)
+    return () => window.removeEventListener('beforeunload', onUnload)
+  }, [sessionId])
+
   function cleanup() {
     if (timerRef.current) window.clearTimeout(timerRef.current)
     if (recorderRef.current) { try { recorderRef.current.stop() } catch { /* */ } }
@@ -90,7 +102,10 @@ export default function Live({ live, avatars, voices, notify }: {
     }
   }
 
-  function disconnect() {
+  async function disconnect() {
+    if (sessionId) {
+      try { await api.closeLive(sessionId) } catch { /* cleanup best effort */ }
+    }
     cleanup()
     setSessionId(null)
     setConnected(false)

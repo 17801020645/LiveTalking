@@ -38,6 +38,7 @@ class RTCManager:
         """
         self.opt = opt
         self.pcs: set = set()
+        self.pcs_by_session: Dict[str, RTCPeerConnection] = {}
 
     async def _create_pc_and_answer(self, avatar_session, sessionid, offer):
         """创建 PeerConnection、添加轨道、SDP 交换，返回已完成 answer 的 pc"""
@@ -46,14 +47,43 @@ class RTCManager:
             configuration=RTCConfiguration(iceServers=[ice_server])
         )
         self.pcs.add(pc)
+        self.pcs_by_session[sessionid] = pc
+
+        cleanup_task = None
+
+        async def cleanup_session(reason):
+            nonlocal cleanup_task
+            cleanup_task = None
+            if pc.connectionState == "connected":
+                return
+            logger.info("Cleaning session %s (%s)", sessionid, reason)
+            try:
+                await pc.close()
+            finally:
+                self.pcs.discard(pc)
+                self.pcs_by_session.pop(sessionid, None)
+                session_manager.remove_session(sessionid)
+
+        async def disconnect_timeout():
+            await asyncio.sleep(10)
+            if pc.connectionState != "connected":
+                await cleanup_session("disconnected timeout")
 
         @pc.on("connectionstatechange")
         async def on_connectionstatechange():
-            logger.info("Connection state is %s", pc.connectionState)
-            if pc.connectionState in ("failed", "closed"):
-                await pc.close()
-                self.pcs.discard(pc)
-                session_manager.remove_session(sessionid)
+            nonlocal cleanup_task
+            state = pc.connectionState
+            logger.info("Connection state is %s", state)
+            if state == "connected":
+                if cleanup_task is not None:
+                    cleanup_task.cancel()
+                    cleanup_task = None
+            elif state in ("failed", "closed"):
+                await cleanup_session(state)
+            elif state == "disconnected":
+                if cleanup_task is not None:
+                    cleanup_task.cancel()
+                cleanup_task = asyncio.create_task(disconnect_timeout())
 
         # 添加发送轨道
         from server.webrtc import HumanPlayer
@@ -74,6 +104,16 @@ class RTCManager:
         await pc.setLocalDescription(answer)
 
         return pc
+
+    async def close_session(self, sessionid: str) -> None:
+        """显式关闭会话；WebRTC 异常断开时由前端/卸载钩子调用。"""
+        pc = self.pcs_by_session.pop(sessionid, None)
+        if pc is not None:
+            try:
+                await pc.close()
+            finally:
+                self.pcs.discard(pc)
+        session_manager.remove_session(sessionid)
 
     async def answer_offer(self, params):
         """从信令参数创建会话并完成 SDP 交换。成功返回 dict，失败返回 (None, msg)。"""
