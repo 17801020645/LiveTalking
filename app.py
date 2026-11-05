@@ -124,6 +124,47 @@ async def download_record(request):
         return web.Response(status=404, text="Record not found")
 
 
+async def live_status(request):
+    """供离线 worker 判断实时是否繁忙；只读，不影响会话。"""
+    active = session_manager.active_count()
+    sessions = []
+    for sid, session in list(session_manager.sessions.items()):
+        if session is None:
+            continue
+        sessions.append({
+            "id": sid,
+            "state": getattr(session, "state", "active"),
+        })
+
+    gpu = {}
+    try:
+        import subprocess as _subprocess
+
+        out = _subprocess.check_output(
+            [
+                "nvidia-smi",
+                "--query-gpu=memory.used,memory.total",
+                "--format=csv,noheader,nounits",
+            ],
+            text=True,
+            timeout=2,
+        ).strip().splitlines()[0]
+        used, total = [int(x.strip()) for x in out.split(",")[:2]]
+        gpu = {"used_mb": used, "total_mb": total}
+    except Exception:
+        gpu = {}
+
+    return web.json_response({
+        "code": 0,
+        "data": {
+            "active": active,
+            "max": int(getattr(request.app["opt"], "max_session", 0) or 0),
+            "sessions": sessions,
+            "gpu": gpu,
+        },
+    })
+
+
 def main():
     global rtc_manager, opt, model,load_avatar
     # 解析命令行参数
@@ -198,6 +239,7 @@ def main():
     appasync.on_shutdown.append(on_shutdown)
     appasync.router.add_post("/offer", offer)
     appasync.router.add_get("/record/{sessionid}", download_record)
+    appasync.router.add_get("/api/live/status", live_status)
 
     # /api/v1 与 /app 必须在 web/ 静态路由之前注册
     attach_platform(appasync)
