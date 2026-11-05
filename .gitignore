@@ -75,3 +75,5 @@ data_utils/face_parsing/79999_iter.pth
 .impeccable/live/*.png
 .cursor/hooks.json
 # impeccable-ignore-end
+
+.venv
