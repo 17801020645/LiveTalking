@@ -20,7 +20,7 @@ const fallbackVoices: VoiceInfo[] = [
 
 function readView(): View {
   const h = location.hash.replace('#', '')
-  return (['overview', 'offline', 'live', 'assets', 'qc', 'settings'] as View[]).includes(h as View) ? h as View : 'overview'
+  return (['overview', 'offline', 'live', 'assets', 'recordings', 'qc', 'settings'] as View[]).includes(h as View) ? h as View : 'overview'
 }
 
 export default function App() {
