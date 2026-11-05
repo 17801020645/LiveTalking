@@ -12,6 +12,7 @@ import os
 from aiohttp import ClientSession, ClientTimeout, web
 from PIL import Image
 
+from server.platform_auth import require_admin
 from utils.logger import logger
 
 VOICES = [
@@ -63,6 +64,43 @@ async def list_voices(request):
     return web.json_response({"code": 0, "msg": "ok", "data": VOICES})
 
 
+async def list_recordings(request):
+    root = os.path.join("data", "record")
+    items = []
+    if os.path.isdir(root):
+        for name in sorted(os.listdir(root), reverse=True):
+            if not name.lower().endswith(".mp4"):
+                continue
+            path = os.path.join(root, name)
+            try:
+                st = os.stat(path)
+            except OSError:
+                continue
+            items.append({
+                "id": name[:-4],
+                "name": name,
+                "size": st.st_size,
+                "mtime": st.st_mtime,
+                "url": f"/record/{name[:-4]}",
+            })
+    return web.json_response({"code": 0, "msg": "ok", "data": items})
+
+
+async def delete_recording(request):
+    denied = require_admin(request)
+    if denied:
+        return denied
+    rec_id = os.path.basename(request.match_info["recording_id"])
+    path = os.path.join("data", "record", f"{rec_id}.mp4")
+    if not os.path.isfile(path):
+        return web.json_response({"code": -1, "msg": "recording not found"}, status=404)
+    try:
+        os.remove(path)
+    except OSError as exc:
+        return web.json_response({"code": -1, "msg": str(exc)}, status=500)
+    return web.json_response({"code": 0, "msg": "ok", "data": {"id": rec_id, "deleted": True}})
+
+
 async def proxy_offline(request):
     target = "http://127.0.0.1:8012" + request.path_qs
     data = None if request.method in ("GET", "HEAD") else await request.read()
@@ -95,6 +133,8 @@ def setup_ui_routes(app, ui_dist: str = "ui_dist") -> None:
     app.router.add_get("/api/assets/avatars", list_avatars)
     app.router.add_get("/api/assets/avatars/{avatar_id}/frame", avatar_frame)
     app.router.add_get("/api/assets/voices", list_voices)
+    app.router.add_get("/api/recordings", list_recordings)
+    app.router.add_delete("/api/recordings/{recording_id}", delete_recording)
     app.router.add_route("*", "/api/offline/{tail:.*}", proxy_offline)
     index_file = os.path.join(ui_dist, "index.html")
 

@@ -27,6 +27,8 @@ FIELDS = {
     "qc_status",
     "qc_json",
     "stage",
+    "priority",
+    "cancel_requested",
 }
 
 
@@ -69,6 +71,8 @@ def init_db() -> None:
             "qc_status": "TEXT",
             "qc_json": "TEXT",
             "stage": "TEXT",
+            "priority": "INTEGER NOT NULL DEFAULT 0",
+            "cancel_requested": "INTEGER NOT NULL DEFAULT 0",
         }
         for name, ddl in migrations.items():
             if name not in cols:
@@ -85,13 +89,14 @@ def create_job(
     subtitle: bool = True,
     bgm: str = "",
     cover: bool = True,
+    priority: int = 0,
 ) -> str:
     job_id = uuid.uuid4().hex
     con = _connect()
     try:
         con.execute(
-            "INSERT INTO jobs(id, status, text, avatar_id, voice, subtitle, bgm, cover, created_at) "
-            "VALUES (?,?,?,?,?,?,?,?,?)",
+            "INSERT INTO jobs(id, status, text, avatar_id, voice, subtitle, bgm, cover, priority, created_at) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?)",
             (
                 job_id,
                 "pending",
@@ -101,6 +106,7 @@ def create_job(
                 int(bool(subtitle)),
                 bgm or "",
                 int(bool(cover)),
+                int(priority),
                 time.time(),
             ),
         )
@@ -135,7 +141,8 @@ def claim_next() -> dict | None:
     try:
         con.execute("BEGIN IMMEDIATE")
         row = con.execute(
-            "SELECT * FROM jobs WHERE status='pending' ORDER BY created_at LIMIT 1"
+            "SELECT * FROM jobs WHERE status='pending' "
+            "ORDER BY priority DESC, created_at LIMIT 1"
         ).fetchone()
         if row is None:
             con.commit()
@@ -149,6 +156,15 @@ def claim_next() -> dict | None:
         job["status"] = "running"
         job["progress"] = 0
         return job
+    finally:
+        con.close()
+
+
+def delete_job(job_id: str) -> None:
+    con = _connect()
+    try:
+        con.execute("DELETE FROM jobs WHERE id=?", (job_id,))
+        con.commit()
     finally:
         con.close()
 

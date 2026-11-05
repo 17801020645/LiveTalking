@@ -1,13 +1,64 @@
+import { useState } from 'react'
 import { api } from '../api'
-import type { AvatarInfo, VoiceInfo } from '../types'
+import type { AvatarInfo, AvatarTask, LiveStatus, User, VoiceInfo } from '../types'
 import { Badge, Card } from './ui'
 
-export default function Assets({ avatars, voices, bgm, notify }: {
-  avatars: AvatarInfo[]; voices: VoiceInfo[]; bgm: string[]; notify: (s: string) => void
+export default function Assets({ avatars, voices, bgm, user, live, refresh, notify }: {
+  avatars: AvatarInfo[]; voices: VoiceInfo[]; bgm: string[]; user: User; live: LiveStatus;
+  refresh: () => void; notify: (s: string) => void
 }) {
+  const [uploading, setUploading] = useState(false)
+  const [avatarId, setAvatarId] = useState('avatar_v' + new Date().toISOString().slice(5, 10).replace('-', ''))
+  const [file, setFile] = useState<File | null>(null)
+  const [task, setTask] = useState<AvatarTask | null>(null)
+  const [error, setError] = useState('')
+
+  async function startUpload() {
+    if (!file) return setError('请选择视频文件')
+    if (!avatarId.trim()) return setError('请填写 avatar_id')
+    if (live.active > 0) return setError('请先结束实时会话，避免显存不足')
+    setUploading(true); setError(''); setTask(null)
+    try {
+      try { await api.unloadOffline() } catch { /* offline worker may be idle */ }
+      const { task_id } = await api.createAvatarTask(avatarId.trim(), file)
+      notify('形象生成任务已提交')
+      const timer = window.setInterval(async () => {
+        try {
+          const t = await api.avatarTask(task_id)
+          setTask(t)
+          if (t.status === 'completed') {
+            window.clearInterval(timer); setUploading(false); notify('形象生成完成'); refresh()
+          } else if (t.status === 'failed') {
+            window.clearInterval(timer); setUploading(false); setError(t.error_msg || '生成失败')
+          }
+        } catch (e: any) {
+          window.clearInterval(timer); setUploading(false); setError(e.message || '查询失败')
+        }
+      }, 3000)
+    } catch (e: any) {
+      setUploading(false); setError(e.message || String(e))
+    }
+  }
   return (
     <div className="page">
-      <div className="page-head"><div><div className="eyebrow">ASSETS / 03</div><h1 className="h1">资产库</h1><p className="sub">形象、音色与包装素材。当前 720p 形象可用，1080p 形象待拍。</p></div><div className="hero-actions"><button className="btn primary" onClick={() => notify('上传形象需要资产接口，v2 再做')}>⇪ 上传形象</button></div></div>
+      <div className="page-head"><div><div className="eyebrow">ASSETS / 03</div><h1 className="h1">资产库</h1><p className="sub">形象、音色与包装素材。管理员可上传视频并生成 MuseTalk 形象。</p></div><div className="hero-actions">{user.role === 'admin' && <button className="btn primary" onClick={() => setError('')} disabled={uploading}>⇪ 上传形象</button>}</div></div>
+      {user.role === 'admin' && (
+        <div className="card upload-panel">
+          <div className="card-head"><h3>生成形象 / UPLOAD</h3><span className="meta">MUSETALK · ADMIN</span></div>
+          <div className="card-body">
+            <div className="row-2">
+              <div className="field"><label>avatar_id</label><input value={avatarId} onChange={e => setAvatarId(e.target.value)} placeholder="avatar_v1" /></div>
+              <div className="field"><label>视频（建议 30–60s，4K/1080p）</label><input type="file" accept="video/*" onChange={e => setFile(e.target.files?.[0] || null)} /></div>
+            </div>
+            <div className="composer-foot">
+              <span className="hint">生成前会卸载离线模型；实时会话需为 0。耗时取决于视频长度。</span>
+              <button className="btn primary" onClick={startUpload} disabled={uploading}>{uploading ? '生成中…' : '开始生成'}</button>
+            </div>
+            {error && <div className="login-error" style={{ marginTop: 10 }}>{error}</div>}
+            {task && <div className="hint" style={{ marginTop: 10 }}>任务 {task.task_id.slice(0, 8)}… · {task.status} · {task.progress}%</div>}
+          </div>
+        </div>
+      )}
       <div className="asset-grid">
         {avatars.map(a => (
           <div className="card asset" key={a.id}>

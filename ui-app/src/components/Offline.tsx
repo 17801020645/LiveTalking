@@ -19,6 +19,7 @@ export default function Offline({ jobs, avatars, voices, bgm, refresh, notify }:
   const [submitting, setSubmitting] = useState(false)
   const [filter, setFilter] = useState<Filter>('all')
   const [selected, setSelected] = useState<Job | null>(null)
+  const [priority, setPriority] = useState(0)
   const [batching, setBatching] = useState(false)
   const batchRef = useRef<HTMLInputElement | null>(null)
 
@@ -41,7 +42,7 @@ export default function Offline({ jobs, avatars, voices, bgm, refresh, notify }:
     try {
       const { id } = await api.createJob({
         text: text.trim(), avatar_id: avatar, voice,
-        subtitle, cover, bgm: bgmValue,
+        subtitle, cover, bgm: bgmValue, priority,
       })
       notify(`任务已提交：${id.slice(0, 8)}…`)
       refresh()
@@ -66,13 +67,24 @@ export default function Offline({ jobs, avatars, voices, bgm, refresh, notify }:
     let ok = 0
     for (const line of lines) {
       try {
-        await api.createJob({ text: line, avatar_id: avatar, voice, subtitle, cover, bgm: bgmValue })
+        await api.createJob({ text: line, avatar_id: avatar, voice, subtitle, cover, bgm: bgmValue, priority })
         ok++
       } catch { /* count */ }
     }
     setBatching(false)
     notify(`批量导入完成：${ok}/${lines.length}`)
     refresh()
+  }
+
+  async function cancel(id: string) {
+    try { await api.cancelJob(id); notify('已请求取消'); refresh(); setSelected(null) }
+    catch (e: any) { notify(`取消失败：${e.message || e}`) }
+  }
+
+  async function remove(id: string) {
+    if (!confirm('删除任务及其产物？')) return
+    try { await api.deleteJob(id); notify('任务已删除'); refresh(); setSelected(null) }
+    catch (e: any) { notify(`删除失败：${e.message || e}`) }
   }
 
   async function retry(id: string) {
@@ -98,6 +110,7 @@ export default function Offline({ jobs, avatars, voices, bgm, refresh, notify }:
               <div className="field"><label>形象</label><select value={avatar} onChange={e => setAvatar(e.target.value)}>{avatars.map(a => <option key={a.id} value={a.id}>{a.id} · {a.width}×{a.height}</option>)}</select></div>
               <div className="field"><label>音色</label><select value={voice} onChange={e => setVoice(e.target.value)}>{voices.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}</select></div>
             </div>
+            <div className="field"><label>优先级</label><select value={priority} onChange={e => setPriority(Number(e.target.value))}><option value={0}>普通</option><option value={1}>高</option><option value={2}>最高</option></select></div>
             <div className="field"><label>包装</label><div className="check-row">
               <label className="check"><input type="checkbox" checked={subtitle} onChange={e => setSubtitle(e.target.checked)} /> 烧录字幕</label>
               <label className="check"><input type="checkbox" checked={cover} onChange={e => setCover(e.target.checked)} /> 生成封面</label>
@@ -146,7 +159,7 @@ export default function Offline({ jobs, avatars, voices, bgm, refresh, notify }:
             <div className="eyebrow">JOB DETAIL</div>
             <h3>{selected.text.slice(0, 24) || '未命名任务'}</h3>
             <p className="sub">{selected.avatar_id} · {selected.voice} · {selected.id.slice(0, 8)}</p>
-            <div className="section"><h4>状态</h4><p><Badge tone={selected.stage === 'waiting_live' ? 'wait' : statusTone(selected.status)}>{selected.stage === 'waiting_live' ? '等待实时空闲' : selected.status}</Badge> <span className="hint">{selected.progress}%</span></p>{selected.error && <p className="bad-text">{selected.error}</p>}</div>
+            <div className="section"><h4>状态</h4><p><Badge tone={selected.stage === 'waiting_live' ? 'wait' : statusTone(selected.status)}>{selected.stage === 'waiting_live' ? '等待实时空闲' : selected.status}</Badge> <span className="hint">{selected.progress}% · 优先级 {selected.priority ?? 0}</span></p>{selected.error && <p className="bad-text">{selected.error}</p>}</div>
             <div className="section"><h4>包装</h4><div className="kv"><span>字幕</span><b>{selected.subtitle ? '已开启' : '关闭'}</b></div><div className="kv"><span>封面</span><b>{selected.cover ? '已生成' : '关闭'}</b></div><div className="kv"><span>BGM</span><b>{selected.bgm || '无'}</b></div></div>
             <div className="section"><h4>质检</h4>{(() => {
               const qc = parseQc(selected)
@@ -162,7 +175,9 @@ export default function Offline({ jobs, avatars, voices, bgm, refresh, notify }:
               {selected.status === 'success' && <a className="btn primary" href={`/api/offline/jobs/${selected.id}/download`}>下载视频</a>}
               {selected.status === 'success' && <a className="btn" href={`/api/offline/jobs/${selected.id}/cover`}>封面</a>}
               {selected.srt_path && <a className="btn" href={`/api/offline/jobs/${selected.id}/subtitle`}>字幕</a>}
+              {(selected.status === 'pending' || selected.status === 'running') && <button className="btn danger" onClick={() => cancel(selected.id)}>取消任务</button>}
               {(selected.status === 'failed' || selected.status === 'success') && <button className="btn" onClick={() => { retry(selected.id); setSelected(null) }}>重试</button>}
+              {selected.status !== 'running' && selected.status !== 'pending' && <button className="btn danger" onClick={() => remove(selected.id)}>删除</button>}
               <button className="btn ghost" onClick={() => setSelected(null)}>关闭</button>
             </div></div>
           </aside>

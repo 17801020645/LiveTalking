@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { api } from './api'
-import type { AvatarInfo, Job, LiveStatus, OfflineHealth, VoiceInfo, View } from './types'
+import { api, ApiError } from './api'
+import type { AvatarInfo, Job, LiveStatus, OfflineHealth, User, VoiceInfo, View } from './types'
 import Shell from './components/Shell'
 import Overview from './components/Overview'
 import Offline from './components/Offline'
@@ -8,6 +8,8 @@ import Live from './components/Live'
 import Assets from './components/Assets'
 import QC from './components/QC'
 import Settings from './components/Settings'
+import Recordings from './components/Recordings'
+import Login from './components/Login'
 
 const emptyLive: LiveStatus = { active: 0, max: 2, sessions: [], gpu: { used_mb: 0, total_mb: 0 } }
 const fallbackAvatars: AvatarInfo[] = [{ id: 'avatar_ck', frames: 500, width: 720, height: 1280 }]
@@ -29,6 +31,8 @@ export default function App() {
   const [avatars, setAvatars] = useState<AvatarInfo[]>([])
   const [voices, setVoices] = useState<VoiceInfo[]>([])
   const [bgm, setBgm] = useState<string[]>([])
+  const [user, setUser] = useState<User | null>(null)
+  const [authChecked, setAuthChecked] = useState(false)
   const [toasts, setToasts] = useState<{ id: number; text: string }[]>([])
 
   const notify = useCallback((text: string) => {
@@ -50,13 +54,21 @@ export default function App() {
     }
     if (results[4].status === 'fulfilled' && results[4].value.length) setVoices(results[4].value)
     if (results[5].status === 'fulfilled') setBgm(results[5].value)
+    const unauthorized = results.some(r => r.status === 'rejected' && r.reason instanceof ApiError && r.reason.status === 401)
+    if (unauthorized) setUser(null)
   }, [])
 
   useEffect(() => {
+    api.me().then(u => { setUser(u); setAuthChecked(true) })
+      .catch(() => { setUser(null); setAuthChecked(true) })
+  }, [])
+
+  useEffect(() => {
+    if (!user) return
     load()
     const id = window.setInterval(load, 3000)
     return () => window.clearInterval(id)
-  }, [load])
+  }, [load, user])
 
   useEffect(() => {
     const onHash = () => setView(readView())
@@ -70,17 +82,27 @@ export default function App() {
     document.querySelector('.content')?.scrollTo({ top: 0 })
   }, [])
 
+  const pendingJobs = useMemo(() => jobs.filter(j => j.status === 'pending' || j.status === 'running').length, [jobs])
+
+  async function logout() {
+    try { await api.logout() } catch { /* ignore */ }
+    setUser(null)
+  }
+
+  if (!authChecked) return <div className="login-page"><div className="login-card"><div className="hint">正在检查登录状态…</div></div></div>
+  if (!user) return <Login onSuccess={u => { setUser(u); }} />
+
   const effectiveAvatars = avatars.length ? avatars : fallbackAvatars
   const effectiveVoices = voices.length ? voices : fallbackVoices
-  const pendingJobs = useMemo(() => jobs.filter(j => j.status === 'pending' || j.status === 'running').length, [jobs])
 
   return (
     <>
-      <Shell view={view} onView={go} live={live} jobs={pendingJobs}>
+      <Shell view={view} onView={go} live={live} jobs={pendingJobs} user={user} onLogout={logout}>
         {view === 'overview' && <Overview live={live} jobs={jobs} avatars={effectiveAvatars} onView={go} />}
         {view === 'offline' && <Offline jobs={jobs} avatars={effectiveAvatars} voices={effectiveVoices} bgm={bgm} refresh={load} notify={notify} />}
         {view === 'live' && <Live live={live} avatars={effectiveAvatars} voices={effectiveVoices} notify={notify} />}
-        {view === 'assets' && <Assets avatars={effectiveAvatars} voices={effectiveVoices} bgm={bgm} notify={notify} />}
+        {view === 'assets' && <Assets avatars={effectiveAvatars} voices={effectiveVoices} bgm={bgm} user={user} live={live} refresh={load} notify={notify} />}
+        {view === 'recordings' && <Recordings user={user} notify={notify} />}
         {view === 'qc' && <QC jobs={jobs} />}
         {view === 'settings' && <Settings live={live} />}
         {health && !health.worker_alive && <div className="global-warn">离线 worker 未运行</div>}

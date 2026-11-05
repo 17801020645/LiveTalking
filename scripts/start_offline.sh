@@ -19,7 +19,7 @@ set -a
 set +a
 export LIVE_STATUS_URL="${LIVE_STATUS_URL:-http://127.0.0.1:8010/api/live/status}"
 
-nohup "$ROOT/.venv/bin/python" -m offline.server --port 8012 > "$LOG" 2>&1 &
+nohup "$ROOT/.venv/bin/python" -m offline.server --host 127.0.0.1 --port 8012 > "$LOG" 2>&1 &
 echo $! > "$PIDFILE"
 
 for _ in $(seq 1 20); do

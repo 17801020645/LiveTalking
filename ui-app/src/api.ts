@@ -1,11 +1,16 @@
-import type { AvatarInfo, Job, LiveStatus, OfflineHealth, VoiceInfo } from './types'
+import type { AvatarInfo, AvatarTask, Job, LiveStatus, OfflineHealth, Recording, User, VoiceInfo } from './types'
+
+export class ApiError extends Error {
+  status: number
+  constructor(message: string, status: number) { super(message); this.status = status }
+}
 
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, init)
   const text = await res.text()
   let data: any = null
   try { data = text ? JSON.parse(text) : null } catch { /* ignore */ }
-  if (!res.ok) throw new Error(data?.msg || data?.error || `${res.status} ${res.statusText}`)
+  if (!res.ok) throw new ApiError(data?.msg || data?.error || `${res.status} ${res.statusText}`, res.status)
   if (data && data.code !== undefined && data.code !== 0) throw new Error(data.msg || 'request failed')
   return (data?.data !== undefined ? data.data : data) as T
 }
@@ -24,8 +29,11 @@ export const api = {
   voices: () => request<VoiceInfo[]>('/api/assets/voices'),
   bgm: () => request<string[]>('/api/offline/bgm'),
   createJob: (body: {
-    text: string; avatar_id: string; voice: string; subtitle: boolean; cover: boolean; bgm: string
+    text: string; avatar_id: string; voice: string; subtitle: boolean; cover: boolean; bgm: string; priority?: number
   }) => request<{ id: string }>('/api/offline/jobs', json(body)),
+  cancelJob: (id: string) => request<unknown>(`/api/offline/jobs/${id}/cancel`, { method: 'POST' }),
+  deleteJob: (id: string) => request<unknown>(`/api/offline/jobs/${id}`, { method: 'DELETE' }),
+  unloadOffline: () => request<unknown>('/api/offline/unload', { method: 'POST' }),
   retryJob: (id: string) => request<unknown>(`/api/offline/jobs/${id}/retry`, { method: 'POST' }),
   human: (body: { text: string; type: string; interrupt: boolean; sessionid: string }) =>
     request<unknown>('/human', json(body)),
@@ -35,6 +43,20 @@ export const api = {
     request<unknown>('/api/live/close', json({ sessionid })),
   record: (sessionid: string, type: 'start_record' | 'end_record') =>
     request<unknown>('/record', json({ sessionid, type })),
+  recordings: () => request<Recording[]>('/api/recordings'),
+  deleteRecording: (id: string) => request<unknown>(`/api/recordings/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+  me: () => request<User>('/api/v1/auth/me'),
+  login: (username: string, password: string) =>
+    request<unknown>('/api/v1/auth/login', json({ username, password })),
+  logout: () => request<unknown>('/api/v1/auth/logout', { method: 'POST' }),
+  avatarTask: (id: string) => request<AvatarTask>(`/api/avatar/task/${id}`),
+  createAvatarTask: (avatarId: string, file: File) => {
+    const fd = new FormData()
+    fd.append('model', 'musetalk')
+    fd.append('avatar_id', avatarId)
+    fd.append('video_file', file)
+    return request<{ task_id: string }>('/api/avatar/task', { method: 'POST', body: fd })
+  },
   asr: async (blob: Blob) => {
     const fd = new FormData()
     fd.append('file', blob, 'talk.webm')

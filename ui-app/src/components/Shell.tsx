@@ -1,18 +1,19 @@
-import type { LiveStatus, View } from '../types'
+import type { LiveStatus, User, View } from '../types'
 
 const nav: { id: View; label: string; icon: string; tag?: string }[] = [
   { id: 'overview', label: '总览', icon: '◫' },
   { id: 'offline', label: '离线任务', icon: '▤' },
   { id: 'live', label: '实时会话', icon: '◉' },
   { id: 'assets', label: '资产库', icon: '◇' },
+  { id: 'recordings', label: '录制库', icon: '▣' },
   { id: 'qc', label: '质检中心', icon: '◈' },
 ]
 
-export default function Shell({ view, onView, live, jobs, children }: {
-  view: View; onView: (v: View) => void; live: LiveStatus; jobs: number; children: React.ReactNode
+export default function Shell({ view, onView, live, jobs, user, onLogout, children }: {
+  view: View; onView: (v: View) => void; live: LiveStatus; jobs: number; user: User; onLogout: () => void; children: React.ReactNode
 }) {
   const titles: Record<View, string> = {
-    overview: '总览', offline: '离线任务', live: '实时会话', assets: '资产库', qc: '质检中心', settings: '系统设置',
+    overview: '总览', offline: '离线任务', live: '实时会话', assets: '资产库', recordings: '录制库', qc: '质检中心', settings: '系统设置',
   }
   const gpuPct = live.gpu.total_mb ? Math.round((live.gpu.used_mb / live.gpu.total_mb) * 100) : 0
   const gpuGb = (live.gpu.used_mb / 1024).toFixed(1)
@@ -55,7 +56,11 @@ export default function Shell({ view, onView, live, jobs, children }: {
             <div className="pill"><span className="dot cyan" />GPU <b>{gpuPct}%</b></div>
             <div className="pill"><span className="dot amber" />QUEUE <b>{jobs}</b></div>
           </div>
-          <div className="operator"><div className="avatar-me">S</div><span>管理员 · S</span></div>
+          <div className="operator">
+            <div className="avatar-me">{user.username.slice(0, 1).toUpperCase()}</div>
+            <span>{user.role === 'admin' ? '管理员' : '用户'} · {user.username}</span>
+            <button className="btn ghost mini-btn" onClick={onLogout}>退出</button>
+          </div>
         </header>
         <div className="content">{children}</div>
       </main>

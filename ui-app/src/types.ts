@@ -1,4 +1,4 @@
-export type View = 'overview' | 'offline' | 'live' | 'assets' | 'qc' | 'settings'
+export type View = 'overview' | 'offline' | 'live' | 'assets' | 'recordings' | 'qc' | 'settings'
 
 export interface Job {
   id: string
@@ -18,6 +18,8 @@ export interface Job {
   subtitle?: number
   cover?: number
   bgm?: string
+  priority?: number
+  cancel_requested?: number
 }
 
 export interface LiveSession {
@@ -66,4 +68,28 @@ export interface QcResult {
   flicker_ratio?: number
   lip_corr?: number
   syncnet?: { status?: string; confidence?: number; av_offset?: number } | string
+}
+
+export interface Recording {
+  id: string
+  name: string
+  size: number
+  mtime: number
+  url: string
+}
+
+export interface AvatarTask {
+  task_id: string
+  model_type: string
+  avatar_id: string
+  status: string
+  progress: number
+  error_msg: string
+}
+
+export interface User {
+  id: number
+  username: string
+  role: 'admin' | 'user' | string
+  status?: string
 }

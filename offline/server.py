@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import time
 from pathlib import Path
 
 from aiohttp import web
@@ -76,6 +77,11 @@ async def create_job(request: web.Request) -> web.Response:
         if not (ROOT / "data" / "bgm" / bgm).is_file():
             return json_err(f"bgm not found: {bgm}")
 
+    try:
+        priority = max(0, min(2, int(body.get("priority", 0))))
+    except (TypeError, ValueError):
+        priority = 0
+
     job_id = store.create_job(
         text,
         avatar_id,
@@ -83,6 +89,7 @@ async def create_job(request: web.Request) -> web.Response:
         subtitle=subtitle,
         bgm=bgm,
         cover=cover,
+        priority=priority,
     )
     return json_ok({"id": job_id})
 
@@ -125,6 +132,46 @@ async def retry_job(request: web.Request) -> web.Response:
     return json_ok({"id": job_id})
 
 
+async def cancel_job(request: web.Request) -> web.Response:
+    job_id = request.match_info["job_id"]
+    job = store.get_job(job_id)
+    if job is None:
+        return json_err("job not found", 404)
+    if job["status"] == "pending":
+        store.update_job(job_id, status="cancelled", stage=None, finished_at=time.time())
+    elif job["status"] == "running":
+        worker = request.app["worker"]
+        worker.cancel_job(job_id)
+    else:
+        return json_err("only pending/running job can be cancelled")
+    return json_ok({"id": job_id, "status": "cancelled"})
+
+
+async def delete_job(request: web.Request) -> web.Response:
+    job_id = request.match_info["job_id"]
+    job = store.get_job(job_id)
+    if job is None:
+        return json_err("job not found", 404)
+    if job["status"] in ("pending", "running"):
+        return json_err("cancel the job before deleting it")
+    for key in ("output_path", "cover_path", "srt_path"):
+        path = job.get(key)
+        if path:
+            try:
+                os.remove(path)
+            except OSError:
+                pass
+    store.delete_job(job_id)
+    return json_ok({"id": job_id, "deleted": True})
+
+
+async def unload_models(request: web.Request) -> web.Response:
+    worker = request.app["worker"]
+    if not worker.unload_models():
+        return json_err("worker is busy", 409)
+    return json_ok({"unloaded": True})
+
+
 async def download_asset(request: web.Request) -> web.StreamResponse:
     job = store.get_job(request.match_info["job_id"])
     if job is None:
@@ -164,6 +211,9 @@ def create_app(worker: Worker) -> web.Application:
     app.router.add_post("/api/offline/jobs", create_job)
     app.router.add_get("/api/offline/jobs/{job_id}", get_job)
     app.router.add_post("/api/offline/jobs/{job_id}/retry", retry_job)
+    app.router.add_post("/api/offline/jobs/{job_id}/cancel", cancel_job)
+    app.router.add_delete("/api/offline/jobs/{job_id}", delete_job)
+    app.router.add_post("/api/offline/unload", unload_models)
     app.router.add_get("/api/offline/jobs/{job_id}/download", download_job)
     app.router.add_get("/api/offline/jobs/{job_id}/cover", download_asset)
     app.router.add_get("/api/offline/jobs/{job_id}/subtitle", download_asset)

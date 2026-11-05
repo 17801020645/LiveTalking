@@ -43,9 +43,22 @@ def _public_path(path: str, method: str) -> bool:
         return True
     if path == "/api/v1/auth/forgot-password" and method == "POST":
         return True
-    if path.startswith("/api/avatar"):
+    # 控制台静态文件（含登录页）可公开；API 由前端在登录后调用
+    if path == "/console" or path.startswith("/console/"):
+        return True
+    # 离线 worker 需要读实时状态做让路；只暴露路数/GPU，不含敏感数据
+    if path == "/api/live/status" and method == "GET":
+        return True
+    if path.startswith("/api/v1/"):
         return False
-    return not path.startswith("/api/v1/")
+    protected = (
+        "/api/offline", "/api/assets", "/api/live", "/api/asr",
+        "/api/avatar", "/api/recordings", "/record",
+        "/human", "/offer", "/interrupt_talk",
+    )
+    if path.startswith(protected):
+        return False
+    return True
 
 
 async def load_user_by_token(db, token: str):
