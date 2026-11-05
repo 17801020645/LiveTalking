@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>麦克风检测</title>
+<style>
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f8fafc;color:#0f172a;margin:0;padding:24px}
+  .card{max-width:620px;margin:0 auto;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:22px;box-shadow:0 8px 24px rgba(15,23,42,.06)}
+  h1{font-size:20px;margin:0 0 8px}
+  p{color:#475569;font-size:14px;line-height:1.65}
+  select,button{font-size:14px;padding:8px 10px;border-radius:8px;border:1px solid #cbd5e1;background:#fff}
+  button{background:#4f46e5;color:#fff;border-color:#4f46e5;cursor:pointer}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:14px 0}
+  .bar{height:18px;background:#e2e8f0;border-radius:999px;overflow:hidden}
+  .bar > div{height:100%;width:0;background:#22c55e;transition:width .08s linear}
+  .status{font-size:14px;margin-top:12px}
+  .muted{color:#64748b;font-size:13px}
+  .warn{color:#b45309}
+  .bad{color:#b91c1c}
+  .good{color:#15803d}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>麦克风检测</h1>
+  <p>这个页面只做一件事：确认 <b>Chrome 实际拿到的麦克风</b>有没有声音。页面必须通过 <b>https</b> 打开。</p>
+  <div class="row">
+    <button id="start">开始检测</button>
+    <select id="device" disabled><option>先点“开始检测”授权</option></select>
+  </div>
+  <div class="bar"><div id="level"></div></div>
+  <div class="status" id="status">未开始</div>
+  <div class="muted" id="hint">如果这里电平不动，Chrome 就没拿到声音，ASR 一定会识别为空。</div>
+</div>
+<script>
+let stream, ctx, analyser, raf;
+const $ = id => document.getElementById(id);
+
+async function listDevices() {
+  const devices = await navigator.mediaDevices.enumerateDevices();
+  const sel = $('device');
+  sel.innerHTML = '';
+  const inputs = devices.filter(d => d.kind === 'audioinput');
+  inputs.forEach((d, i) => {
+    const o = document.createElement('option');
+    o.value = d.deviceId;
+    o.textContent = (d.label || `麦克风 ${i+1}`) + (d.deviceId === 'default' ? '（默认）' : '');
+    sel.appendChild(o);
+  });
+  sel.disabled = false;
+  return inputs;
+}
+
+async function start(deviceId) {
+  stop();
+  const constraints = { audio: deviceId ? { deviceId: { exact: deviceId } } : true };
+  stream = await navigator.mediaDevices.getUserMedia(constraints);
+  ctx = new (window.AudioContext || window.webkitAudioContext)();
+  analyser = ctx.createAnalyser();
+  analyser.fftSize = 1024;
+  ctx.createMediaStreamSource(stream).connect(analyser);
+  const track = stream.getAudioTracks()[0];
+  $('status').className = 'status good';
+  $('status').textContent = '正在监听：' + (track.label || '默认麦克风');
+  const inputs = await listDevices();
+  const current = inputs.find(d => d.deviceId === track.getSettings().deviceId);
+  if (current) $('device').value = current.deviceId;
+  const data = new Float32Array(analyser.fftSize);
+  function draw() {
+    analyser.getFloatTimeDomainData(data);
+    let sum = 0;
+    for (let i = 0; i < data.length; i++) sum += data[i] * data[i];
+    const rms = Math.sqrt(sum / data.length);
+    const pct = Math.min(100, rms * 500);
+    $('level').style.width = pct + '%';
+    $('level').style.background = rms > 0.02 ? '#22c55e' : rms > 0.005 ? '#eab308' : '#ef4444';
+    if (rms < 0.002) {
+      $('hint').className = 'muted bad';
+      $('hint').textContent = '几乎没有声音：检查是否选错设备、耳机麦克风是否静音。';
+    } else {
+      $('hint').className = 'muted';
+      $('hint').textContent = '有输入电平。说一句话，绿色条应明显跳动。';
+    }
+    raf = requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+function stop() {
+  if (raf) cancelAnimationFrame(raf);
+  raf = null;
+  if (stream) stream.getTracks().forEach(t => t.stop());
+  stream = null;
+  if (ctx) ctx.close().catch(() => {});
+  ctx = null;
+}
+
+$('start').onclick = async () => {
+  try {
+    if (!window.isSecureContext) {
+      $('status').className = 'status bad';
+      $('status').textContent = '当前不是 HTTPS，浏览器不会给麦克风。';
+      return;
+    }
+    await start();
+  } catch (e) {
+    $('status').className = 'status bad';
+    $('status').textContent = '打开麦克风失败：' + (e.message || e);
+  }
+};
+
+$('device').onchange = async () => {
+  try { await start($('device').value); }
+  catch (e) { $('status').className = 'status bad'; $('status').textContent = '切换设备失败：' + (e.message || e); }
+};
+
+if (!navigator.mediaDevices) {
+  $('status').className = 'status bad';
+  $('status').textContent = '浏览器没有 mediaDevices；请用 HTTPS 或 localhost。';
+}
+</script>
+</body>
+</html>
