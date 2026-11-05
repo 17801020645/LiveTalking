@@ -251,13 +251,21 @@ def main():
     whep_resource = appasync.router.add_resource('/whep')
     whep_resource.add_route('POST', whep)
 
-    logger.info('start http server; http://<serverip>:'+str(opt.listenport))
+    _scheme = 'https' if (opt.ssl_cert and opt.ssl_key) else 'http'
+    logger.info(f'start {_scheme} server; {_scheme}://<serverip>:'+str(opt.listenport))
     # logger.info('如果使用webrtc，推荐访问webrtc集成前端: http://<serverip>:'+str(opt.listenport)+'/dashboard.html')
     def run_server(runner):
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         loop.run_until_complete(runner.setup())
-        site = web.TCPSite(runner, '0.0.0.0', opt.listenport)
+        ssl_context = None
+        if opt.ssl_cert and opt.ssl_key:
+            import ssl
+            ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+            ssl_context.load_cert_chain(opt.ssl_cert, opt.ssl_key)
+        site = web.TCPSite(
+            runner, '0.0.0.0', opt.listenport, ssl_context=ssl_context
+        )
         loop.run_until_complete(site.start())
         if opt.transport=='rtcpush':
             for k in range(opt.max_session):

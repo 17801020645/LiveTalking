@@ -302,9 +302,14 @@ def setup_routes(app):
 
     # ── Local ASR endpoint (SenseVoice/FunASR) ── Issue #604 ──
     try:
-        from server.asr_server import asr_websocket_handler, is_funasr_available
+        from server.asr_server import (
+            asr_websocket_handler,
+            is_funasr_available,
+            transcribe_upload,
+        )
         if is_funasr_available():
             app.router.add_get("/api/asr", asr_websocket_handler)
+            app.router.add_post("/api/asr/transcribe", transcribe_upload)
             logger.info("[ASR] Local SenseVoice ASR endpoint enabled at /api/asr")
         else:
             logger.info("[ASR] funasr not installed — local ASR endpoint disabled "

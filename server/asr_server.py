@@ -15,6 +15,9 @@
 import json
 import time
 import io
+import os
+import subprocess
+import tempfile
 import asyncio
 import threading
 import numpy as np
@@ -46,7 +49,9 @@ def _load_sensevoice():
         import torch
         from funasr import AutoModel
 
-        device = "cuda:0" if torch.cuda.is_available() else "cpu"
+        device = os.environ.get("ASR_DEVICE", "cpu")
+        if device == "auto":
+            device = "cuda:0" if torch.cuda.is_available() else "cpu"
         logger.info(
             f"[ASR] Loading SenseVoiceSmall on device='{device}' "
             f"(first run will download ~500MB from ModelScope)..."
@@ -254,6 +259,73 @@ async def asr_websocket_handler(request):
 
     logger.info(f"[ASR] 🔌 WebSocket disconnected ({client_ip})")
     return ws
+
+
+# ─── HTTP Push-to-Talk Endpoint ───────────────────────────────────────────
+
+async def transcribe_upload(request):
+    """接收浏览器录制的音频（webm/mp4/wav），转 16k 单声道后跑 SenseVoice。"""
+    if not is_funasr_available():
+        return web.json_response(
+            {"code": -1, "msg": "funasr not installed"}, status=503
+        )
+
+    if not (request.content_type or "").startswith("multipart/"):
+        return web.json_response({"code": -1, "msg": "multipart/form-data required"}, status=400)
+
+    tmp_in = None
+    tmp_wav = None
+    try:
+        reader = await request.multipart()
+        field = await reader.next()
+        if field is None or field.name != "file":
+            return web.json_response({"code": -1, "msg": "file is required"}, status=400)
+
+        data = await field.read(decode=False)
+        if not data:
+            return web.json_response({"code": -1, "msg": "empty audio"}, status=400)
+        if len(data) > 20 * 1024 * 1024:
+            return web.json_response({"code": -1, "msg": "audio too large"}, status=413)
+
+        tmp_in = tempfile.mktemp(suffix=".webm")
+        tmp_wav = tempfile.mktemp(suffix=".wav")
+        with open(tmp_in, "wb") as f:
+            f.write(data)
+
+        subprocess.run(
+            [
+                "ffmpeg", "-nostdin", "-y", "-v", "error",
+                "-i", tmp_in, "-ar", "16000", "-ac", "1", tmp_wav,
+            ],
+            check=True,
+            capture_output=True,
+        )
+
+        import soundfile as sf
+
+        audio, sr = sf.read(tmp_wav, dtype="float32", always_2d=False)
+        loop = asyncio.get_event_loop()
+        text, inference_ms, audio_dur = await loop.run_in_executor(
+            None, _run_inference, audio, sr, True
+        )
+        return web.json_response({
+            "code": 0,
+            "data": {
+                "text": text,
+                "ms": round(float(inference_ms), 1),
+                "duration": round(float(audio_dur), 2),
+            },
+        })
+    except Exception as exc:  # noqa: BLE001
+        logger.exception("[ASR] upload transcribe failed: %s", exc)
+        return web.json_response({"code": -1, "msg": str(exc)[:300]}, status=500)
+    finally:
+        for path in (tmp_in, tmp_wav):
+            if path:
+                try:
+                    os.remove(path)
+                except OSError:
+                    pass
 
 
 # ─── Availability Check ───────────────────────────────────────────────────

@@ -77,3 +77,5 @@ data_utils/face_parsing/79999_iter.pth
 # impeccable-ignore-end
 
 .venv
+
+certs/

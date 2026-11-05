@@ -174,6 +174,12 @@
                             <input class="form-check-input" type="checkbox" id="txtInterrupt" checked>
                             <label class="form-check-label small">打断</label>
                         </div>
+                        <button class="btn-outline-custom btn-sm" id="btnTalk"
+                                onpointerdown="startTalk(event)" onpointerup="stopTalk(event)"
+                                onpointerleave="stopTalk(event)" onpointercancel="stopTalk(event)">
+                            <i class="bi bi-mic-fill"></i> 按住说话
+                        </button>
+                        <span class="small text-muted" id="talkStatus"></span>
                         <button class="btn-primary-custom btn-sm ms-auto" onclick="sendText()"><i class="bi bi-send"></i> 发送</button>
                         <button class="btn-outline-custom btn-sm" onclick="interrupt()"><i class="bi bi-stop-circle"></i> 打断</button>
                     </div>
@@ -330,6 +336,107 @@ function stop() {
     document.getElementById('btnStop').style.display = 'none';
     document.getElementById('video').srcObject = null;
     document.getElementById('audio').srcObject = null;
+}
+
+// ─── Push-to-talk ASR ─────────────────────────────────────
+let talkRecorder = null;
+let talkChunks = [];
+let talkStream = null;
+let talkTimer = null;
+let talkBusy = false;
+
+function setTalkStatus(text, cls) {
+    const el = document.getElementById('talkStatus');
+    if (!el) return;
+    el.className = 'small ' + (cls || 'text-muted');
+    el.textContent = text || '';
+}
+
+async function startTalk(e) {
+    if (e) e.preventDefault();
+    if (!sessionid) return alert('请先连接 WebRTC');
+    if (!window.isSecureContext) {
+        setTalkStatus('需要 HTTPS 或 localhost 才能使用麦克风', 'text-danger');
+        return;
+    }
+    if (talkBusy) return;
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setTalkStatus('当前浏览器不支持麦克风', 'text-danger');
+        return;
+    }
+    if (!window.MediaRecorder) {
+        setTalkStatus('当前浏览器不支持录音', 'text-danger');
+        return;
+    }
+    try {
+        talkStream = await navigator.mediaDevices.getUserMedia({
+            audio: { echoCancellation: true, noiseSuppression: true },
+        });
+        talkChunks = [];
+        const mime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+            ? 'audio/webm;codecs=opus' : '';
+        talkRecorder = new MediaRecorder(talkStream, mime ? { mimeType: mime } : undefined);
+        talkRecorder.ondataavailable = ev => {
+            if (ev.data && ev.data.size) talkChunks.push(ev.data);
+        };
+        talkRecorder.start();
+        talkBusy = true;
+        const btn = document.getElementById('btnTalk');
+        btn.classList.add('recording');
+        btn.innerHTML = '<i class="bi bi-mic-mute-fill"></i> 松开结束';
+        setTalkStatus('录音中…', 'text-primary');
+        talkTimer = setTimeout(() => stopTalk(), 30000);
+    } catch (err) {
+        setTalkStatus('麦克风不可用：' + (err.message || err), 'text-danger');
+        if (talkStream) {
+            talkStream.getTracks().forEach(t => t.stop());
+            talkStream = null;
+        }
+        talkBusy = false;
+    }
+}
+
+function stopTalk(e) {
+    if (e) e.preventDefault();
+    if (!talkRecorder) return;
+    const rec = talkRecorder;
+    talkRecorder = null;
+    clearTimeout(talkTimer);
+    talkBusy = false;
+    const btn = document.getElementById('btnTalk');
+    btn.classList.remove('recording');
+    btn.innerHTML = '<i class="bi bi-mic-fill"></i> 按住说话';
+    const done = new Promise(resolve => { rec.onstop = resolve; });
+    rec.stop();
+    if (talkStream) {
+        talkStream.getTracks().forEach(t => t.stop());
+        talkStream = null;
+    }
+    done.then(() => transcribeTalk());
+}
+
+async function transcribeTalk() {
+    if (!talkChunks.length) {
+        setTalkStatus('没录到声音，请重试', 'text-warning');
+        return;
+    }
+    const blob = new Blob(talkChunks, { type: talkChunks[0].type || 'audio/webm' });
+    talkChunks = [];
+    const fd = new FormData();
+    fd.append('file', blob, 'talk.webm');
+    setTalkStatus('识别中…', 'text-primary');
+    try {
+        const r = await fetch('/api/asr/transcribe', { method: 'POST', body: fd });
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok || d.code) throw new Error(d.msg || ('HTTP ' + r.status));
+        const text = ((d.data && d.data.text) || '').trim();
+        if (!text) throw new Error('没有识别到文字');
+        document.getElementById('txtMessage').value = text;
+        setTalkStatus('识别：' + text, 'text-success');
+        sendText();
+    } catch (err) {
+        setTalkStatus('识别失败：' + (err.message || err), 'text-danger');
+    }
 }
 
 // ─── Text ──────────────────────────────────────────────────
