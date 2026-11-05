@@ -12,8 +12,10 @@ if [ -f "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE")" 2>/dev/null; then
   exit 0
 fi
 
+ENV_FILE="$ROOT/.env"
+[ -f "$ENV_FILE" ] || ENV_FILE="$ROOT/../../.env"
 set -a
-. "$ROOT/../../.env"
+. "$ENV_FILE"
 set +a
 export LIVE_STATUS_URL="${LIVE_STATUS_URL:-http://127.0.0.1:8010/api/live/status}"
 

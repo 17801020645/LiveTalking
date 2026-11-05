@@ -17,8 +17,10 @@ if [ ! -f certs/lan.crt ] || [ ! -f certs/lan.key ]; then
   exit 1
 fi
 
+ENV_FILE="$ROOT/.env"
+[ -f "$ENV_FILE" ] || ENV_FILE="$ROOT/../../.env"
 set -a
-. "$ROOT/../../.env"
+. "$ENV_FILE"
 set +a
 
 nohup "$ROOT/.venv/bin/python" app.py \
