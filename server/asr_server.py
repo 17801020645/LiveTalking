@@ -304,9 +304,15 @@ async def transcribe_upload(request):
         import soundfile as sf
 
         audio, sr = sf.read(tmp_wav, dtype="float32", always_2d=False)
+        peak = float(np.max(np.abs(audio))) if len(audio) else 0.0
+        rms = float(np.sqrt(np.mean(np.square(audio)))) if len(audio) else 0.0
         loop = asyncio.get_event_loop()
         text, inference_ms, audio_dur = await loop.run_in_executor(
             None, _run_inference, audio, sr, True
+        )
+        logger.info(
+            "[ASR] upload duration=%.2fs peak=%.4f rms=%.4f text=%r",
+            audio_dur, peak, rms, text[:80],
         )
         return web.json_response({
             "code": 0,
@@ -314,6 +320,8 @@ async def transcribe_upload(request):
                 "text": text,
                 "ms": round(float(inference_ms), 1),
                 "duration": round(float(audio_dur), 2),
+                "peak": round(peak, 4),
+                "rms": round(rms, 4),
             },
         })
     except Exception as exc:  # noqa: BLE001
