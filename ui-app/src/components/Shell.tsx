@@ -58,7 +58,7 @@ export default function Shell({ view, onView, live, jobs, user, onLogout, childr
           </div>
           <div className="operator">
             <div className="avatar-me">{user.username.slice(0, 1).toUpperCase()}</div>
-            <span>{user.role === 'admin' ? '管理员' : '用户'} · {user.username}</span>
+            <span>{user.role === 'admin' ? '管理员' : '用户'} · {user.username} · {user.tenant_id || 'default'}</span>
             <button className="btn ghost mini-btn" onClick={onLogout}>退出</button>
           </div>
         </header>

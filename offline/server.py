@@ -31,6 +31,21 @@ def json_err(msg: str, status: int = 400) -> web.Response:
     return web.json_response({"code": -1, "msg": msg}, status=status)
 
 
+def _scope(request: web.Request) -> tuple[str, bool]:
+    tenant = (request.headers.get("X-Tenant-Id") or "default").strip() or "default"
+    return tenant, (request.headers.get("X-Role") or "user") == "admin"
+
+
+def _allowed_job(request: web.Request, job_id: str):
+    job = store.get_job(job_id)
+    if job is None:
+        return None, json_err("job not found", 404)
+    tenant, is_admin = _scope(request)
+    if not is_admin and (job.get("tenant_id") or "default") != tenant:
+        return None, json_err("job not found", 404)
+    return job, None
+
+
 async def index(request: web.Request) -> web.StreamResponse:
     return web.FileResponse(PAGE)
 
@@ -46,7 +61,8 @@ async def health(request: web.Request) -> web.Response:
 
 
 async def list_jobs(request: web.Request) -> web.Response:
-    jobs = store.list_jobs(limit=50)
+    tenant, is_admin = _scope(request)
+    jobs = store.list_jobs(limit=50, tenant_id=None if is_admin else tenant)
     for job in jobs:
         job["text"] = (job.get("text") or "")[:80]
     return json_ok(jobs)
@@ -82,6 +98,7 @@ async def create_job(request: web.Request) -> web.Response:
     except (TypeError, ValueError):
         priority = 0
 
+    tenant, _ = _scope(request)
     job_id = store.create_job(
         text,
         avatar_id,
@@ -90,6 +107,7 @@ async def create_job(request: web.Request) -> web.Response:
         bgm=bgm,
         cover=cover,
         priority=priority,
+        tenant_id=tenant,
     )
     return json_ok({"id": job_id})
 
@@ -107,17 +125,17 @@ async def list_bgm(request: web.Request) -> web.Response:
 
 
 async def get_job(request: web.Request) -> web.Response:
-    job = store.get_job(request.match_info["job_id"])
-    if job is None:
-        return json_err("job not found", 404)
+    job, err = _allowed_job(request, request.match_info["job_id"])
+    if err:
+        return err
     return json_ok(job)
 
 
 async def retry_job(request: web.Request) -> web.Response:
     job_id = request.match_info["job_id"]
-    job = store.get_job(job_id)
-    if job is None:
-        return json_err("job not found", 404)
+    job, err = _allowed_job(request, job_id)
+    if err:
+        return err
     if job["status"] not in ("failed", "success"):
         return json_err("only failed/success job can be retried")
     store.update_job(
@@ -134,9 +152,9 @@ async def retry_job(request: web.Request) -> web.Response:
 
 async def cancel_job(request: web.Request) -> web.Response:
     job_id = request.match_info["job_id"]
-    job = store.get_job(job_id)
-    if job is None:
-        return json_err("job not found", 404)
+    job, err = _allowed_job(request, job_id)
+    if err:
+        return err
     if job["status"] == "pending":
         store.update_job(job_id, status="cancelled", stage=None, finished_at=time.time())
     elif job["status"] == "running":
@@ -149,9 +167,9 @@ async def cancel_job(request: web.Request) -> web.Response:
 
 async def delete_job(request: web.Request) -> web.Response:
     job_id = request.match_info["job_id"]
-    job = store.get_job(job_id)
-    if job is None:
-        return json_err("job not found", 404)
+    job, err = _allowed_job(request, job_id)
+    if err:
+        return err
     if job["status"] in ("pending", "running"):
         return json_err("cancel the job before deleting it")
     for key in ("output_path", "cover_path", "srt_path"):
@@ -173,9 +191,9 @@ async def unload_models(request: web.Request) -> web.Response:
 
 
 async def download_asset(request: web.Request) -> web.StreamResponse:
-    job = store.get_job(request.match_info["job_id"])
-    if job is None:
-        return json_err("job not found", 404)
+    job, err = _allowed_job(request, request.match_info["job_id"])
+    if err:
+        return err
     kind = "cover" if request.path.endswith("/cover") else "subtitle"
     path = job.get("cover_path") if kind == "cover" else job.get("srt_path")
     if not path or not os.path.exists(path):
@@ -190,9 +208,9 @@ async def download_asset(request: web.Request) -> web.StreamResponse:
 
 
 async def download_job(request: web.Request) -> web.StreamResponse:
-    job = store.get_job(request.match_info["job_id"])
-    if job is None:
-        return json_err("job not found", 404)
+    job, err = _allowed_job(request, request.match_info["job_id"])
+    if err:
+        return err
     path = job.get("output_path")
     if job["status"] != "success" or not path or not os.path.exists(path):
         return json_err("output not ready", 404)

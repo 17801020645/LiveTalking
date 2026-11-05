@@ -104,7 +104,7 @@ export default function App() {
         {view === 'assets' && <Assets avatars={effectiveAvatars} voices={effectiveVoices} bgm={bgm} user={user} live={live} refresh={load} notify={notify} />}
         {view === 'recordings' && <Recordings user={user} notify={notify} />}
         {view === 'qc' && <QC jobs={jobs} />}
-        {view === 'settings' && <Settings live={live} />}
+        {view === 'settings' && <Settings live={live} user={user} notify={notify} />}
         {health && !health.worker_alive && <div className="global-warn">离线 worker 未运行</div>}
       </Shell>
       <div className="toast" aria-live="polite">

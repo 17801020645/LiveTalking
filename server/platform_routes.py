@@ -98,7 +98,7 @@ async def login(request):
         return json_error(LOGIN_ERROR, status=401)
     db = request.app["platform_db"]
     async with db.execute(
-        "SELECT id, username, role, status, password_hash FROM users WHERE username = ?",
+        "SELECT id, username, role, tenant_id, status, password_hash FROM users WHERE username = ?",
         (username,),
     ) as cur:
         row = await cur.fetchone()
@@ -106,7 +106,7 @@ async def login(request):
     if not row or row["status"] != "active" or not verify_password(password, row["password_hash"]):
         return json_error(LOGIN_ERROR, status=401)
     token = await create_session(db, row["id"])
-    resp = json_ok({"id": row["id"], "username": row["username"], "role": row["role"]})
+    resp = json_ok({"id": row["id"], "username": row["username"], "role": row["role"], "tenant_id": row["tenant_id"] or "default"})
     resp.set_cookie(
         COOKIE_NAME,
         token,
@@ -128,7 +128,7 @@ async def logout(request):
 
 async def me(request):
     user = request["user"]
-    return json_ok({"id": user["id"], "username": user["username"], "role": user["role"]})
+    return json_ok({"id": user["id"], "username": user["username"], "role": user["role"], "tenant_id": user.get("tenant_id", "default")})
 
 
 async def change_password(request):

@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import glob
 import os
+import subprocess
+import tempfile
 
 from aiohttp import ClientSession, ClientTimeout, web
 from PIL import Image
@@ -65,6 +67,9 @@ async def list_voices(request):
 
 
 async def list_recordings(request):
+    denied = require_admin(request)
+    if denied:
+        return denied
     root = os.path.join("data", "record")
     items = []
     if os.path.isdir(root):
@@ -101,13 +106,54 @@ async def delete_recording(request):
     return web.json_response({"code": 0, "msg": "ok", "data": {"id": rec_id, "deleted": True}})
 
 
+async def clip_recording(request):
+    denied = require_admin(request)
+    if denied:
+        return denied
+    rec_id = os.path.basename(request.match_info["recording_id"])
+    src = os.path.join("data", "record", f"{rec_id}.mp4")
+    if not os.path.isfile(src):
+        return web.json_response({"code": -1, "msg": "recording not found"}, status=404)
+    try:
+        start = max(0.0, float(request.query.get("start", "0")))
+        end = float(request.query.get("end", "0"))
+    except ValueError:
+        return web.json_response({"code": -1, "msg": "invalid start/end"}, status=400)
+    if end <= start:
+        return web.json_response({"code": -1, "msg": "end must be > start"}, status=400)
+    tmp = tempfile.mktemp(suffix=".mp4")
+    try:
+        subprocess.run(
+            ["ffmpeg", "-nostdin", "-y", "-v", "error", "-ss", str(start),
+             "-to", str(end), "-i", src, "-c", "copy", "-avoid_negative_ts", "make_zero", tmp],
+            check=True,
+        )
+        data = open(tmp, "rb").read()
+        return web.Response(
+            body=data,
+            content_type="video/mp4",
+            headers={"Content-Disposition": f'attachment; filename="{rec_id}_{start}-{end}.mp4"'},
+        )
+    except Exception as exc:
+        return web.json_response({"code": -1, "msg": str(exc)[:300]}, status=500)
+    finally:
+        try:
+            os.remove(tmp)
+        except OSError:
+            pass
+
+
 async def proxy_offline(request):
     target = "http://127.0.0.1:8012" + request.path_qs
     data = None if request.method in ("GET", "HEAD") else await request.read()
     headers = {
         k: v for k, v in request.headers.items()
-        if k.lower() not in ("host", "content-length", "connection", "accept-encoding")
+        if k.lower() not in ("host", "content-length", "connection", "accept-encoding", "cookie")
     }
+    user = request.get("user") or {}
+    headers["X-Tenant-Id"] = user.get("tenant_id", "default")
+    headers["X-Role"] = user.get("role", "user")
+    headers["X-User"] = user.get("username", "")
     timeout = ClientTimeout(total=300)
     async with ClientSession(timeout=timeout) as session:
         async with session.request(request.method, target, data=data, headers=headers) as resp:
@@ -135,6 +181,7 @@ def setup_ui_routes(app, ui_dist: str = "ui_dist") -> None:
     app.router.add_get("/api/assets/voices", list_voices)
     app.router.add_get("/api/recordings", list_recordings)
     app.router.add_delete("/api/recordings/{recording_id}", delete_recording)
+    app.router.add_get("/api/recordings/{recording_id}/clip", clip_recording)
     app.router.add_route("*", "/api/offline/{tail:.*}", proxy_offline)
     index_file = os.path.join(ui_dist, "index.html")
 

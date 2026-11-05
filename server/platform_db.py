@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS users (
     username TEXT NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
     role TEXT NOT NULL,
+    tenant_id TEXT NOT NULL DEFAULT 'default',
     status TEXT NOT NULL DEFAULT 'active',
     created_at REAL NOT NULL
 );
@@ -139,6 +140,11 @@ class Database:
         self._conn.execute("PRAGMA foreign_keys = ON")
         self._conn.execute("PRAGMA journal_mode = WAL")
         self._conn.executescript(SCHEMA)
+        cols = {row[1] for row in self._conn.execute("PRAGMA table_info(users)")}
+        if "tenant_id" not in cols:
+            self._conn.execute(
+                "ALTER TABLE users ADD COLUMN tenant_id TEXT NOT NULL DEFAULT 'default'"
+            )
         self._conn.commit()
         self._lock = asyncio.Lock()
 

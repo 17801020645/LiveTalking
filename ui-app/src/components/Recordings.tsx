@@ -19,6 +19,13 @@ export default function Recordings({ user, notify }: { user: User; notify: (s: s
   }
   useEffect(() => { load() }, [])
 
+  function clip(id: string) {
+    const start = Number(prompt('起始秒数', '0') || '0')
+    const end = Number(prompt('结束秒数', '10') || '10')
+    if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return notify('时间范围无效')
+    window.open(api.clipRecordingUrl(id, start, end), '_blank')
+  }
+
   async function remove(id: string) {
     if (!confirm('删除这条录制？')) return
     try { await api.deleteRecording(id); notify('录制已删除'); load() }
@@ -45,6 +52,7 @@ export default function Recordings({ user, notify }: { user: User; notify: (s: s
                     <td>
                       <a className="btn ghost mini-btn" href={r.url} target="_blank" rel="noreferrer">播放</a>{' '}
                       <a className="btn ghost mini-btn" href={r.url} download>下载</a>{' '}
+                      {user.role === 'admin' && <button className="btn ghost mini-btn" onClick={() => clip(r.id)}>剪辑</button>}{' '}
                       {user.role === 'admin' && <button className="btn danger mini-btn" onClick={() => remove(r.id)}>删除</button>}
                     </td>
                   </tr>

@@ -46,10 +46,16 @@ export const api = {
   recordings: () => request<Recording[]>('/api/recordings'),
   deleteRecording: (id: string) => request<unknown>(`/api/recordings/${encodeURIComponent(id)}`, { method: 'DELETE' }),
   me: () => request<User>('/api/v1/auth/me'),
+  changePassword: (current_password: string, new_password: string) =>
+    request<unknown>('/api/v1/auth/password', json({ current_password, new_password })),
   login: (username: string, password: string) =>
     request<unknown>('/api/v1/auth/login', json({ username, password })),
   logout: () => request<unknown>('/api/v1/auth/logout', { method: 'POST' }),
   avatarTask: (id: string) => request<AvatarTask>(`/api/avatar/task/${id}`),
+  avatarTasks: () => request<{ tasks: AvatarTask[] }>('/api/avatar/tasks'),
+  cancelAvatarTask: (id: string) => request<unknown>(`/api/avatar/task/${id}`, { method: 'DELETE' }),
+  clipRecordingUrl: (id: string, start: number, end: number) =>
+    `/api/recordings/${encodeURIComponent(id)}/clip?start=${start}&end=${end}`,
   createAvatarTask: (avatarId: string, file: File) => {
     const fd = new FormData()
     fd.append('model', 'musetalk')

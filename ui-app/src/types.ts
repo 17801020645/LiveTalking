@@ -91,5 +91,6 @@ export interface User {
   id: number
   username: string
   role: 'admin' | 'user' | string
+  tenant_id?: string
   status?: string
 }

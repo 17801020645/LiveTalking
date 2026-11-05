@@ -29,6 +29,7 @@ FIELDS = {
     "stage",
     "priority",
     "cancel_requested",
+    "tenant_id",
 }
 
 
@@ -73,6 +74,7 @@ def init_db() -> None:
             "stage": "TEXT",
             "priority": "INTEGER NOT NULL DEFAULT 0",
             "cancel_requested": "INTEGER NOT NULL DEFAULT 0",
+            "tenant_id": "TEXT NOT NULL DEFAULT 'default'",
         }
         for name, ddl in migrations.items():
             if name not in cols:
@@ -90,13 +92,14 @@ def create_job(
     bgm: str = "",
     cover: bool = True,
     priority: int = 0,
+    tenant_id: str = "default",
 ) -> str:
     job_id = uuid.uuid4().hex
     con = _connect()
     try:
         con.execute(
-            "INSERT INTO jobs(id, status, text, avatar_id, voice, subtitle, bgm, cover, priority, created_at) "
-            "VALUES (?,?,?,?,?,?,?,?,?,?)",
+            "INSERT INTO jobs(id, status, text, avatar_id, voice, subtitle, bgm, cover, priority, tenant_id, created_at) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
             (
                 job_id,
                 "pending",
@@ -107,6 +110,7 @@ def create_job(
                 bgm or "",
                 int(bool(cover)),
                 int(priority),
+                tenant_id or "default",
                 time.time(),
             ),
         )
@@ -125,12 +129,18 @@ def get_job(job_id: str) -> dict | None:
         con.close()
 
 
-def list_jobs(limit: int = 50) -> list[dict]:
+def list_jobs(limit: int = 50, tenant_id: str | None = None) -> list[dict]:
     con = _connect()
     try:
-        rows = con.execute(
-            "SELECT * FROM jobs ORDER BY created_at DESC LIMIT ?", (int(limit),)
-        ).fetchall()
+        if tenant_id:
+            rows = con.execute(
+                "SELECT * FROM jobs WHERE tenant_id=? ORDER BY created_at DESC LIMIT ?",
+                (tenant_id, int(limit)),
+            ).fetchall()
+        else:
+            rows = con.execute(
+                "SELECT * FROM jobs ORDER BY created_at DESC LIMIT ?", (int(limit),)
+            ).fetchall()
         return [dict(r) for r in rows]
     finally:
         con.close()

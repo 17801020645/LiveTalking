@@ -67,7 +67,7 @@ async def load_user_by_token(db, token: str):
     now = time.time()
     async with db.execute(
         """
-        SELECT u.id, u.username, u.role, u.status
+        SELECT u.id, u.username, u.role, u.tenant_id, u.status
         FROM sessions s
         JOIN users u ON u.id = s.user_id
         WHERE s.token = ? AND s.expires_at > ?
@@ -79,7 +79,7 @@ async def load_user_by_token(db, token: str):
         return None
     if row["status"] != "active":
         return None
-    return {"id": row["id"], "username": row["username"], "role": row["role"], "status": row["status"]}
+    return {"id": row["id"], "username": row["username"], "role": row["role"], "tenant_id": row["tenant_id"] or "default", "status": row["status"]}
 
 
 def json_error(msg: str, code: int = -1, status: int = 400):

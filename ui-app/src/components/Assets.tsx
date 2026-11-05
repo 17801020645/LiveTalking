@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { api } from '../api'
 import type { AvatarInfo, AvatarTask, LiveStatus, User, VoiceInfo } from '../types'
 import { Badge, Card } from './ui'
@@ -11,7 +11,19 @@ export default function Assets({ avatars, voices, bgm, user, live, refresh, noti
   const [avatarId, setAvatarId] = useState('avatar_v' + new Date().toISOString().slice(5, 10).replace('-', ''))
   const [file, setFile] = useState<File | null>(null)
   const [task, setTask] = useState<AvatarTask | null>(null)
+  const [tasks, setTasks] = useState<AvatarTask[]>([])
   const [error, setError] = useState('')
+
+  async function loadTasks() {
+    if (user.role !== 'admin') return
+    try { const r = await api.avatarTasks(); setTasks(r.tasks || []) } catch { /* ignore */ }
+  }
+  useEffect(() => { loadTasks() }, [user.role])
+
+  async function cancelTask(id: string) {
+    try { await api.cancelAvatarTask(id); notify('已取消排队任务'); loadTasks() }
+    catch (e: any) { notify(`取消失败：${e.message || e}`) }
+  }
 
   async function startUpload() {
     if (!file) return setError('请选择视频文件')
@@ -21,7 +33,7 @@ export default function Assets({ avatars, voices, bgm, user, live, refresh, noti
     try {
       try { await api.unloadOffline() } catch { /* offline worker may be idle */ }
       const { task_id } = await api.createAvatarTask(avatarId.trim(), file)
-      notify('形象生成任务已提交')
+      notify('形象生成任务已提交'); loadTasks()
       const timer = window.setInterval(async () => {
         try {
           const t = await api.avatarTask(task_id)
@@ -56,6 +68,22 @@ export default function Assets({ avatars, voices, bgm, user, live, refresh, noti
             </div>
             {error && <div className="login-error" style={{ marginTop: 10 }}>{error}</div>}
             {task && <div className="hint" style={{ marginTop: 10 }}>任务 {task.task_id.slice(0, 8)}… · {task.status} · {task.progress}%</div>}
+            {tasks.length > 0 && (
+              <table className="table" style={{ marginTop: 12 }}>
+                <thead><tr><th>任务</th><th>形象</th><th>状态</th><th>进度</th><th>操作</th></tr></thead>
+                <tbody>
+                  {tasks.slice(0, 6).map(t => (
+                    <tr key={t.task_id}>
+                      <td className="mono">{t.task_id.slice(0, 8)}…</td>
+                      <td className="mono">{t.avatar_id}</td>
+                      <td><span className="badge b-idle">{t.status}</span></td>
+                      <td className="mono">{t.progress}%</td>
+                      <td>{t.status === 'pending' && <button className="btn danger mini-btn" onClick={() => cancelTask(t.task_id)}>取消</button>}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         </div>
       )}
