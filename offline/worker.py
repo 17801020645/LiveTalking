@@ -8,11 +8,17 @@ import sys
 import threading
 import time
 import traceback
+import urllib.request
 
 from offline import store
 from offline.qc import run_qc
 from offline.render import OfflineRenderer, headline
 from offline.tts import synthesize
+
+LIVE_STATUS_URL = os.environ.get(
+    "LIVE_STATUS_URL", "http://127.0.0.1:8010/api/live/status"
+)
+LIVE_IDLE_SECONDS = 15.0
 
 
 class Worker(threading.Thread):
@@ -35,6 +41,34 @@ class Worker(threading.Thread):
                 continue
             self.process(job)
         print("[worker] stopped", flush=True)
+
+    def _live_active(self) -> bool:
+        try:
+            with urllib.request.urlopen(LIVE_STATUS_URL, timeout=2) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+            return int((data.get("data") or {}).get("active") or 0) > 0
+        except Exception as exc:  # noqa: BLE001
+            print(f"[worker] live status unavailable: {exc}", file=sys.stderr, flush=True)
+            return False
+
+    def _wait_live_idle(self, job_id: str) -> None:
+        """实时忙时阻塞；空闲后等 15 秒防抖，再放行。"""
+        if not self._live_active():
+            return
+        store.update_job(job_id, stage="waiting_live")
+        print(f"[worker] {job_id} waiting_live", flush=True)
+        while not self.stop_event.is_set():
+            if not self._live_active():
+                idle_since = time.time()
+                while time.time() - idle_since < LIVE_IDLE_SECONDS:
+                    if self.stop_event.is_set():
+                        return
+                    if self._live_active():
+                        idle_since = time.time()
+                    self.stop_event.wait(2)
+                break
+            self.stop_event.wait(3)
+        store.update_job(job_id, stage=None)
 
     def _get_renderer(self, avatar_id: str) -> OfflineRenderer:
         if avatar_id in self.renderers:
@@ -86,6 +120,7 @@ class Worker(threading.Thread):
             )
             print(f"[worker] {job_id} tts {time.perf_counter() - t0:.2f}s", flush=True)
 
+            self._wait_live_idle(job_id)
             renderer = self._get_renderer(avatar_id)
 
             last = [-1]
@@ -101,6 +136,8 @@ class Worker(threading.Thread):
                 wav_path,
                 output_path,
                 progress=progress,
+                segment_seconds=10.0,
+                pause_check=lambda: self._wait_live_idle(job_id),
                 subtitle_path=srt_path if srt_path and os.path.exists(srt_path) else None,
                 bgm_path=bgm_path,
                 bgm_volume=0.12,
@@ -136,6 +173,7 @@ class Worker(threading.Thread):
                 cover_path=cover_path if cover_path and os.path.exists(cover_path) else None,
                 qc_status=qc_status,
                 qc_json=qc_json,
+                stage=None,
             )
             print(f"[worker] {job_id} done in {elapsed:.2f}s -> {output_path}", flush=True)
         except Exception as exc:  # noqa: BLE001
@@ -145,6 +183,7 @@ class Worker(threading.Thread):
                 status="failed",
                 error=str(exc)[:1000],
                 finished_at=time.time(),
+                stage=None,
             )
             print(f"[worker] {job_id} failed: {exc}", file=sys.stderr, flush=True)
         finally:

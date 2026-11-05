@@ -282,6 +282,7 @@ class OfflineRenderer:
         progress: Optional[Callable[[int, int], None]] = None,
         segment_seconds: float = 0.0,
         overlap_seconds: float = 0.0,
+        pause_check: Optional[Callable[[], None]] = None,
         subtitle_path: str | None = None,
         bgm_path: str | None = None,
         bgm_volume: float = 0.12,
@@ -309,6 +310,8 @@ class OfflineRenderer:
             seg_index = 0
             start = 0.0
             while start < duration - 1e-6:
+                if pause_check is not None:
+                    pause_check()
                 end = min(start + segment_seconds, duration)
                 s0 = max(0, int(round(start * sr)))
                 s1 = min(len(audio), int(round(end * sr)))

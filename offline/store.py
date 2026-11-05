@@ -26,6 +26,7 @@ FIELDS = {
     "cover_path",
     "qc_status",
     "qc_json",
+    "stage",
 }
 
 
@@ -67,6 +68,7 @@ def init_db() -> None:
             "cover_path": "TEXT",
             "qc_status": "TEXT",
             "qc_json": "TEXT",
+            "stage": "TEXT",
         }
         for name, ddl in migrations.items():
             if name not in cols:
