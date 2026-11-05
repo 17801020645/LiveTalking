@@ -39,6 +39,7 @@ from avatars.base_avatar import BaseAvatar
 from llm import llm_response
 import registry
 from server.routes import setup_routes
+from server.ui_routes import setup_ui_routes
 from server.rtc_manager import RTCManager
 from server.session_manager import session_manager
 
@@ -243,6 +244,9 @@ def main():
 
     # /api/v1 与 /app 必须在 web/ 静态路由之前注册
     attach_platform(appasync)
+
+    # React 控制台 + 离线 API 同源代理（必须在 web/ 静态根路由之前）
+    setup_ui_routes(appasync)
 
     # 注册 server/routes.py 中的通用 API 路由
     setup_routes(appasync)

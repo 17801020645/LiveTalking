@@ -79,3 +79,7 @@ data_utils/face_parsing/79999_iter.pth
 .venv
 
 certs/
+
+ui_dist/
+ui-app/node_modules/
+ui-app/dist/
