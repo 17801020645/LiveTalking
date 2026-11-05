@@ -85,3 +85,5 @@ ui-app/node_modules/
 ui-app/dist/
 
 certs
+
+.worktrees/
