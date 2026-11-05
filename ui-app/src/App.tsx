@@ -44,7 +44,10 @@ export default function App() {
     if (results[0].status === 'fulfilled') setLive(results[0].value)
     if (results[1].status === 'fulfilled') setJobs([...results[1].value].sort((a, b) => b.created_at - a.created_at))
     if (results[2].status === 'fulfilled') setHealth(results[2].value)
-    if (results[3].status === 'fulfilled' && results[3].value.length) setAvatars(results[3].value)
+    if (results[3].status === 'fulfilled' && results[3].value.length) {
+      // wav2lip 形象不能用于 MuseTalk/实时控制台，过滤掉
+      setAvatars(results[3].value.filter(a => !a.id.startsWith('wav2lip')))
+    }
     if (results[4].status === 'fulfilled' && results[4].value.length) setVoices(results[4].value)
     if (results[5].status === 'fulfilled') setBgm(results[5].value)
   }, [])

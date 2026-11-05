@@ -33,6 +33,8 @@ export const api = {
     request<unknown>('/interrupt_talk', json({ sessionid })),
   closeLive: (sessionid: string) =>
     request<unknown>('/api/live/close', json({ sessionid })),
+  record: (sessionid: string, type: 'start_record' | 'end_record') =>
+    request<unknown>('/record', json({ sessionid, type })),
   asr: async (blob: Blob) => {
     const fd = new FormData()
     fd.append('file', blob, 'talk.webm')

@@ -20,6 +20,8 @@ export default function Live({ live, avatars, voices, notify }: {
   ])
   const [talkStatus, setTalkStatus] = useState('')
   const [recording, setRecording] = useState(false)
+  const [videoRecording, setVideoRecording] = useState(false)
+  const [recordReady, setRecordReady] = useState(false)
   const pcRef = useRef<RTCPeerConnection | null>(null)
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
@@ -132,6 +134,17 @@ export default function Live({ live, avatars, voices, notify }: {
     catch (e: any) { notify(`打断失败：${e.message || e}`) }
   }
 
+  async function toggleRecord() {
+    if (!sessionId) return notify('请先连接 WebRTC')
+    const type = videoRecording ? 'end_record' : 'start_record'
+    try {
+      await api.record(sessionId, type)
+      setVideoRecording(!videoRecording)
+      if (!videoRecording) { setRecordReady(false); notify('开始录制') }
+      else { setRecordReady(true); notify('录制已结束，可下载') }
+    } catch (e: any) { notify(`录制失败：${e.message || e}`) }
+  }
+
   async function startTalk() {
     if (!sessionId) return notify('请先连接 WebRTC')
     if (!window.isSecureContext) return setTalkStatus('需要 HTTPS 或 localhost 才能使用麦克风')
@@ -203,7 +216,8 @@ export default function Live({ live, avatars, voices, notify }: {
             </div>
             <div className="preview-actions">
               <button className="btn" disabled={!sessionId} onClick={interrupt}>■ 打断</button>
-              <button className="btn" disabled={!sessionId} onClick={() => notify('录制功能 v2 接入')}>● 录制</button>
+              <button className={`btn ${videoRecording ? 'danger' : ''}`} disabled={!sessionId} onClick={toggleRecord}>{videoRecording ? '■ 停止录制' : '● 录制'}</button>
+              {recordReady && sessionId && <a className="btn" href={`/record/${sessionId}`} target="_blank" rel="noreferrer">下载录像</a>}
               <button className="btn danger" disabled={!sessionId} onClick={disconnect}>结束会话</button>
               <div className="row-2" style={{ marginLeft: 'auto' }}>
                 <select value={avatar} onChange={e => setAvatar(e.target.value)} disabled={!!sessionId}>{avatars.map(a => <option key={a.id} value={a.id}>{a.id}</option>)}</select>

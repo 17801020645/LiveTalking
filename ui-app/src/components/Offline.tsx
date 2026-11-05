@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { api } from '../api'
 import type { AvatarInfo, Job, VoiceInfo } from '../types'
 import { AvatarImg, parseQc, qcText, timeAgo } from './Overview'
@@ -19,6 +19,8 @@ export default function Offline({ jobs, avatars, voices, bgm, refresh, notify }:
   const [submitting, setSubmitting] = useState(false)
   const [filter, setFilter] = useState<Filter>('all')
   const [selected, setSelected] = useState<Job | null>(null)
+  const [batching, setBatching] = useState(false)
+  const batchRef = useRef<HTMLInputElement | null>(null)
 
   useEffect(() => {
     if (!avatar && avatars[0]) setAvatar(avatars[0].id)
@@ -50,6 +52,29 @@ export default function Offline({ jobs, avatars, voices, bgm, refresh, notify }:
     }
   }
 
+  async function importBatch(file: File) {
+    if (!avatar || !voice) return notify('形象/音色尚未加载')
+    const raw = await file.text()
+    const lines = raw.split(/\r?\n/).map(line => {
+      // CSV：取第一列；跳过表头/空行
+      const first = line.split(',')[0].trim().replace(/^"|"$/g, '')
+      return first
+    }).filter(line => line && !/^(text|文案|content)$/i.test(line))
+    if (!lines.length) return notify('文件里没有可导入的文案')
+    if (lines.length > 50 && !window.confirm(`共 ${lines.length} 条，确认批量提交？`)) return
+    setBatching(true)
+    let ok = 0
+    for (const line of lines) {
+      try {
+        await api.createJob({ text: line, avatar_id: avatar, voice, subtitle, cover, bgm: bgmValue })
+        ok++
+      } catch { /* count */ }
+    }
+    setBatching(false)
+    notify(`批量导入完成：${ok}/${lines.length}`)
+    refresh()
+  }
+
   async function retry(id: string) {
     try { await api.retryJob(id); notify('已重新入队'); refresh() }
     catch (e: any) { notify(`重试失败：${e.message || e}`) }
@@ -59,7 +84,10 @@ export default function Offline({ jobs, avatars, voices, bgm, refresh, notify }:
     <div className="page">
       <div className="page-head">
         <div><div className="eyebrow">OFFLINE PIPELINE / 01</div><h1 className="h1">离线任务</h1><p className="sub">文案进入队列，按实时空闲情况自动让路；完成后可下载视频、封面与字幕。</p></div>
-        <div className="hero-actions"><button className="btn" onClick={() => notify('批量导入需要 CSV 解析接口，v1 先隐藏')}>⇪ 批量导入</button></div>
+        <div className="hero-actions">
+          <input ref={batchRef} type="file" accept=".txt,.csv" hidden onChange={e => { const f=e.target.files?.[0]; if (f) importBatch(f); e.currentTarget.value='' }} />
+          <button className="btn" disabled={batching} onClick={() => batchRef.current?.click()}>{batching ? '导入中…' : '⇪ 批量导入'}</button>
+        </div>
       </div>
 
       <div className="offline-grid">
