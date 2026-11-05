@@ -2,11 +2,11 @@
 
 ## 能力
 
-项目在 Ubuntu + NVIDIA GPU 上提供本地 TTS：独立 vLLM-Omni 进程监听 8091，暴露 OpenAI 兼容的 `/v1/audio/voices` 与 `/v1/audio/speech`。LiveTalking 通过 `omnitts` 插件作为客户端；管理页 `/tts/` 可直连该进程做音色管理与试听。数字人默认使用该客户端。
+项目在 Ubuntu + NVIDIA GPU 上提供本地 TTS：独立 vLLM-Omni 进程监听 8091，暴露 OpenAI 兼容的 `/v1/audio/voices` 与 `/v1/audio/speech`。BanrenTalking 通过 `omnitts` 插件作为客户端；管理页 `/tts/` 可直连该进程做音色管理与试听。数字人默认使用该客户端。
 
 ## 部署形态
 
-- 使用独立虚拟环境 `.venv-omni`，不得向 LiveTalking `.venv` 安装 vLLM。
+- 使用独立虚拟环境 `.venv-omni`，不得向 BanrenTalking `.venv` 安装 vLLM。
 - 通过 `start-omni.sh` 启动，**默认**模型 `Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice`，端口 8091。
 - 声音克隆改用同一脚本、环境变量 `OMNI_MODEL=Qwen/Qwen3-TTS-12Hz-0.6B-Base`，并重启 8091。首次无本地缓存时设 `HF_HUB_OFFLINE=0` 下载。权重不入库。
 - 一个 `vllm serve` 只挂一个检查点；CustomVoice 与 Base 不能同时在同一 8091 上。
@@ -16,9 +16,9 @@
 
 ## 与数字人的关系
 
-- LiveTalking 默认 `tts: omnitts`、`TTS_SERVER: http://127.0.0.1:8091`、`REF_FILE: vivian`、`omni_tts_task_type: CustomVoice`（须为 `/v1/audio/voices` 中的音色名）。`config.py` 命令行默认与此一致。
+- BanrenTalking 默认 `tts: omnitts`、`TTS_SERVER: http://127.0.0.1:8091`、`REF_FILE: vivian`、`omni_tts_task_type: CustomVoice`（须为 `/v1/audio/voices` 中的音色名）。`config.py` 命令行默认与此一致。
 - 8091 已切到 Base 且要使用克隆音色时：把 `REF_FILE` 设为克隆名，并把 `omni_tts_task_type` 设为 `Base`，然后重启 8010。
-- 数字人进程不内嵌 Omni。8091 不可用时，已切换为 omnitts 的会话不会自动改走 EdgeTTS；合成失败应可观察，且不得导致 LiveTalking 进程退出。
+- 数字人进程不内嵌 Omni。8091 不可用时，已切换为 omnitts 的会话不会自动改走 EdgeTTS；合成失败应可观察，且不得导致 BanrenTalking 进程退出。
 - 不在本能力中实现自动故障回退。切回 EdgeTTS：把 `tts` 改为 `edgetts`（可清空或忽略 Omni 专用的 `TTS_SERVER` / `REF_FILE`）并重启 8010，不必停 8091。
 
 ## 操作者可见行为

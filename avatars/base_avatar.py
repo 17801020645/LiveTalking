@@ -1,5 +1,5 @@
 ###############################################################################
-#  Copyright (C) 2024 LiveTalking@lipku https://github.com/lipku/LiveTalking
+#  Copyright (C) 2024 BanrenTalking@lipku https://github.com/lipku/BanrenTalking
 #  email: lipku@foxmail.com
 # 
 #  Licensed under the Apache License, Version 2.0 (the "License");
@@ -515,7 +515,7 @@ class BaseAvatar:
                     combine_frame = current_frame
 
             # 在画面上添加水印
-            cv2.putText(combine_frame, "LiveTalking", (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (128,128,128), 1)
+            cv2.putText(combine_frame, "BanrenTalking", (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (128,128,128), 1)
             
             # 使用统一输出接口推送视频帧
             self.output.push_video_frame(combine_frame)

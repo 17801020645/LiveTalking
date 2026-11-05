@@ -28,10 +28,10 @@ loop:
 acceptance:
   - id: A1
     source: brief.md
-    text: A1：存在独立 `.venv-omni`；LiveTalking `.venv` 中 `torch` 仍为现有 cu128 版本
+    text: A1：存在独立 `.venv-omni`；BanrenTalking `.venv` 中 `torch` 仍为现有 cu128 版本
     result: passed
     reason:
-      text: 存在独立 .venv-omni（Python 3.12.14，vllm 0.28.0，torch 2.13.0+cu132）；LiveTalking
+      text: 存在独立 .venv-omni（Python 3.12.14，vllm 0.28.0，torch 2.13.0+cu132）；BanrenTalking
         .venv 无 vllm，torch 仍为 2.9.1+cu128。Runtime livetalking-torch PASSED。
       truncated: false
   - id: A2
@@ -60,7 +60,7 @@ acceptance:
       truncated: false
   - id: A5
     source: brief.md
-    text: "A5：文档给出将 LiveTalking 切到 `omnitts` 的准确配置项与重启步骤；未改默认 `tts: edgetts`"
+    text: "A5：文档给出将 BanrenTalking 切到 `omnitts` 的准确配置项与重启步骤；未改默认 `tts: edgetts`"
     result: passed
     reason:
       text: "docs/omni_tts.md 写明 tts: omnitts、TTS_SERVER:
@@ -145,7 +145,7 @@ verification:
   checks:
     - id: livetalking-torch
       name:
-        text: LiveTalking torch still 2.9.1
+        text: BanrenTalking torch still 2.9.1
         truncated: false
       argv_display:
         - text: -c

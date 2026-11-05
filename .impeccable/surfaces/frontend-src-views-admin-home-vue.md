@@ -22,7 +22,7 @@ OWN-WORLD: Matte gallery wall (#111318), Electric Indigo (#4361ee) as the only b
 
 STORY: The operator sees what needs them now, believes the numbers are the live gallery, and clicks a monitor or 「去演示连麦」 to act.
 
-FIRST VIEWPORT: Thin dark rail left with LiveTalking and five admin links. Main wall: three large preview monitors in a row (订单 / 连麦 / 生成), each with a huge count, a tally lamp, and a short caption. 「去演示连麦」 sits under the wall as the program cut, not inside a fourth card. Username and logout stay on a slim top strip.
+FIRST VIEWPORT: Thin dark rail left with BanrenTalking and five admin links. Main wall: three large preview monitors in a row (订单 / 连麦 / 生成), each with a huge count, a tally lamp, and a short caption. 「去演示连麦」 sits under the wall as the program cut, not inside a fourth card. Username and logout stay on a slim top strip.
 
 FORM: Broadcast Gallery (grounded pick; seed key 7c9c70d8). Not the assigned rundown board.
 

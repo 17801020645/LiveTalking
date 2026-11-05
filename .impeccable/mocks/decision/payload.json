@@ -10,7 +10,7 @@
       "thesis": "管理员首页是一张正在执行的导播台本：待办就是下一条 cue。",
       "palette": ["#0b1220", "#4361ee", "#e2e8f0", "#10b981", "#ef4444"],
       "materials": ["frosted glass", "laminated cue sheets", "indigo status chops"],
-      "viewport": "暗室毛玻璃台面；三行厚实 cue（待处理订单、活跃连麦、生成中）带红绿印；标题 LiveTalking 不缩小。",
+      "viewport": "暗室毛玻璃台面；三行厚实 cue（待处理订单、活跃连麦、生成中）带红绿印；标题 BanrenTalking 不缩小。",
       "risk": "台本密度过高时，三个数字会挤成节目单而不是可点的工作入口。",
       "raised": [
         { "from": "iridescent-cloud-edge", "raise": "信号色只出现在窄印上，大面积保持近黑与冷灰。" },

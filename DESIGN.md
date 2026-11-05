@@ -1,5 +1,5 @@
 ---
-name: LiveTalking
+name: BanrenTalking
 description: Dark broadcast gallery for a dual-role digital-human control plane
 colors:
   gallery-wall: "#111318"
@@ -63,7 +63,7 @@ components:
     padding: "11px 12px"
 ---
 
-# Design System: LiveTalking
+# Design System: BanrenTalking
 
 ## Overview
 

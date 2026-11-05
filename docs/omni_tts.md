@@ -1,6 +1,6 @@
 # 本机 Omni TTS（vLLM-Omni）
 
-独立进程在 **8091** 提供 OpenAI 兼容语音接口。LiveTalking（8010）只当客户端。数字人**默认** `tts: omnitts`，文本驱动走 Omni 预设音色 `vivian`。
+独立进程在 **8091** 提供 OpenAI 兼容语音接口。BanrenTalking（8010）只当客户端。数字人**默认** `tts: omnitts`，文本驱动走 Omni 预设音色 `vivian`。
 
 仅支持 **Ubuntu + NVIDIA CUDA**。不要把 vLLM 装进 `.venv`。`./start.sh` 会先拉起 Omni 再起数字人：
 
@@ -135,7 +135,7 @@ tts: edgetts
 nvidia-smi --query-gpu=memory.used,memory.free,utilization.gpu --format=csv -l 1
 ```
 
-若 OOM：0.6B 可把 yaml 两阶段再降到 `0.12`，或降低 LiveTalking `batch_size`；1.7B 可升到 0.30 或换独立 GPU。改完 yaml 后重启 `./start-omni.sh`。
+若 OOM：0.6B 可把 yaml 两阶段再降到 `0.12`，或降低 BanrenTalking `batch_size`；1.7B 可升到 0.30 或换独立 GPU。改完 yaml 后重启 `./start-omni.sh`。
 
 ## 换模型（不必改渲染代码）
 

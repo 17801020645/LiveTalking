@@ -7,7 +7,7 @@
 #      python benchmark_asr.py --audio test.wav   # uses your own audio file
 #      python benchmark_asr.py --runs 10          # more runs for stability
 #
-#  Resolves: https://github.com/lipku/LiveTalking/issues/604
+#  Resolves: https://github.com/lipku/BanrenTalking/issues/604
 ###############################################################################
 
 import argparse

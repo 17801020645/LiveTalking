@@ -2,7 +2,7 @@
 
 ## 能力
 
-LiveTalking 提供基于 Cookie 的登录与两种角色。新资源接口位于 `/api/v1/`。原有演示接口保持匿名，确保 `web/` 仍可直接连麦和生成 Avatar。
+BanrenTalking 提供基于 Cookie 的登录与两种角色。新资源接口位于 `/api/v1/`。原有演示接口保持匿名，确保 `web/` 仍可直接连麦和生成 Avatar。
 
 ## 角色
 

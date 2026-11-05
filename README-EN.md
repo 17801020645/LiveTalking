@@ -1,25 +1,25 @@
 <p align="center">
-    <img src="./assets/LiveTalking-logo.png" align="middle" width="600"/>
+    <img src="./assets/BanrenTalking-logo.png" align="middle" width="600"/>
 </p>
 
 English | [中文版](./README.md)
 
 <p align="center">
     <a href="./LICENSE"><img src="https://img.shields.io/badge/license-Apache%202-dfd.svg"></a>
-    <a href="https://github.com/lipku/LiveTalking/releases"><img src="https://img.shields.io/github/v/release/lipku/LiveTalking?color=ffa"></a>
+    <a href="https://github.com/lipku/BanrenTalking/releases"><img src="https://img.shields.io/github/v/release/lipku/BanrenTalking?color=ffa"></a>
     <a href=""><img src="https://img.shields.io/badge/python-3.10+-aff.svg"></a>
     <a href=""><img src="https://img.shields.io/badge/os-linux%2C%20win%2C%20mac-pink.svg"></a>
-    <a href="https://github.com/lipku/LiveTalking/graphs/contributors"><img src="https://img.shields.io/github/contributors/lipku/LiveTalking?color=c4f042&style=flat-square"></a>
+    <a href="https://github.com/lipku/BanrenTalking/graphs/contributors"><img src="https://img.shields.io/github/contributors/lipku/BanrenTalking?color=c4f042&style=flat-square"></a>
 </p>
 <p align="center">
-<a href="https://trendshift.io/repositories/12565" target="_blank"><img src="https://trendshift.io/api/badge/repositories/12565" alt="lipku%2FLiveTalking | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
+<a href="https://trendshift.io/repositories/12565" target="_blank"><img src="https://trendshift.io/api/badge/repositories/12565" alt="lipku%2FBanrenTalking | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
 </p>
 
 A real-time interactive streaming digital human engine enabling synchronized audio-video conversation, widely adopted in commercial applications.
 
 **Demos**: [wav2lip](https://youtu.be/-ss0H8qLr7E) | [ernerf](https://www.bilibili.com/video/BV1G1421z73r/) | [musetalk](https://youtu.be/vzUMruoZlxc/)
 
-Domestic Mirror: [Gitee](https://gitee.com/lipku/LiveTalking) | [GitCode](https://gitcode.com/lipku/LiveTalking)
+Domestic Mirror: [Gitee](https://gitee.com/lipku/BanrenTalking) | [GitCode](https://gitcode.com/lipku/BanrenTalking)
 
 ---
 
@@ -38,7 +38,7 @@ Domestic Mirror: [Gitee](https://gitee.com/lipku/LiveTalking) | [GitCode](https:
 
 ## Usage Scenarios
 
-LiveTalking leverages real-time streaming digital human technology to drive virtual avatars via text or voice, combined with LLM for intelligent conversation. Suitable for the following scenarios:
+BanrenTalking leverages real-time streaming digital human technology to drive virtual avatars via text or voice, combined with LLM for intelligent conversation. Suitable for the following scenarios:
 
 | Scenario | Description |
 |----------|-------------|
@@ -60,7 +60,7 @@ Tested on Ubuntu 24.04, Python 3.12, PyTorch 2.9.1, CUDA 12.8.
 ### 1.1 Install Dependencies
 
 ```bash
-git clone https://github.com/lipku/LiveTalking.git 
+git clone https://github.com/lipku/BanrenTalking.git 
 conda create -n livetalking python=3.12
 conda activate livetalking
 # If CUDA version is not 12.8 (check via nvidia-smi), install the corresponding PyTorch version(https://pytorch.org/get-started/previous-versions)
@@ -225,7 +225,7 @@ Available images:
 
 ## 7. Statement
 
-Videos developed based on this project and published on platforms such as Bilibili, WeChat Channels, and Douyin must include the LiveTalking watermark and logo.
+Videos developed based on this project and published on platforms such as Bilibili, WeChat Channels, and Douyin must include the BanrenTalking watermark and logo.
 
 ---
 
@@ -236,7 +236,7 @@ If this repository helps your research or project, please cite our work.
 ```
 @software{livetalking,
   author = {Hengzhong Li},
-  title = {LiveTalking: Real-Time Interactive Streaming Digital Human Framework},
+  title = {BanrenTalking: Real-Time Interactive Streaming Digital Human Framework},
   year = {2025},
   publisher = {GitHub},
   url = {https://github.com/lipku/livetalking}

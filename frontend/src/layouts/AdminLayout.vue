@@ -2,7 +2,7 @@
   <div class="shell gallery">
     <a class="skip-link" href="#main-content">跳到主内容</a>
     <aside class="sidebar" aria-label="管理导航">
-      <div class="brand">LiveTalking</div>
+      <div class="brand">BanrenTalking</div>
       <nav class="rail-nav">
         <router-link class="nav-link" to="/admin">
           <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">

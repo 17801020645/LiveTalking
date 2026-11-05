@@ -2,7 +2,7 @@
   <div class="gallery login-wrap">
     <section class="monitor-panel login-monitor" :class="{ 'is-fault': Boolean(error), 'is-program': loading }">
       <span class="tally" :class="error ? 'is-fault' : (loading ? 'is-program' : 'is-idle')" aria-hidden="true" />
-      <h1 class="monitor-name">LiveTalking</h1>
+      <h1 class="monitor-name">BanrenTalking</h1>
       <form v-if="!forgot" class="monitor-body" @submit.prevent="submit">
         <p class="muted">登录后进入数字人工作台</p>
         <div class="field">

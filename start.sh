@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 启动 Omni TTS（8091）与 LiveTalking（8010）。用法：
+# 启动 Omni TTS（8091）与 BanrenTalking（8010）。用法：
 #   ./start.sh
 #   SKIP_OMNI=1 ./start.sh
 #   ./start.sh --avatar_id wav2lip_avatar_female_model

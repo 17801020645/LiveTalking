@@ -1,4 +1,4 @@
-# LiveTalking 本机 4090 配方：1.7B-CustomVoice。
+# BanrenTalking 本机 4090 配方：1.7B-CustomVoice。
 # 两阶段 gpu_memory_utilization 各 0.25（高于 0.6B 的 0.15）。
 # 同卡再加 Wav2Lip 更容易 OOM；不够可升到 0.30 或单独 GPU。
 #

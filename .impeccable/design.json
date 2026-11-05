@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generatedAt": "2026-09-18T12:30:00.000Z",
-  "title": "Design System: LiveTalking",
+  "title": "Design System: BanrenTalking",
   "extensions": {
     "colorMeta": {
       "gallery-wall": { "role": "neutral", "displayName": "Gallery Wall", "canonical": "#111318" },

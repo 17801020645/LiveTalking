@@ -42,7 +42,7 @@ class DefaultAppEntryTests(unittest.IsolatedAsyncioTestCase):
         page = await self.client.get("/index.html")
         self.assertEqual(page.status, 200)
         body = await page.text()
-        self.assertIn("LiveTalking - 数字人实时驱动", body)
+        self.assertIn("BanrenTalking - 数字人实时驱动", body)
         self.assertNotIn('id="app"', body)
 
     async def test_a3_live_asr_link_points_to_index_html(self):

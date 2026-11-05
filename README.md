@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="./assets/LiveTalking-logo.png" align="middle" width="600"/>
+    <img src="./assets/BanrenTalking-logo.png" align="middle" width="600"/>
 </p>
 
 中文版 ｜ [English](./README-EN.md)
@@ -7,13 +7,13 @@
 
 <p align="center">
     <a href="./LICENSE"><img src="https://img.shields.io/badge/license-Apache%202-dfd.svg"></a>
-    <a href="https://github.com/lipku/LiveTalking/releases"><img src="https://img.shields.io/github/v/release/lipku/LiveTalking?color=ffa"></a>
+    <a href="https://github.com/lipku/BanrenTalking/releases"><img src="https://img.shields.io/github/v/release/lipku/BanrenTalking?color=ffa"></a>
     <a href=""><img src="https://img.shields.io/badge/python-3.10+-aff.svg"></a>
     <a href=""><img src="https://img.shields.io/badge/os-linux%2C%20win%2C%20mac-pink.svg"></a>
-    <a href="https://github.com/lipku/LiveTalking/graphs/contributors"><img src="https://img.shields.io/github/contributors/lipku/LiveTalking?color=c4f042&style=flat-square"></a>
+    <a href="https://github.com/lipku/BanrenTalking/graphs/contributors"><img src="https://img.shields.io/github/contributors/lipku/BanrenTalking?color=c4f042&style=flat-square"></a>
 </p>
 <p align="center">
-<a href="https://trendshift.io/repositories/12565" target="_blank"><img src="https://trendshift.io/api/badge/repositories/12565" alt="lipku%2FLiveTalking | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
+<a href="https://trendshift.io/repositories/12565" target="_blank"><img src="https://trendshift.io/api/badge/repositories/12565" alt="lipku%2FBanrenTalking | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
 </p>
 
 
@@ -21,7 +21,7 @@
 
 **效果演示**: [wav2lip](https://www.bilibili.com/video/BV1scwBeyELA/) | [ernerf](https://www.bilibili.com/video/BV1G1421z73r/) | [musetalk](https://www.bilibili.com/video/BV1bUwezvEnG/)
 
-国内镜像: [Gitee](https://gitee.com/lipku/LiveTalking) | [GitCode](https://gitcode.com/lipku/LiveTalking)
+国内镜像: [Gitee](https://gitee.com/lipku/BanrenTalking) | [GitCode](https://gitcode.com/lipku/BanrenTalking)
 
 
 ---
@@ -41,7 +41,7 @@
 
 ## 使用场景
 
-LiveTalking 基于实时流式数字人技术，通过文本或语音驱动虚拟形象说话，结合 LLM 实现智能对话。适用于以下场景：
+BanrenTalking 基于实时流式数字人技术，通过文本或语音驱动虚拟形象说话，结合 LLM 实现智能对话。适用于以下场景：
 
 | 场景 | 说明 |
 |------|------|
@@ -63,7 +63,7 @@ LiveTalking 基于实时流式数字人技术，通过文本或语音驱动虚�
 ### 1.1 安装依赖
 
 ```bash
-git clone https://github.com/lipku/LiveTalking.git 
+git clone https://github.com/lipku/BanrenTalking.git 
 conda create -n livetalking python=3.12
 conda activate livetalking
 # 如果 CUDA 版本不为 12.8 (运行 nvidia-smi 确认)，请根据 PyTorch 官网(https://pytorch.org/get-started/previous-versions)安装对应版本
@@ -236,7 +236,7 @@ python app.py --transport webrtc --model wav2lip --avatar_id wav2lip256_avatar1
 
 ## 7. 声明
 
-基于本项目开发并发布在B站、视频号、抖音等平台上的视频需带上 LiveTalking 水印和标识。
+基于本项目开发并发布在B站、视频号、抖音等平台上的视频需带上 BanrenTalking 水印和标识。
 
 ---
 ## 引用
@@ -246,7 +246,7 @@ python app.py --transport webrtc --model wav2lip --avatar_id wav2lip256_avatar1
 ```
 @software{livetalking,
   author = {Hengzhong Li},
-  title = {LiveTalking: Real-Time Interactive Streaming Digital Human Framework},
+  title = {BanrenTalking: Real-Time Interactive Streaming Digital Human Framework},
   year = {2025},
   publisher = {GitHub},
   url = {https://github.com/lipku/livetalking}

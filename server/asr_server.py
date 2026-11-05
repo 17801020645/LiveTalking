@@ -1,14 +1,14 @@
 ###############################################################################
 #  ASR WebSocket Server — Local SenseVoice/FunASR Integration
 #
-#  Resolves: https://github.com/lipku/LiveTalking/issues/604
+#  Resolves: https://github.com/lipku/BanrenTalking/issues/604
 #
 #  This module provides a WebSocket endpoint (/api/asr) that speaks the same
 #  protocol as the external FunASR server (wss://www.funasr.com:10096/).
 #  The browser client (web/asr/main.js) can connect here instead, keeping
 #  all ASR processing local and cutting ~600ms of network + Whisper latency.
 #
-#  Copyright (C) 2024 LiveTalking@lipku https://github.com/lipku/LiveTalking
+#  Copyright (C) 2024 BanrenTalking@lipku https://github.com/lipku/BanrenTalking
 #  Licensed under the Apache License, Version 2.0
 ###############################################################################
 

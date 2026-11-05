@@ -42,7 +42,7 @@ acceptance:
     text: A2：`GET /index.html` 仍返回原站控制台（200），不是 Vue 壳
     result: passed
     reason:
-      text: GET /index.html 返回 200 原站标题 LiveTalking - 数字人实时驱动，不含 Vue id=app；静态
+      text: GET /index.html 返回 200 原站标题 BanrenTalking - 数字人实时驱动，不含 Vue id=app；静态
         web/index.html 仍可匿名打开。
       truncated: false
   - id: A3

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 在独立 .venv-omni 中安装 vLLM + vLLM-Omni。不要写入 LiveTalking .venv。
+# 在独立 .venv-omni 中安装 vLLM + vLLM-Omni。不要写入 BanrenTalking .venv。
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -32,5 +32,5 @@ uv pip install --python "$VENV/bin/python" 'setuptools>=75' wheel 'antlr4-python
 echo "安装 vllm-omni..."
 uv pip install --python "$VENV/bin/python" vllm-omni
 
-echo "完成。LiveTalking .venv 未被修改。"
+echo "完成。BanrenTalking .venv 未被修改。"
 echo "启动: ./start.sh （换模型或单独起 8091: ./start-omni.sh）"

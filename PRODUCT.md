@@ -45,12 +45,12 @@ web
 
 ## Brand Commitments
 
-产品名是 LiveTalking。仓库有标志 `assets/LiveTalking-logo.png`。未将配色、字体或视觉风格锁定为品牌承诺；前端可以换视觉语言。
+产品名是 BanrenTalking。仓库有标志 `assets/BanrenTalking-logo.png`。未将配色、字体或视觉风格锁定为品牌承诺；前端可以换视觉语言。
 
 ## Evidence on Hand
 
 - 引擎演示视频见 README（wav2lip / ernerf / musetalk 的 Bilibili 链接）。
-- 标志：`assets/LiveTalking-logo.png`。
+- 标志：`assets/BanrenTalking-logo.png`。
 - 无客户案例、证言、定价或商用客户名单可引用。未来设计不得虚构客户、口碑或业绩数字。
 
 ## Product Principles

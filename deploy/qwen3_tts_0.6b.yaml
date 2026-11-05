@@ -1,4 +1,4 @@
-# LiveTalking 本机 4090 配方：基于 vLLM-Omni 官方 qwen3_tts.yaml，
+# BanrenTalking 本机 4090 配方：基于 vLLM-Omni 官方 qwen3_tts.yaml，
 # 将两阶段 gpu_memory_utilization 从 0.3 降到 0.15，给 Wav2Lip 留显存。
 # 空闲约 5GiB、推理峰值约 10GiB。1.7B 用 deploy/qwen3_tts_1.7b.yaml（两阶段 0.25）。
 #

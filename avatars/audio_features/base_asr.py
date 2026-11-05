@@ -1,5 +1,5 @@
 ###############################################################################
-#  Copyright (C) 2024 LiveTalking@lipku https://github.com/lipku/LiveTalking
+#  Copyright (C) 2024 BanrenTalking@lipku https://github.com/lipku/BanrenTalking
 #  email: lipku@foxmail.com
 # 
 #  Licensed under the Apache License, Version 2.0 (the "License");
