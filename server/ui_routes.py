@@ -7,6 +7,7 @@ mixed-content issues. The offline service itself stays an independent process.
 from __future__ import annotations
 
 import glob
+import json
 import os
 import subprocess
 import tempfile
@@ -15,6 +16,7 @@ from aiohttp import ClientSession, ClientTimeout, web
 from PIL import Image
 
 from server.platform_auth import require_admin
+from server.recording_meta import get_owner
 from utils.logger import logger
 
 VOICES = [
@@ -25,8 +27,21 @@ VOICES = [
 ]
 
 
+def _avatar_tenant(avatar_id: str) -> str | None:
+    path = os.path.join("data", "avatars", avatar_id, "tenant.json")
+    if not os.path.isfile(path):
+        return None
+    try:
+        return json.load(open(path, encoding="utf-8")).get("tenant_id")
+    except Exception:
+        return None
+
+
 async def list_avatars(request):
     root = os.path.join("data", "avatars")
+    user = request.get("user") or {}
+    is_admin = user.get("role") == "admin"
+    tenant = user.get("tenant_id", "default")
     result = []
     if os.path.isdir(root):
         for name in sorted(os.listdir(root)):
@@ -35,6 +50,9 @@ async def list_avatars(request):
                 continue
             files = sorted(glob.glob(os.path.join(full, "*.png")) + glob.glob(os.path.join(full, "*.jpg")))
             if not files:
+                continue
+            owner = _avatar_tenant(name)
+            if owner and not is_admin and owner != tenant:
                 continue
             try:
                 with Image.open(files[0]) as im:
@@ -53,6 +71,10 @@ async def list_avatars(request):
 
 async def avatar_frame(request):
     avatar_id = request.match_info["avatar_id"]
+    user = request.get("user") or {}
+    owner = _avatar_tenant(avatar_id)
+    if owner and user.get("role") != "admin" and owner != user.get("tenant_id", "default"):
+        return web.Response(status=404, text="avatar not found")
     root = os.path.join("data", "avatars", avatar_id, "full_imgs")
     if not os.path.isdir(root):
         return web.Response(status=404, text="avatar not found")
@@ -66,15 +88,27 @@ async def list_voices(request):
     return web.json_response({"code": 0, "msg": "ok", "data": VOICES})
 
 
+def _recording_allowed(request, rec_id: str) -> bool:
+    user = request.get("user") or {}
+    if user.get("role") == "admin":
+        return True
+    owner = get_owner(rec_id)
+    return bool(owner and owner.get("tenant_id") == user.get("tenant_id", "default"))
+
+
 async def list_recordings(request):
-    denied = require_admin(request)
-    if denied:
-        return denied
+    user = request.get("user") or {}
+    is_admin = user.get("role") == "admin"
+    tenant = user.get("tenant_id", "default")
     root = os.path.join("data", "record")
     items = []
     if os.path.isdir(root):
         for name in sorted(os.listdir(root), reverse=True):
             if not name.lower().endswith(".mp4"):
+                continue
+            rec_id = name[:-4]
+            owner = get_owner(rec_id)
+            if not is_admin and (not owner or owner.get("tenant_id") != tenant):
                 continue
             path = os.path.join(root, name)
             try:
@@ -82,20 +116,21 @@ async def list_recordings(request):
             except OSError:
                 continue
             items.append({
-                "id": name[:-4],
+                "id": rec_id,
                 "name": name,
                 "size": st.st_size,
                 "mtime": st.st_mtime,
-                "url": f"/record/{name[:-4]}",
+                "url": f"/record/{rec_id}",
+                "tenant_id": (owner or {}).get("tenant_id", "default"),
+                "username": (owner or {}).get("username", ""),
             })
     return web.json_response({"code": 0, "msg": "ok", "data": items})
 
 
 async def delete_recording(request):
-    denied = require_admin(request)
-    if denied:
-        return denied
     rec_id = os.path.basename(request.match_info["recording_id"])
+    if not _recording_allowed(request, rec_id):
+        return web.json_response({"code": -1, "msg": "recording not found"}, status=404)
     path = os.path.join("data", "record", f"{rec_id}.mp4")
     if not os.path.isfile(path):
         return web.json_response({"code": -1, "msg": "recording not found"}, status=404)
@@ -107,10 +142,9 @@ async def delete_recording(request):
 
 
 async def clip_recording(request):
-    denied = require_admin(request)
-    if denied:
-        return denied
     rec_id = os.path.basename(request.match_info["recording_id"])
+    if not _recording_allowed(request, rec_id):
+        return web.json_response({"code": -1, "msg": "recording not found"}, status=404)
     src = os.path.join("data", "record", f"{rec_id}.mp4")
     if not os.path.isfile(src):
         return web.json_response({"code": -1, "msg": "recording not found"}, status=404)

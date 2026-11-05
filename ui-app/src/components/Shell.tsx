@@ -1,11 +1,12 @@
 import type { LiveStatus, User, View } from '../types'
 
-const nav: { id: View; label: string; icon: string; tag?: string }[] = [
+const nav: { id: View; label: string; icon: string; tag?: string; adminOnly?: boolean }[] = [
   { id: 'overview', label: '总览', icon: '◫' },
   { id: 'offline', label: '离线任务', icon: '▤' },
   { id: 'live', label: '实时会话', icon: '◉' },
   { id: 'assets', label: '资产库', icon: '◇' },
   { id: 'recordings', label: '录制库', icon: '▣' },
+  { id: 'admin', label: '租户/用户', icon: '⌘', adminOnly: true },
   { id: 'qc', label: '质检中心', icon: '◈' },
 ]
 
@@ -13,7 +14,7 @@ export default function Shell({ view, onView, live, jobs, user, onLogout, childr
   view: View; onView: (v: View) => void; live: LiveStatus; jobs: number; user: User; onLogout: () => void; children: React.ReactNode
 }) {
   const titles: Record<View, string> = {
-    overview: '总览', offline: '离线任务', live: '实时会话', assets: '资产库', recordings: '录制库', qc: '质检中心', settings: '系统设置',
+    overview: '总览', offline: '离线任务', live: '实时会话', assets: '资产库', recordings: '录制库', qc: '质检中心', admin: '租户/用户', settings: '系统设置',
   }
   const gpuPct = live.gpu.total_mb ? Math.round((live.gpu.used_mb / live.gpu.total_mb) * 100) : 0
   const gpuGb = (live.gpu.used_mb / 1024).toFixed(1)
@@ -28,7 +29,7 @@ export default function Shell({ view, onView, live, jobs, user, onLogout, childr
         </div>
         <nav className="nav" aria-label="主导航">
           <div className="nav-label">WORKSPACE / 01</div>
-          {nav.map(item => (
+          {nav.filter(item => !item.adminOnly || user.role === 'admin').map(item => (
             <button key={item.id} className={view === item.id ? 'active' : ''} onClick={() => onView(item.id)}>
               <span className="ico">{item.icon}</span><span>{item.label}</span>
               {item.id === 'offline' && jobs > 0 && <span className="tag">{jobs}</span>}

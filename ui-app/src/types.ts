@@ -1,4 +1,4 @@
-export type View = 'overview' | 'offline' | 'live' | 'assets' | 'recordings' | 'qc' | 'settings'
+export type View = 'overview' | 'offline' | 'live' | 'assets' | 'recordings' | 'qc' | 'admin' | 'settings'
 
 export interface Job {
   id: string
@@ -93,4 +93,13 @@ export interface User {
   role: 'admin' | 'user' | string
   tenant_id?: string
   status?: string
+}
+
+export interface AdminUser {
+  id: number
+  username: string
+  role: string
+  tenant_id: string
+  status: string
+  created_at: number
 }

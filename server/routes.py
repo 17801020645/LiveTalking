@@ -175,6 +175,12 @@ async def record(request):
         if avatar_session is None:
             return json_error("session not found")
         if params['type'] == 'start_record':
+            try:
+                from server.recording_meta import set_owner
+                user = request.get("user") or {}
+                set_owner(sessionid, user.get("tenant_id", "default"), user.get("username", ""))
+            except Exception:
+                pass
             avatar_session.start_recording()
         elif params['type'] == 'end_record':
             avatar_session.stop_recording()

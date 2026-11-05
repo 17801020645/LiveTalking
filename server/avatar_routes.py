@@ -77,7 +77,9 @@ async def create_avatar_task(request):
 
         save_path = data_path
 
+        user = request.get("user") or {}
         task_params = {
+            "tenant_id": user.get("tenant_id", "default"),
             "video_path": video_path,
             "save_path": save_path,
             "img_size": int(params.get('img_size', 256)),
@@ -137,7 +139,7 @@ async def delete_avatar_task(request):
     if denied:
         return denied
     task_id = request.match_info.get('task_id')
-    success, msg = task_manager.delete_task(task_id)
+    success, msg = task_manager.cancel_task(task_id)
     if not success:
         return json_error(msg)
     return json_ok(data={"msg": msg})

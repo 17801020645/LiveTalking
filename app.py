@@ -118,7 +118,17 @@ async def download_record(request):
         return denied
 
     record_file = os.path.join('data', 'record', f"{sessionid}.mp4")
-    
+    try:
+        from server.recording_meta import get_owner
+        owner = get_owner(sessionid)
+        user = request.get("user") or {}
+        if owner and user.get("role") != "admin" and owner.get("tenant_id") != user.get("tenant_id", "default"):
+            return web.Response(status=404, text="Record not found")
+        if not owner and user.get("role") != "admin":
+            return web.Response(status=404, text="Record not found")
+    except Exception:
+        pass
+
     if os.path.exists(record_file):
         return web.FileResponse(record_file)
     else:

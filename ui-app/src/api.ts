@@ -1,4 +1,4 @@
-import type { AvatarInfo, AvatarTask, Job, LiveStatus, OfflineHealth, Recording, User, VoiceInfo } from './types'
+import type { AdminUser, AvatarInfo, AvatarTask, Job, LiveStatus, OfflineHealth, Recording, User, VoiceInfo } from './types'
 
 export class ApiError extends Error {
   status: number
@@ -56,6 +56,13 @@ export const api = {
   cancelAvatarTask: (id: string) => request<unknown>(`/api/avatar/task/${id}`, { method: 'DELETE' }),
   clipRecordingUrl: (id: string, start: number, end: number) =>
     `/api/recordings/${encodeURIComponent(id)}/clip?start=${start}&end=${end}`,
+  adminUsers: () => request<{ users: AdminUser[] }>('/api/v1/admin/users'),
+  createUser: (body: { username: string; password: string; role: string; tenant_id: string }) =>
+    request<unknown>('/api/v1/admin/users', json(body)),
+  setUserEnabled: (id: number, enabled: boolean) =>
+    request<unknown>(`/api/v1/admin/users/${id}/${enabled ? 'enable' : 'disable'}`, { method: 'POST' }),
+  deleteUser: (id: number) =>
+    request<unknown>(`/api/v1/admin/users/${id}/delete`, { method: 'POST' }),
   createAvatarTask: (avatarId: string, file: File) => {
     const fd = new FormData()
     fd.append('model', 'musetalk')

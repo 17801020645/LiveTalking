@@ -4,6 +4,7 @@ import sqlite3
 import threading
 import time
 import uuid
+import shutil
 from concurrent.futures import ThreadPoolExecutor
 
 import requests
@@ -11,6 +12,10 @@ import requests
 from utils.logger import logger
 
 INTERRUPTED_MSG = "进程中断，任务未完成"
+
+
+class TaskCancelled(Exception):
+    pass
 
 
 class AvatarTask:
@@ -22,6 +27,7 @@ class AvatarTask:
         self.status = "pending"  # pending, running, completed, failed
         self.progress = 0
         self.error_msg = ""
+        self.cancel_requested = False
         self.notify_url = notify_url
         self.start_time = time.time()
         self.end_time = None
@@ -34,6 +40,7 @@ class AvatarTask:
             "status": self.status,
             "progress": self.progress,
             "error_msg": self.error_msg,
+            "cancel_requested": self.cancel_requested,
             "notify_url": self.notify_url,
             "start_time": self.start_time,
             "end_time": self.end_time,
@@ -75,6 +82,20 @@ class TaskManager:
         with self.lock:
             return self.tasks.get(task_id)
 
+    def cancel_task(self, task_id):
+        with self.lock:
+            task = self.tasks.get(task_id)
+            if not task:
+                return False, "Task not found"
+            if task.status == "pending":
+                del self.tasks[task_id]
+                self._delete_row(task_id)
+                return True, "Task cancelled"
+            if task.status == "running":
+                task.cancel_requested = True
+                return True, "Cancellation requested"
+            return False, f"Task is in {task.status} state"
+
     def delete_task(self, task_id):
         with self.lock:
             task = self.tasks.get(task_id)
@@ -107,6 +128,8 @@ class TaskManager:
 
         try:
             def progress_callback(p):
+                if task.cancel_requested:
+                    raise TaskCancelled("cancelled by user")
                 task.progress = p
                 self._persist(task)
 
@@ -137,11 +160,30 @@ class TaskManager:
             else:
                 raise ValueError(f"Unsupported model type: {task.model_type}")
 
+            tenant = task.params.get("tenant_id")
+            if tenant:
+                try:
+                    meta_dir = os.path.join(task.params.get("save_path", "./data/avatars"), task.avatar_id)
+                    os.makedirs(meta_dir, exist_ok=True)
+                    with open(os.path.join(meta_dir, "tenant.json"), "w", encoding="utf-8") as f:
+                        json.dump({"tenant_id": tenant}, f)
+                except Exception as exc:
+                    logger.warning("write tenant metadata failed: %s", exc)
             task.status = "completed"
             task.progress = 100
             self._persist(task)
             self._notify(task)
             logger.info(f"Task {task_id} completed successfully")
+        except TaskCancelled:
+            task.status = "cancelled"
+            task.error_msg = "cancelled by user"
+            try:
+                shutil.rmtree(os.path.join(task.params.get("save_path", "./data/avatars"), task.avatar_id), ignore_errors=True)
+            except Exception:
+                pass
+            self._persist(task)
+            self._notify(task)
+            logger.info(f"Task {task_id} cancelled")
         except Exception as e:
             task.status = "failed"
             task.error_msg = str(e)

@@ -9,6 +9,7 @@ import Assets from './components/Assets'
 import QC from './components/QC'
 import Settings from './components/Settings'
 import Recordings from './components/Recordings'
+import Admin from './components/Admin'
 import Login from './components/Login'
 
 const emptyLive: LiveStatus = { active: 0, max: 2, sessions: [], gpu: { used_mb: 0, total_mb: 0 } }
@@ -20,7 +21,7 @@ const fallbackVoices: VoiceInfo[] = [
 
 function readView(): View {
   const h = location.hash.replace('#', '')
-  return (['overview', 'offline', 'live', 'assets', 'recordings', 'qc', 'settings'] as View[]).includes(h as View) ? h as View : 'overview'
+  return (['overview', 'offline', 'live', 'assets', 'recordings', 'qc', 'admin', 'settings'] as View[]).includes(h as View) ? h as View : 'overview'
 }
 
 export default function App() {
@@ -103,6 +104,7 @@ export default function App() {
         {view === 'live' && <Live live={live} avatars={effectiveAvatars} voices={effectiveVoices} notify={notify} />}
         {view === 'assets' && <Assets avatars={effectiveAvatars} voices={effectiveVoices} bgm={bgm} user={user} live={live} refresh={load} notify={notify} />}
         {view === 'recordings' && <Recordings user={user} notify={notify} />}
+        {view === 'admin' && <Admin user={user} notify={notify} />}
         {view === 'qc' && <QC jobs={jobs} />}
         {view === 'settings' && <Settings live={live} user={user} notify={notify} />}
         {health && !health.worker_alive && <div className="global-warn">离线 worker 未运行</div>}

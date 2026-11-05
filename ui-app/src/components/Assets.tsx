@@ -78,7 +78,7 @@ export default function Assets({ avatars, voices, bgm, user, live, refresh, noti
                       <td className="mono">{t.avatar_id}</td>
                       <td><span className="badge b-idle">{t.status}</span></td>
                       <td className="mono">{t.progress}%</td>
-                      <td>{t.status === 'pending' && <button className="btn danger mini-btn" onClick={() => cancelTask(t.task_id)}>取消</button>}</td>
+                      <td>{(t.status === 'pending' || t.status === 'running') && <button className="btn danger mini-btn" onClick={() => cancelTask(t.task_id)}>{t.status === 'running' ? '请求取消' : '取消'}</button>}</td>
                     </tr>
                   ))}
                 </tbody>

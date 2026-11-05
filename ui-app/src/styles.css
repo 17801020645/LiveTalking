@@ -230,3 +230,4 @@ textarea::placeholder{color:#475569}
 .upload-panel{margin-bottom:14px}
 .operator .mini-btn{margin-left:4px}
 @media(max-width:560px){.login-card{padding:20px}}
+.mt-card{margin-top:14px}

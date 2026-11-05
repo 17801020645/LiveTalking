@@ -81,6 +81,7 @@ def _user_row(row):
         "id": row["id"],
         "username": row["username"],
         "role": row["role"],
+        "tenant_id": row["tenant_id"] if "tenant_id" in row.keys() else "default",
         "status": row["status"],
         "created_at": row["created_at"],
     }
@@ -165,7 +166,7 @@ async def admin_list_users(request):
         return denied
     db = request.app["platform_db"]
     async with db.execute(
-        "SELECT id, username, role, status, created_at FROM users ORDER BY id ASC"
+        "SELECT id, username, role, tenant_id, status, created_at FROM users ORDER BY id ASC"
     ) as cur:
         rows = await cur.fetchall()
     return json_ok({"users": [_user_row(r) for r in rows]})
@@ -181,6 +182,10 @@ async def admin_create_user(request):
         return json_error("无效请求")
     username = (body.get("username") or "").strip()
     password = body.get("password") or ""
+    role = (body.get("role") or "user").strip()
+    tenant_id = (body.get("tenant_id") or "default").strip() or "default"
+    if role not in ("user", "admin"):
+        return json_error("role 必须是 user/admin")
     if len(username) < 3:
         return json_error("用户名至少 3 个字符")
     if len(password) < 6:
@@ -188,14 +193,14 @@ async def admin_create_user(request):
     db = request.app["platform_db"]
     try:
         cur = await db.execute(
-            "INSERT INTO users (username, password_hash, role, status, created_at) VALUES (?, ?, ?, ?, ?)",
-            (username, hash_password(password), "user", "active", time.time()),
+            "INSERT INTO users (username, password_hash, role, tenant_id, status, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+            (username, hash_password(password), role, tenant_id, "active", time.time()),
         )
         await db.commit()
         user_id = cur.lastrowid
     except sqlite3.IntegrityError:
         return json_error("用户名已存在")
-    return json_ok({"id": user_id, "username": username, "role": "user", "status": "active"})
+    return json_ok({"id": user_id, "username": username, "role": role, "tenant_id": tenant_id, "status": "active"})
 
 
 async def admin_disable_user(request):
