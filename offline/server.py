@@ -60,6 +60,16 @@ async def health(request: web.Request) -> web.Response:
     )
 
 
+async def healthz(request: web.Request) -> web.Response:
+    worker: Worker = request.app["worker"]
+    alive = worker.is_alive()
+    return web.json_response(
+        {"status": "ok" if alive else "degraded", "service": "nexus-offline",
+         "worker_alive": alive, "counts": store.counts()},
+        status=200 if alive else 503,
+    )
+
+
 async def list_jobs(request: web.Request) -> web.Response:
     tenant, is_admin = _scope(request)
     jobs = store.list_jobs(limit=50, tenant_id=None if is_admin else tenant)
@@ -224,6 +234,7 @@ def create_app(worker: Worker) -> web.Application:
     app = web.Application(client_max_size=2 * 1024 * 1024)
     app["worker"] = worker
     app.router.add_get("/", index)
+    app.router.add_get("/healthz", healthz)
     app.router.add_get("/api/offline/health", health)
     app.router.add_get("/api/offline/jobs", list_jobs)
     app.router.add_post("/api/offline/jobs", create_job)

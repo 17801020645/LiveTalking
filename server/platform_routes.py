@@ -108,10 +108,12 @@ async def login(request):
         return json_error(LOGIN_ERROR, status=401)
     token = await create_session(db, row["id"])
     resp = json_ok({"id": row["id"], "username": row["username"], "role": row["role"], "tenant_id": row["tenant_id"] or "default"})
+    from server.prod_security import is_secure
     resp.set_cookie(
         COOKIE_NAME,
         token,
         httponly=True,
+        secure=is_secure(request),
         samesite="Lax",
         path="/",
         max_age=SESSION_DAYS * 86400,

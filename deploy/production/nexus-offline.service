@@ -1,0 +1,27 @@
+[Unit]
+Description=NEXUS digital human - offline render worker
+After=network-online.target nexus-live.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=banren45
+Group=banren45
+WorkingDirectory=/home/banren45/workspace/01_digital_human/LiveTalking
+EnvironmentFile=-/home/banren45/workspace/01_digital_human/LiveTalking/.env
+Environment=PYTHONUNBUFFERED=1
+Environment=LIVE_STATUS_URL=http://127.0.0.1:8010/api/live/status
+ExecStart=/home/banren45/workspace/01_digital_human/LiveTalking/scripts/run_offline.sh
+Restart=always
+RestartSec=3
+TimeoutStopSec=30
+KillSignal=SIGINT
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ReadWritePaths=/home/banren45/workspace/01_digital_human/LiveTalking/data
+UMask=0027
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target

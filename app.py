@@ -25,6 +25,7 @@ import json
 #from geventwebsocket.handler import WebSocketHandler
 import re
 import os
+import time
 import numpy as np
 from threading import Thread,Event
 #import multiprocessing
@@ -242,6 +243,7 @@ def main():
     from server.platform_auth import platform_auth_middleware
     from server.platform_cors import cors_middleware
     from server.platform_routes import attach_platform
+    from server.prod_security import prod_security_middleware
 
     @web.middleware
     async def no_cache_html_middleware(request, handler):
@@ -252,9 +254,23 @@ def main():
             resp.headers["Expires"] = "0"
         return resp
 
+    async def healthz(request):
+        db = request.app.get("platform_db")
+        return web.json_response({
+            "status": "ok",
+            "service": "nexus-live",
+            "platform_db": db is not None,
+            "time": int(time.time()),
+        })
+
+    async def readyz(request):
+        if request.app.get("platform_db") is None:
+            return web.json_response({"status": "not-ready", "reason": "platform db not initialized"}, status=503)
+        return web.json_response({"status": "ready", "service": "nexus-live"})
+
     appasync = web.Application(
         client_max_size=1024**2*100,
-        middlewares=[cors_middleware, platform_auth_middleware, no_cache_html_middleware],
+        middlewares=[prod_security_middleware, cors_middleware, platform_auth_middleware, no_cache_html_middleware],
     )
     appasync["llm_response"] = llm_response
     appasync["opt"] = opt
@@ -263,6 +279,8 @@ def main():
     appasync.on_shutdown.append(on_shutdown)
     appasync.router.add_post("/offer", offer)
     appasync.router.add_get("/record/{sessionid}", download_record)
+    appasync.router.add_get("/healthz", healthz)
+    appasync.router.add_get("/readyz", readyz)
     appasync.router.add_get("/api/live/status", live_status)
     appasync.router.add_post("/api/live/close", close_live)
 

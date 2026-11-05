@@ -1,0 +1,10 @@
+[Unit]
+Description=NEXUS SQLite backup
+
+[Service]
+Type=oneshot
+User=banren45
+Group=banren45
+WorkingDirectory=/home/banren45/workspace/01_digital_human/LiveTalking
+EnvironmentFile=-/home/banren45/workspace/01_digital_human/LiveTalking/.env
+ExecStart=/home/banren45/workspace/01_digital_human/LiveTalking/scripts/backup.sh

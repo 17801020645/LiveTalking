@@ -1,0 +1,26 @@
+[Unit]
+Description=NEXUS digital human - live WebRTC
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=banren45
+Group=banren45
+WorkingDirectory=/home/banren45/workspace/01_digital_human/LiveTalking
+EnvironmentFile=-/home/banren45/workspace/01_digital_human/LiveTalking/.env
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/home/banren45/workspace/01_digital_human/LiveTalking/scripts/run_live.sh
+Restart=always
+RestartSec=3
+TimeoutStopSec=25
+KillSignal=SIGINT
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ReadWritePaths=/home/banren45/workspace/01_digital_human/LiveTalking/data /home/banren45/workspace/01_digital_human/LiveTalking/certs
+UMask=0027
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target
