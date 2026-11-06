@@ -60,6 +60,46 @@ async def health(request: web.Request) -> web.Response:
     )
 
 
+async def metrics(request: web.Request) -> web.Response:
+    worker = request.app["worker"]
+    counts = store.counts()
+    total = sum(counts.values())
+    lines = [
+        "# HELP nexus_offline_jobs Number of jobs by status",
+        "# TYPE nexus_offline_jobs gauge",
+    ]
+    for status, value in sorted(counts.items()):
+        lines.append(f'nexus_offline_jobs{{status="{status}"}} {value}')
+    lines += [
+        "# HELP nexus_offline_jobs_total Total jobs",
+        "# TYPE nexus_offline_jobs_total gauge",
+        f"nexus_offline_jobs_total {total}",
+        "# HELP nexus_offline_worker_busy Worker currently rendering",
+        "# TYPE nexus_offline_worker_busy gauge",
+        f"nexus_offline_worker_busy {1 if worker.busy else 0}",
+        "# HELP nexus_offline_worker_alive Worker thread alive",
+        "# TYPE nexus_offline_worker_alive gauge",
+        f"nexus_offline_worker_alive {1 if worker.is_alive() else 0}",
+    ]
+    try:
+        from offline import store as _store
+        con = _store._connect()
+        try:
+            n = con.execute("SELECT COUNT(*) FROM jobs WHERE qc_status='pass'").fetchone()[0]
+        finally:
+            con.close()
+        lines += [
+            "# HELP nexus_offline_qc_pass_total Jobs passing QC",
+            "# TYPE nexus_offline_qc_pass_total counter",
+            f"nexus_offline_qc_pass_total {n}",
+        ]
+    except Exception:
+        pass
+    return web.Response(text="
+".join(lines)+"
+", content_type="text/plain; version=0.0.4")
+
+
 async def healthz(request: web.Request) -> web.Response:
     worker: Worker = request.app["worker"]
     alive = worker.is_alive()
@@ -235,6 +275,7 @@ def create_app(worker: Worker) -> web.Application:
     app["worker"] = worker
     app.router.add_get("/", index)
     app.router.add_get("/healthz", healthz)
+    app.router.add_get("/metrics", metrics)
     app.router.add_get("/api/offline/health", health)
     app.router.add_get("/api/offline/jobs", list_jobs)
     app.router.add_post("/api/offline/jobs", create_job)
