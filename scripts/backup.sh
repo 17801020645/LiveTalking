@@ -5,4 +5,5 @@ cd "$ROOT"
 ENV_FILE="$ROOT/.env"
 [ -f "$ENV_FILE" ] || ENV_FILE="$ROOT/../../.env"
 if [ -f "$ENV_FILE" ]; then set -a; . "$ENV_FILE"; set +a; fi
+export DATA_ROOT="${DATA_ROOT:-/data/apps/digital-human/data}"
 exec "$ROOT/.venv/bin/python" scripts/backup.py

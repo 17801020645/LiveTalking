@@ -12,9 +12,10 @@ ROOT = Path(__file__).resolve().parent.parent
 DEST_ROOT = Path(os.environ.get("BACKUP_DIR", str(ROOT / "data" / "backups")))
 RETENTION_DAYS = int(os.environ.get("BACKUP_RETENTION_DAYS", "7"))
 
+DATA_ROOT = Path(os.environ.get("DATA_ROOT", str(ROOT / "data")))
 SOURCES = [
-    ROOT / "data" / "platform.db",
-    ROOT / "data" / "offline" / "jobs.db",
+    DATA_ROOT / "platform.db",
+    DATA_ROOT / "offline" / "jobs.db",
 ]
 
 
