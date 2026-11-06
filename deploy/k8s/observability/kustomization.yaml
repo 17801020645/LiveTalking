@@ -5,3 +5,4 @@ resources:
   - node-exporter.yaml
   - kube-state-metrics.yaml
   - prometheus-agent.yaml
+  - dcgm-exporter.yaml
