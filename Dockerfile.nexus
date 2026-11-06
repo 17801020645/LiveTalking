@@ -13,6 +13,8 @@ WORKDIR /app
 
 # Reuse the validated POC virtualenv; models/data are mounted at runtime.
 COPY .venv /app/.venv
+# The source venv was created by uv with an absolute host python symlink.
+RUN ln -sf /usr/local/bin/python3.12 /app/.venv/bin/python &&     ln -sf python /app/.venv/bin/python3 &&     ln -sf python /app/.venv/bin/python3.12
 COPY *.py /app/
 COPY config.yaml /app/
 COPY server /app/server
