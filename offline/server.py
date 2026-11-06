@@ -95,9 +95,7 @@ async def metrics(request: web.Request) -> web.Response:
         ]
     except Exception:
         pass
-    return web.Response(text="
-".join(lines)+"
-", content_type="text/plain; version=0.0.4")
+    return web.Response(text="\n".join(lines)+"\n", content_type="text/plain; version=0.0.4")
 
 
 async def healthz(request: web.Request) -> web.Response:
