@@ -53,6 +53,9 @@ data:
       - job_name: dcgm-exporter
         static_configs:
           - targets: ["dcgm-exporter.nexus-monitoring.svc.cluster.local:9400"]
+      - job_name: nexus-offline
+        static_configs:
+          - targets: ["nexus-offline.nexus.svc.cluster.local:8012"]
       - job_name: kubelet-cadvisor
         scheme: https
         tls_config:
