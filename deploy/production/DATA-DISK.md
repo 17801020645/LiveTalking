@@ -58,3 +58,16 @@ sudo bash scripts/setup-data-migration.sh --k3s-resume
 
 - Docker：恢复 `/etc/docker/daemon.json.bak.*`，启 Docker；旧 `/var/lib/docker` 仍在；
 - k3s：恢复 `/etc/rancher/k3s/config.yaml.bak.*`，启 k3s；旧 `/var/lib/rancher/k3s` 仍在。
+
+
+## 2026-11-06 完成状态
+
+- Docker data-root：`/data/docker`（生效）
+- k3s data-dir：`/data/k3s`（生效，`/etc/rancher/k3s/config.yaml`）
+- 数字人数据：`/data/apps/digital-human/data`（生效）
+- 模型：`/data/models/weights`（生效）
+- 备份：`/data/backups/digital-human`（生效）
+- `/data`：25G used / 1.8T free
+- 应用：`nexus-live` / `nexus-offline` 1/1 Running；2 路实时验收通过
+- 旧 `/var/lib/docker`、`/var/lib/rancher/k3s`、`/home/.../LiveTalking/data` 仍保留
+- 两个旧 `Unknown` Pod 仍存在，删除需要确认
