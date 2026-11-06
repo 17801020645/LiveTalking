@@ -259,7 +259,7 @@ def main():
         active = len(getattr(rtc_manager, "pcs_by_session", {}))
         return web.Response(
             text=render_metrics(active),
-            content_type="text/plain; version=0.0.4; charset=utf-8",
+            content_type="text/plain; version=0.0.4",
         )
 
     async def healthz(request):
