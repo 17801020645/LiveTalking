@@ -6,7 +6,7 @@
 
 ```bash
 cd /home/banren45/workspace/01_digital_human/LiveTalking
-docker build -t nexus-app:v0.6.0 .
+docker build -f Dockerfile.nexus -t nexus-app:v0.6.0 .
 ```
 
 把镜像导入 k3s containerd（需要 sudo）：

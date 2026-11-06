@@ -1,0 +1,27 @@
+FROM python:3.12-slim
+
+ENV PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PATH=/app/.venv/bin:$PATH
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      ffmpeg libgl1 libglib2.0-0 libgomp1 libsndfile1 \
+      libsm6 libxext6 libxrender1 curl ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Reuse the validated POC virtualenv; models/data are mounted at runtime.
+COPY .venv /app/.venv
+COPY *.py /app/
+COPY config.yaml /app/
+COPY server /app/server
+COPY offline /app/offline
+COPY avatars /app/avatars
+COPY utils /app/utils
+COPY ui_dist /app/ui_dist
+COPY scripts/run_live_container.sh scripts/run_offline_container.sh /app/scripts/
+RUN chmod +x /app/scripts/run_live_container.sh /app/scripts/run_offline_container.sh
+
+EXPOSE 8010 8012
+CMD ["/app/scripts/run_live_container.sh"]
