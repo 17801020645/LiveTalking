@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import ssl
 import sys
 import threading
 import time
@@ -83,7 +84,10 @@ class Worker(threading.Thread):
 
     def _live_active(self) -> bool:
         try:
-            with urllib.request.urlopen(LIVE_STATUS_URL, timeout=2) as resp:
+            kw = {}
+            if LIVE_STATUS_URL.startswith("https://"):
+                kw["context"] = ssl._create_unverified_context()
+            with urllib.request.urlopen(LIVE_STATUS_URL, timeout=2, **kw) as resp:
                 data = json.loads(resp.read().decode("utf-8"))
             return int((data.get("data") or {}).get("active") or 0) > 0
         except Exception as exc:  # noqa: BLE001

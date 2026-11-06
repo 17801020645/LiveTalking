@@ -19,6 +19,8 @@ from server.platform_auth import require_admin
 from server.recording_meta import get_owner
 from utils.logger import logger
 
+OFFLINE_API_URL = os.environ.get("OFFLINE_API_URL", "http://127.0.0.1:8012").rstrip("/")
+
 VOICES = [
     {"id": "zh-CN-XiaoxiaoNeural", "name": "晓晓 · 女声", "gender": "female", "provider": "edge"},
     {"id": "zh-CN-YunxiNeural", "name": "云希 · 男声", "gender": "male", "provider": "edge"},
@@ -178,7 +180,7 @@ async def clip_recording(request):
 
 
 async def proxy_offline(request):
-    target = "http://127.0.0.1:8012" + request.path_qs
+    target = OFFLINE_API_URL + request.path_qs
     data = None if request.method in ("GET", "HEAD") else await request.read()
     headers = {
         k: v for k, v in request.headers.items()

@@ -1,0 +1,88 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nexus-offline
+  namespace: nexus
+  labels:
+    app.kubernetes.io/name: nexus-offline
+    app.kubernetes.io/part-of: nexus
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: nexus-offline
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: nexus-offline
+        app.kubernetes.io/part-of: nexus
+    spec:
+      runtimeClassName: nvidia
+      containers:
+        - name: offline
+          image: nexus-app:v0.6.0
+          imagePullPolicy: IfNotPresent
+          command: ["/app/scripts/run_offline_container.sh"]
+          env:
+            - name: LIVE_STATUS_URL
+              value: "https://nexus-live:8010/api/live/status"
+          ports:
+            - name: http
+              containerPort: 8012
+          resources:
+            requests:
+              cpu: "1"
+              memory: 4Gi
+              nvidia.com/gpu: 1
+            limits:
+              cpu: "8"
+              memory: 16Gi
+              nvidia.com/gpu: 1
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: 8012
+            periodSeconds: 5
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8012
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8012
+            periodSeconds: 30
+            failureThreshold: 5
+          volumeMounts:
+            - name: data
+              mountPath: /app/data
+            - name: models
+              mountPath: /app/models
+              readOnly: true
+      volumes:
+        - name: data
+          hostPath:
+            path: /home/banren45/workspace/01_digital_human/LiveTalking/data
+            type: Directory
+        - name: models
+          hostPath:
+            path: /home/banren45/workspace/01_digital_human/LiveTalking/models
+            type: Directory
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nexus-offline
+  namespace: nexus
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: nexus-offline
+  ports:
+    - name: http
+      port: 8012
+      targetPort: 8012

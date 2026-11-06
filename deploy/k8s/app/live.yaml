@@ -1,0 +1,99 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nexus-live
+  namespace: nexus
+  labels:
+    app.kubernetes.io/name: nexus-live
+    app.kubernetes.io/part-of: nexus
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: nexus-live
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: nexus-live
+        app.kubernetes.io/part-of: nexus
+    spec:
+      runtimeClassName: nvidia
+      containers:
+        - name: live
+          image: nexus-app:v0.6.0
+          imagePullPolicy: IfNotPresent
+          command: ["/app/scripts/run_live_container.sh"]
+          env:
+            - name: LIVE_PORT
+              value: "8010"
+            - name: MAX_SESSIONS
+              value: "2"
+            - name: OFFLINE_API_URL
+              value: "http://nexus-offline:8012"
+          ports:
+            - name: https
+              containerPort: 8010
+          resources:
+            requests:
+              cpu: "1"
+              memory: 6Gi
+              nvidia.com/gpu: 1
+            limits:
+              cpu: "8"
+              memory: 20Gi
+              nvidia.com/gpu: 1
+          startupProbe:
+            tcpSocket:
+              port: 8010
+            periodSeconds: 5
+            failureThreshold: 60
+          readinessProbe:
+            tcpSocket:
+              port: 8010
+            periodSeconds: 10
+            failureThreshold: 6
+          livenessProbe:
+            tcpSocket:
+              port: 8010
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            failureThreshold: 5
+          volumeMounts:
+            - name: data
+              mountPath: /app/data
+            - name: models
+              mountPath: /app/models
+              readOnly: true
+            - name: certs
+              mountPath: /app/certs
+              readOnly: true
+      volumes:
+        - name: data
+          hostPath:
+            path: /home/banren45/workspace/01_digital_human/LiveTalking/data
+            type: Directory
+        - name: models
+          hostPath:
+            path: /home/banren45/workspace/01_digital_human/LiveTalking/models
+            type: Directory
+        - name: certs
+          hostPath:
+            path: /home/banren45/workspace/01_digital_human/LiveTalking/certs
+            type: Directory
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nexus-live
+  namespace: nexus
+spec:
+  type: NodePort
+  selector:
+    app.kubernetes.io/name: nexus-live
+  ports:
+    - name: https
+      port: 8010
+      targetPort: 8010
+      nodePort: 30810

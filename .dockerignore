@@ -1,0 +1,14 @@
+.git
+.worktrees
+data
+models
+certs
+ui-app
+__pycache__
+*.pyc
+*.log
+*.mp4
+*.wav
+.env
+.venv-freeze-20261104.txt
+.DS_Store
