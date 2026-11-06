@@ -28,8 +28,14 @@
 
 ```bash
 sudo bash scripts/setup-data-migration.sh --dry-run
+
+# 首次
 sudo bash scripts/setup-data-migration.sh --docker
 sudo bash scripts/setup-data-migration.sh --k3s
+
+# 如果上一次中断、/data/docker 或 /data/k3s 已有部分拷贝
+sudo bash scripts/setup-data-migration.sh --docker-resume
+sudo bash scripts/setup-data-migration.sh --k3s-resume
 ```
 
 - `--docker`：停 Docker → rsync `/var/lib/docker` → `/data/docker` → 改 data-root → 启 Docker；
