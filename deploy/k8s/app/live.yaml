@@ -22,7 +22,7 @@ spec:
       runtimeClassName: nvidia
       containers:
         - name: live
-          image: nexus-app:v0.6.0
+          image: nexus-app:v0.6.1
           imagePullPolicy: IfNotPresent
           command: ["/app/scripts/run_live_container.sh"]
           envFrom:
