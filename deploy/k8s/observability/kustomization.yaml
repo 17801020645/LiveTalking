@@ -6,3 +6,4 @@ resources:
   - kube-state-metrics.yaml
   - prometheus-agent.yaml
   - dcgm-exporter.yaml
+  - promtail.yaml
