@@ -39,7 +39,10 @@ def main() -> dict:
     dest.mkdir(parents=True, exist_ok=True)
     manifest = {"created_at": ts, "files": []}
     for src in SOURCES:
-        rel = src.relative_to(ROOT)
+        try:
+            rel = src.relative_to(ROOT)
+        except ValueError:
+            rel = Path("data") / src.relative_to(DATA_ROOT)
         dst = dest / rel.name
         if backup_sqlite(src, dst):
             manifest["files"].append({"source": str(rel), "size": dst.stat().st_size})
