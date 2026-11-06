@@ -9,7 +9,7 @@ cd /home/banren45/workspace/01_digital_human/LiveTalking
 docker build -f Dockerfile.nexus -t nexus-app:v0.6.1 .
 ```
 
-把镜像导入 k3s containerd（需要 sudo）：
+把镜像导入 k3s containerd（需要 sudo；固定命令授权见 IMPORT.md）：
 
 ```bash
 docker save nexus-app:v0.6.1 -o /tmp/nexus-app-v0.6.0.tar
