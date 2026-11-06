@@ -70,7 +70,7 @@ spec:
             type: Directory
         - name: models
           hostPath:
-            path: /home/banren45/workspace/01_digital_human/LiveTalking/models
+            path: /home/banren45/workspace/models/weights
             type: Directory
 ---
 apiVersion: v1

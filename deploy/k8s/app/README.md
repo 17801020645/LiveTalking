@@ -24,7 +24,8 @@ sudo k3s ctr images import /tmp/nexus-app-v0.6.0.tar
 # 1. 维护窗口：停宿主机
 ./scripts/stop_all.sh
 
-# 2. 部署
+# 2. 部署（namespace 先建）
+kubectl apply -f deploy/k8s/app/namespace.yaml
 kubectl apply -k deploy/k8s/app
 
 # 3. 检查
