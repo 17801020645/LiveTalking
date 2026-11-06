@@ -25,6 +25,10 @@ spec:
           image: nexus-app:v0.6.0
           imagePullPolicy: IfNotPresent
           command: ["/app/scripts/run_live_container.sh"]
+          envFrom:
+            - secretRef:
+                name: nexus-env
+                optional: true
           env:
             - name: LIVE_PORT
               value: "8010"

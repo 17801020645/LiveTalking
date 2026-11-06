@@ -24,15 +24,18 @@ sudo k3s ctr images import /tmp/nexus-app-v0.6.0.tar
 # 1. 维护窗口：停宿主机
 ./scripts/stop_all.sh
 
-# 2. 部署（namespace 先建）
+# 2. 创建运行时密钥（来自 .env；不要提交 Secret YAML）
+kubectl -n nexus create secret generic nexus-env --from-env-file=.env
+
+# 3. 部署（namespace 先建）
 kubectl apply -f deploy/k8s/app/namespace.yaml
 kubectl apply -k deploy/k8s/app
 
-# 3. 检查
+# 4. 检查
 kubectl -n nexus get pods
 kubectl -n nexus logs deploy/nexus-live -f
 
-# 4. 访问（自签）
+# 5. 访问（自签）
 https://192.168.31.75:30810/console/
 ```
 

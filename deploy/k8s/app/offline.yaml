@@ -25,6 +25,10 @@ spec:
           image: nexus-app:v0.6.0
           imagePullPolicy: IfNotPresent
           command: ["/app/scripts/run_offline_container.sh"]
+          envFrom:
+            - secretRef:
+                name: nexus-env
+                optional: true
           env:
             - name: LIVE_STATUS_URL
               value: "https://nexus-live:8010/api/live/status"
