@@ -20,6 +20,8 @@ COPY config.yaml /app/
 COPY server /app/server
 COPY offline /app/offline
 COPY avatars /app/avatars
+COPY tts /app/tts
+COPY web /app/web
 COPY utils /app/utils
 COPY ui_dist /app/ui_dist
 COPY scripts/run_live_container.sh scripts/run_offline_container.sh /app/scripts/

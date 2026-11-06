@@ -39,6 +39,7 @@ spec:
           ports:
             - name: https
               containerPort: 8010
+              hostPort: 8010
           resources:
             requests:
               cpu: "1"
@@ -73,6 +74,15 @@ spec:
             - name: certs
               mountPath: /app/certs
               readOnly: true
+            - name: web
+              mountPath: /app/web
+              readOnly: true
+            - name: tts
+              mountPath: /app/tts
+              readOnly: true
+            - name: ui-dist
+              mountPath: /app/ui_dist
+              readOnly: true
       volumes:
         - name: data
           hostPath:
@@ -85,6 +95,18 @@ spec:
         - name: certs
           hostPath:
             path: /home/banren45/workspace/01_digital_human/LiveTalking/.worktrees/single-node-mvp/certs
+            type: Directory
+        - name: web
+          hostPath:
+            path: /home/banren45/workspace/01_digital_human/LiveTalking/web
+            type: Directory
+        - name: tts
+          hostPath:
+            path: /home/banren45/workspace/01_digital_human/LiveTalking/tts
+            type: Directory
+        - name: ui-dist
+          hostPath:
+            path: /home/banren45/workspace/01_digital_human/LiveTalking/ui_dist
             type: Directory
 ---
 apiVersion: v1
