@@ -41,6 +41,7 @@ from llm import llm_response
 import registry
 from server.routes import setup_routes
 from server.ui_routes import setup_ui_routes
+from server.app_metrics import middleware_factory as metrics_middleware_factory, render as render_metrics
 from server.rtc_manager import RTCManager
 from server.session_manager import session_manager
 
@@ -254,6 +255,13 @@ def main():
             resp.headers["Expires"] = "0"
         return resp
 
+    async def metrics(request):
+        active = len(getattr(rtc_manager, "pcs_by_session", {}))
+        return web.Response(
+            text=render_metrics(active),
+            content_type="text/plain; version=0.0.4; charset=utf-8",
+        )
+
     async def healthz(request):
         db = request.app.get("platform_db")
         return web.json_response({
@@ -270,7 +278,7 @@ def main():
 
     appasync = web.Application(
         client_max_size=1024**2*100,
-        middlewares=[prod_security_middleware, cors_middleware, platform_auth_middleware, no_cache_html_middleware],
+        middlewares=[metrics_middleware_factory(), prod_security_middleware, cors_middleware, platform_auth_middleware, no_cache_html_middleware],
     )
     appasync["llm_response"] = llm_response
     appasync["opt"] = opt
@@ -279,6 +287,7 @@ def main():
     appasync.on_shutdown.append(on_shutdown)
     appasync.router.add_post("/offer", offer)
     appasync.router.add_get("/record/{sessionid}", download_record)
+    appasync.router.add_get("/metrics", metrics)
     appasync.router.add_get("/healthz", healthz)
     appasync.router.add_get("/readyz", readyz)
     appasync.router.add_get("/api/live/status", live_status)

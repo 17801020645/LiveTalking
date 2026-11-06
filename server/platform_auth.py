@@ -49,6 +49,8 @@ def _public_path(path: str, method: str) -> bool:
     # 离线 worker 需要读实时状态做让路；只暴露路数/GPU，不含敏感数据
     if path == "/api/live/status" and method == "GET":
         return True
+    if path == "/metrics" and method == "GET":
+        return True
     if path.startswith("/api/v1/"):
         return False
     protected = (
