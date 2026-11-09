@@ -22,7 +22,7 @@ spec:
       runtimeClassName: nvidia
       containers:
         - name: offline
-          image: nexus-app:v0.6.5
+          image: nexus-app:v0.6.6
           imagePullPolicy: IfNotPresent
           command: ["/app/scripts/run_offline_container.sh"]
           envFrom:

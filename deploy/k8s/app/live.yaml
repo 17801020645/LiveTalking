@@ -24,7 +24,7 @@ spec:
       dnsPolicy: ClusterFirstWithHostNet
       containers:
         - name: live
-          image: nexus-app:v0.6.5
+          image: nexus-app:v0.6.6
           imagePullPolicy: IfNotPresent
           command: ["/app/scripts/run_live_container.sh"]
           envFrom:
