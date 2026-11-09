@@ -61,6 +61,7 @@ def json_error(msg: str, code: int = -1):
 from server.session_manager import session_manager
 from server.avatar_routes import setup_avatar_routes
 from server.live_session_auth import deny_live_drive
+from server.live_transcript import transcript_store
 
 def get_session(request, sessionid: str):
     """从 app 中获取 session 实例"""
@@ -84,6 +85,10 @@ async def human(request):
 
         if params.get('interrupt'):
             avatar_session.flush_talk()
+
+        if params.get('type') == 'chat':
+            transcript_store.begin(sessionid, params.get('text', ''))
+            avatar_session._transcript_sid = sessionid
 
         datainfo = {}
         if params.get('tts'):  # tts 参数透传（voice, emotion 等）
@@ -293,6 +298,13 @@ async def index(request):
     raise web.HTTPFound("/app/")
 
 
+async def live_transcript(request):
+    sessionid = (request.query.get('sessionid') or '').strip()
+    if not sessionid:
+        return json_error('sessionid is required')
+    return json_ok(data=transcript_store.get(sessionid))
+
+
 def setup_routes(app):
     """注册所有路由到 aiohttp app"""
     app.router.add_get("/", index)
@@ -305,6 +317,7 @@ def setup_routes(app):
     app.router.add_get("/api/admin/config", admin_config)
     app.router.add_get("/api/admin/sessions", admin_sessions)
     app.router.add_get('/sse', sse_handler)
+    app.router.add_get('/api/live/transcript', live_transcript)
 
     # ── Local ASR endpoint (SenseVoice/FunASR) ── Issue #604 ──
     try:

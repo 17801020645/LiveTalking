@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from avatars.base_avatar import BaseAvatar
 from utils.logger import logger
+from server.live_transcript import transcript_store
 
 _SENTENCE_ENDS = ",.!;:，。！？：；"
 
@@ -27,6 +28,7 @@ def _speak(avatar_session: "BaseAvatar", text: str, datainfo: dict) -> None:
     spoken = _sanitize_for_speech(text)
     if spoken:
         logger.info(spoken)
+        transcript_store.append_assistant(getattr(avatar_session, "_transcript_sid", ""), spoken)
         avatar_session.put_msg_txt(spoken, datainfo)
 
 
