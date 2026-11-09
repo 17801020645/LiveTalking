@@ -24,7 +24,7 @@ spec:
       dnsPolicy: ClusterFirstWithHostNet
       initContainers:
         - name: ui-assets
-          image: nexus-ui:v0.6.7
+          image: nexus-ui:v0.6.8
           imagePullPolicy: IfNotPresent
           command: ["sh", "-c", "cp -a /ui/. /app/ui_dist/"]
           volumeMounts:
