@@ -49,8 +49,8 @@ sudo k3s ctr images import /home/banren45/nexus-app-v0.6.7.tar
 然后：
 
 ```bash
-./scripts/apply-release.sh v0.6.7
-./scripts/smoke-release.sh v0.6.7
+./scripts/apply-release.sh v0.6.7 ui
+./scripts/smoke-release.sh v0.6.7 ui
 ```
 
 `smoke-release.sh` 只输出 PASS/FAIL 摘要，不打印完整日志。

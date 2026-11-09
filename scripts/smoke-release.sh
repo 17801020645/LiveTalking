@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 TAG="${1:-}"
+MODE="${2:-all}"
 NS="${NS:-nexus}"
 CURL="$(command -v curl || true)"
 if [[ -z "$CURL" && -x /home/banren45/.local/bin/curl ]]; then CURL=/home/banren45/.local/bin/curl; fi
@@ -23,16 +24,18 @@ status=$("$CURL" -sk "$BASE/api/live/status" 2>/dev/null | python3 -c 'import sy
 [[ -n "$ui" ]] || bad "ui asset missing"
 [[ -n "$status" ]] || bad "live status unavailable"
 if [[ -n "$TAG" ]]; then
-  echo "$images" | grep -q "nexus-app:$TAG" || bad "app image not nexus-app:$TAG"
+  if [[ "$MODE" == "all" ]]; then
+    echo "$images" | grep -q "nexus-app:$TAG" || bad "app image not nexus-app:$TAG"
+  fi
   if [[ -n "$ui_image" ]]; then
     echo "$ui_image" | grep -q "nexus-ui:$TAG" || bad "ui image not nexus-ui:$TAG"
-  else
+  elif [[ "$MODE" == "all" ]]; then
     echo "$images" | grep -q "nexus-app:$TAG" || bad "neither ui nor app image matches"
   fi
 fi
 echo "$pods" | grep -q 'nexus-live-.*Running/true' || bad "live not ready"
 echo "$pods" | grep -q 'nexus-offline-.*Running/true' || bad "offline not ready"
-echo "SMOKE SUMMARY tag=${TAG:-any} live=${status:-?} health=$health ready=$ready ui=${ui:-missing}"
+echo "SMOKE SUMMARY tag=${TAG:-any} mode=${MODE} live=${status:-?} health=$health ready=$ready ui=${ui:-missing}"
 echo "IMAGES $images"
 echo "UI_IMAGE ${ui_image:-none}"
 

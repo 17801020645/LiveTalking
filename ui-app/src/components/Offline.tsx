@@ -31,6 +31,8 @@ export default function Offline({ jobs, avatars, voices, bgm, initialAvatarId, d
     if (!voice && voices[0]) setVoice(voices[0].id)
   }, [avatars, voices, avatar, voice])
 
+  const selectedAvatar = avatars.find(a => a.id === avatar)
+
   const filtered = useMemo(() => jobs.filter(j => {
     if (filter === 'all') return true
     if (filter === 'running') return j.status === 'running' || j.status === 'pending'
@@ -113,6 +115,11 @@ export default function Offline({ jobs, avatars, voices, bgm, initialAvatarId, d
               <div className="field"><label>形象</label><select value={avatar} onChange={e => setAvatar(e.target.value)}>{avatars.map(a => <option key={a.id} value={a.id}>{a.id} · {a.width}×{a.height}</option>)}</select></div>
               <div className="field"><label>音色</label><select value={voice} onChange={e => setVoice(e.target.value)}>{voices.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}</select></div>
             </div>
+            {selectedAvatar && <div className="selected-avatar">
+              <span className="selected-avatar-img"><AvatarImg id={selectedAvatar.id} alt={selectedAvatar.id} /></span>
+              <span className="selected-avatar-copy"><b>{selectedAvatar.id}</b><small>{selectedAvatar.width}×{selectedAvatar.height} · {selectedAvatar.frames} 帧</small></span>
+              <span className="badge b-ok">将使用此形象</span>
+            </div>}
             <div className="field"><label>优先级</label><select value={priority} onChange={e => setPriority(Number(e.target.value))}><option value={0}>普通</option><option value={1}>高</option><option value={2}>最高</option></select></div>
             <div className="field"><label>包装</label><div className="check-row">
               <label className="check"><input type="checkbox" checked={subtitle} onChange={e => setSubtitle(e.target.checked)} /> 烧录字幕</label>

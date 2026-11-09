@@ -442,3 +442,17 @@ textarea::placeholder{color:#475569}
 .video-loading.media-video,.video-load-error.media-video{max-height:none;min-height:320px}
 .job-video.video-loading,.job-video.video-load-error{max-height:300px}
 @media(max-width:620px){.job-video.video-loading,.job-video.video-load-error{max-height:210px;min-height:180px}}
+
+/* avatar media: keep portrait fully visible */
+.asset-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+.asset .cover{height:auto;aspect-ratio:3/4;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 18%,#15243c,#050914 72%)}
+.asset .cover img{width:100%;height:100%;object-fit:contain;opacity:1;display:block}
+.selected-avatar{display:flex;align-items:center;gap:10px;margin:-2px 0 13px;padding:8px;border:1px solid var(--line);border-radius:9px;background:rgba(2,6,23,.32)}
+.selected-avatar-img{width:46px;height:58px;border-radius:6px;overflow:hidden;background:#0f172a;flex:0 0 46px}
+.selected-avatar-img img{width:100%;height:100%;object-fit:contain;display:block}
+.selected-avatar-copy{display:grid;gap:4px;min-width:0}
+.selected-avatar-copy b{font-size:11px;font-weight:550;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.selected-avatar-copy small{font:9px/1.2 var(--mono);color:var(--dim)}
+.selected-avatar .badge{margin-left:auto}
+@media(max-width:1180px){.asset-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:620px){.asset-grid{grid-template-columns:1fr}.asset .cover{max-height:360px}.selected-avatar .badge{display:none}}

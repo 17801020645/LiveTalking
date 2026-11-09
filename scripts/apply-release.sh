@@ -2,7 +2,9 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TAG="${1:-}"
-[[ -n "$TAG" ]] || { echo "usage: $0 <tag>" >&2; exit 2; }
+MODE="${2:-all}"
+[[ -n "$TAG" ]] || { echo "usage: $0 <tag> [all|ui]" >&2; exit 2; }
+case "$MODE" in all|ui) ;; *) echo "mode must be all or ui" >&2; exit 2;; esac
 export PATH="$HOME/.local/bin:$PATH"
 cd "$ROOT"
 python3 - "$TAG" <<'PY'
