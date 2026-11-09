@@ -24,7 +24,7 @@ spec:
       dnsPolicy: ClusterFirstWithHostNet
       containers:
         - name: live
-          image: nexus-app:v0.6.2
+          image: nexus-app:v0.6.5
           imagePullPolicy: IfNotPresent
           command: ["/app/scripts/run_live_container.sh"]
           envFrom:
@@ -81,9 +81,6 @@ spec:
             - name: web
               mountPath: /app/web
               readOnly: true
-            - name: ui-dist
-              mountPath: /app/ui_dist
-              readOnly: true
             - name: server-code
               mountPath: /app/server
               readOnly: true
@@ -110,10 +107,6 @@ spec:
         - name: web
           hostPath:
             path: /home/banren45/workspace/01_digital_human/LiveTalking/web
-            type: Directory
-        - name: ui-dist
-          hostPath:
-            path: /home/banren45/workspace/01_digital_human/LiveTalking/ui_dist
             type: Directory
         - name: server-code
           hostPath:
