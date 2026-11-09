@@ -14,6 +14,7 @@ export default function Live({ live, avatars, voices, notify }: {
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [connected, setConnected] = useState(false)
   const [videoReady, setVideoReady] = useState(false)
+  const transcriptTimerRef = useRef<number | null>(null)
   const [connecting, setConnecting] = useState(false)
   const [input, setInput] = useState('')
   const [chat, setChat] = useState<ChatMsg[]>([
@@ -54,6 +55,7 @@ export default function Live({ live, avatars, voices, notify }: {
   }, [sessionId])
 
   function cleanup() {
+    if (transcriptTimerRef.current) { window.clearTimeout(transcriptTimerRef.current); transcriptTimerRef.current = null }
     if (timerRef.current) window.clearTimeout(timerRef.current)
     if (recorderRef.current) { try { recorderRef.current.stop() } catch { /* */ } }
     if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop())
@@ -122,6 +124,33 @@ export default function Live({ live, avatars, voices, notify }: {
     notify('会话已结束')
   }
 
+  function pollAssistant(sid: string) {
+    if (transcriptTimerRef.current) window.clearTimeout(transcriptTimerRef.current)
+    let tries = 0
+    const tick = async () => {
+      if (!sessionId || sessionId !== sid) return
+      try {
+        const data = await api.liveTranscript(sid)
+        const reply = [...(data.messages || [])].reverse().find(m => m.role === 'assistant' && m.text.trim())
+        if (reply) {
+          const nextText = reply.text.trim()
+          setChat(c => {
+            const idx = [...c].reverse().findIndex(m => !m.me)
+            if (idx < 0) return c
+            const i = c.length - 1 - idx
+            if (c[i].text === nextText) return c
+            const next = [...c]
+            next[i] = { ...next[i], text: nextText }
+            return next
+          })
+        }
+      } catch { /* transcript is best-effort */ }
+      tries += 1
+      if (tries < 80) transcriptTimerRef.current = window.setTimeout(tick, 500)
+    }
+    void tick()
+  }
+
   async function sendText(textOverride?: string, fromTalk = false) {
     const text = (textOverride ?? input).trim()
     if (!text) return
@@ -130,6 +159,7 @@ export default function Live({ live, avatars, voices, notify }: {
       await api.human({ text, type: 'chat', interrupt: true, sessionid: sessionId })
       setChat(c => [...c, { who: fromTalk ? '你 · 按住说话' : '你', text, me: true }, { who: '数字人 · 小陈', text: '正在播报…' }])
       setInput('')
+      pollAssistant(sessionId)
     } catch (e: any) { notify(`发送失败：${e.message || e}`) }
   }
 

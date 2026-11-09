@@ -23,6 +23,7 @@ const json = (body: unknown): RequestInit => ({
 
 export const api = {
   liveStatus: () => request<LiveStatus>('/api/live/status'),
+  liveTranscript: (sessionid: string) => request<{ messages: { role: string; text: string }[] }>(`/api/live/transcript?sessionid=${encodeURIComponent(sessionid)}`),
   offlineHealth: () => request<OfflineHealth>('/api/offline/health'),
   jobs: () => request<Job[]>('/api/offline/jobs'),
   avatars: () => request<AvatarInfo[]>('/api/assets/avatars'),
