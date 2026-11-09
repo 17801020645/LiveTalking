@@ -81,6 +81,9 @@ spec:
             - name: web
               mountPath: /app/web
               readOnly: true
+            - name: ui-dist
+              mountPath: /app/ui_dist
+              readOnly: true
       volumes:
         - name: data
           hostPath:
@@ -101,6 +104,10 @@ spec:
         - name: web
           hostPath:
             path: /home/banren45/workspace/01_digital_human/LiveTalking/web
+            type: Directory
+        - name: ui-dist
+          hostPath:
+            path: /home/banren45/workspace/01_digital_human/LiveTalking/ui_dist
             type: Directory
 ---
 apiVersion: v1

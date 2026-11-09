@@ -31,7 +31,10 @@ export default function Live({ live, avatars, voices, notify }: {
   const timerRef = useRef<number | null>(null)
 
   useEffect(() => {
-    if (!avatar && avatars[0]) setAvatar(avatars[0].id)
+    if (!avatar) {
+      const preferred = avatars.find(a => a.id === 'avatar_ck') || avatars[0]
+      if (preferred) setAvatar(preferred.id)
+    }
     if (!voice && voices[0]) setVoice(voices[0].id)
   }, [avatars, voices, avatar, voice])
 
@@ -117,13 +120,13 @@ export default function Live({ live, avatars, voices, notify }: {
     notify('会话已结束')
   }
 
-  async function sendText(textOverride?: string) {
+  async function sendText(textOverride?: string, fromTalk = false) {
     const text = (textOverride ?? input).trim()
     if (!text) return
     if (!sessionId) return notify('请先连接 WebRTC')
     try {
       await api.human({ text, type: 'chat', interrupt: true, sessionid: sessionId })
-      setChat(c => [...c, { who: '你', text, me: true }, { who: '数字人 · 小陈', text: '正在播报…' }])
+      setChat(c => [...c, { who: fromTalk ? '你 · 按住说话' : '你', text, me: true }, { who: '数字人 · 小陈', text: '正在播报…' }])
       setInput('')
     } catch (e: any) { notify(`发送失败：${e.message || e}`) }
   }
@@ -187,8 +190,7 @@ export default function Live({ live, avatars, voices, notify }: {
           return
         }
         setTalkStatus(`识别：${text}`)
-        setChat(c => [...c, { who: '你 · 按住说话', text, me: true }])
-        await sendText(text)
+        await sendText(text, true)
       } catch (e: any) { setTalkStatus(`识别失败：${e.message || e}`) }
     })
   }
