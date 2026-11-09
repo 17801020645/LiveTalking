@@ -20,6 +20,8 @@ spec:
         app.kubernetes.io/part-of: nexus
     spec:
       runtimeClassName: nvidia
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
       containers:
         - name: live
           image: nexus-app:v0.6.2
@@ -39,7 +41,6 @@ spec:
           ports:
             - name: https
               containerPort: 8010
-              hostPort: 8010
           resources:
             requests:
               cpu: "1"
@@ -74,6 +75,9 @@ spec:
             - name: certs
               mountPath: /app/certs
               readOnly: true
+            - name: streamout
+              mountPath: /app/streamout
+              readOnly: true
       volumes:
         - name: data
           hostPath:
@@ -86,6 +90,10 @@ spec:
         - name: certs
           hostPath:
             path: /home/banren45/workspace/01_digital_human/LiveTalking/.worktrees/single-node-mvp/certs
+            type: Directory
+        - name: streamout
+          hostPath:
+            path: /home/banren45/workspace/01_digital_human/LiveTalking/streamout
             type: Directory
 ---
 apiVersion: v1

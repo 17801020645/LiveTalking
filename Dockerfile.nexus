@@ -23,6 +23,7 @@ COPY avatars /app/avatars
 COPY tts /app/tts
 COPY web /app/web
 COPY utils /app/utils
+COPY streamout /app/streamout
 COPY ui_dist /app/ui_dist
 COPY scripts/run_live_container.sh scripts/run_offline_container.sh /app/scripts/
 RUN chmod +x /app/scripts/run_live_container.sh /app/scripts/run_offline_container.sh
