@@ -1,16 +1,52 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { api } from '../api'
 import type { Recording, User } from '../types'
-import { Badge, Card } from './ui'
+import { Badge, Card, VideoPreview } from './ui'
 
 function fmtSize(n: number) {
   if (n > 1024 * 1024) return (n / 1024 / 1024).toFixed(1) + ' MB'
   return (n / 1024).toFixed(0) + ' KB'
 }
 
+
+function RecordingThumb({ url, onPlay }: { url: string; onPlay: () => void }) {
+  const videoRef = useRef<HTMLVideoElement | null>(null)
+  const [poster, setPoster] = useState('')
+  useEffect(() => {
+    setPoster('')
+    const video = videoRef.current
+    if (!video) return
+    const seek = () => { try { video.currentTime = Math.min(0.15, (video.duration || 1) / 10) } catch { /* metadata not ready */ } }
+    const snap = () => {
+      if (!video.videoWidth || !video.videoHeight) return
+      try {
+        const canvas = document.createElement('canvas')
+        canvas.width = video.videoWidth
+        canvas.height = video.videoHeight
+        canvas.getContext('2d')?.drawImage(video, 0, 0, canvas.width, canvas.height)
+        setPoster(canvas.toDataURL('image/jpeg', 0.72))
+      } catch { /* CORS / decode */ }
+    }
+    video.addEventListener('loadedmetadata', seek)
+    video.addEventListener('seeked', snap)
+    return () => {
+      video.removeEventListener('loadedmetadata', seek)
+      video.removeEventListener('seeked', snap)
+    }
+  }, [url])
+  return (
+    <button className="recording-thumb" onClick={onPlay} aria-label="播放录制预览">
+      {poster ? <img src={poster} alt="录制画面预览" /> : <video ref={videoRef} src={`${url}#t=0.1`} muted playsInline preload="metadata" />}
+      <span className="recording-play">▶</span>
+    </button>
+  )
+}
+
 export default function Recordings({ user, notify }: { user: User; notify: (s: string) => void }) {
   const [items, setItems] = useState<Recording[]>([])
   const [loading, setLoading] = useState(true)
+  const [playing, setPlaying] = useState<Recording | null>(null)
 
   async function load() {
     setLoading(true)
@@ -46,11 +82,11 @@ export default function Recordings({ user, notify }: { user: User; notify: (s: s
               <tbody>
                 {items.map(r => (
                   <tr key={r.id}>
-                    <td className="name">{r.id.slice(0, 12)}…</td>
+                    <td><div className="recording-name"><RecordingThumb url={r.url} onPlay={() => setPlaying(r)} /><div><b>{r.id.slice(0, 12)}…</b><small className="mono">{r.name}</small></div></div></td>
                     <td className="mono">{fmtSize(r.size)}</td>
                     <td className="mono">{new Date(r.mtime * 1000).toLocaleString('zh-CN')}</td>
                     <td>
-                      <a className="btn ghost mini-btn" href={r.url} target="_blank" rel="noreferrer">播放</a>{' '}
+                      <button className="btn ghost mini-btn" onClick={() => setPlaying(r)}>播放</button>{' '}
                       <a className="btn ghost mini-btn" href={r.url} download>下载</a>{' '}
                       {user.role === 'admin' && <button className="btn ghost mini-btn" onClick={() => clip(r.id)}>剪辑</button>}{' '}
                       {user.role === 'admin' && <button className="btn danger mini-btn" onClick={() => remove(r.id)}>删除</button>}
@@ -63,6 +99,14 @@ export default function Recordings({ user, notify }: { user: User; notify: (s: s
           <div className="hint" style={{ padding: '10px 8px' }}><Badge tone="idle">MP4</Badge> 录制由 LiveTalking 的 /record 生成，保存在 data/record/。</div>
         </div>
       </Card>
+      {playing && createPortal(
+        <div className="media-modal" onClick={() => setPlaying(null)}>
+          <div className="media-dialog" onClick={e => e.stopPropagation()}>
+            <button className="media-close" onClick={() => setPlaying(null)} aria-label="关闭播放器">×</button>
+            <VideoPreview className="media-video" src={playing.url} autoPlay />
+            <div className="media-caption"><span>{playing.name}</span><span className="mono">{fmtSize(playing.size)}</span></div>
+          </div>
+        </div>, document.body)}
     </div>
   )
 }

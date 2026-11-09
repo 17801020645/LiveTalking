@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { api } from '../api'
 import type { AvatarInfo, Job, VoiceInfo } from '../types'
 import { AvatarImg, parseQc, qcText, timeAgo } from './Overview'
-import { Badge, Card, Progress, qcTone, statusTone } from './ui'
+import { Badge, Card, Progress, VideoPreview, qcTone, statusTone } from './ui'
 
 type Filter = 'all' | 'running' | 'done' | 'failed'
 
@@ -141,7 +141,7 @@ export default function Offline({ jobs, avatars, voices, bgm, initialAvatarId, d
                   {filtered.map(job => (
                     <tr key={job.id} className="task-row" onClick={() => setSelected(job)}>
                       <td><div className="title"><span className="avatar-dot" /><span className="name">{job.text.slice(0, 16) || '(无文案)'}</span></div><div className="mono">{timeAgo(job.created_at)} · {job.id.slice(0, 6)}</div></td>
-                      <td className="mono">{job.avatar_id}</td>
+                      <td><div className="avatar-cell"><span className="table-avatar"><AvatarImg id={job.avatar_id} alt={job.avatar_id} /></span><span className="mono">{job.avatar_id}</span></div></td>
                       <td><Progress value={job.progress} wait={job.stage === 'waiting_live'} /></td>
                       <td>{job.stage === 'waiting_live' ? <Badge tone="wait">等待实时空闲</Badge> : <Badge tone={statusTone(job.status)}>{job.status === 'success' ? '完成' : job.status === 'failed' ? '失败' : job.status === 'running' ? '渲染中' : '排队中'}</Badge>}</td>
                       <td><Badge tone={qcTone(job.qc_status)}>{qcText(job)}</Badge></td>
@@ -162,6 +162,12 @@ export default function Offline({ jobs, avatars, voices, bgm, initialAvatarId, d
             <div className="eyebrow">JOB DETAIL</div>
             <h3>{selected.text.slice(0, 24) || '未命名任务'}</h3>
             <p className="sub">{selected.avatar_id} · {selected.voice} · {selected.id.slice(0, 8)}</p>
+            <div className="job-media">
+              {selected.status === 'success'
+                ? <VideoPreview className="job-video" poster={api.avatarFrame(selected.avatar_id)} src={`/api/offline/jobs/${selected.id}/download`} />
+                : <div className="job-avatar-large"><AvatarImg id={selected.avatar_id} alt={selected.avatar_id} /><span>{selected.status === 'failed' ? '任务失败，未生成成片' : '正在生成成片…'}</span></div>}
+              <div className="job-media-foot"><span>{selected.status === 'success' ? '成片预览 · 可直接播放' : '形象预览'}</span><span className="mono">{selected.avatar_id}</span></div>
+            </div>
             <div className="section"><h4>状态</h4><p><Badge tone={selected.stage === 'waiting_live' ? 'wait' : statusTone(selected.status)}>{selected.stage === 'waiting_live' ? '等待实时空闲' : selected.status}</Badge> <span className="hint">{selected.progress}% · 优先级 {selected.priority ?? 0}</span></p>{selected.error && <p className="bad-text">{selected.error}</p>}</div>
             <div className="section"><h4>包装</h4><div className="kv"><span>字幕</span><b>{selected.subtitle ? '已开启' : '关闭'}</b></div><div className="kv"><span>封面</span><b>{selected.cover ? '已生成' : '关闭'}</b></div><div className="kv"><span>BGM</span><b>{selected.bgm || '无'}</b></div></div>
             <div className="section"><h4>质检</h4>{(() => {

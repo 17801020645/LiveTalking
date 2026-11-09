@@ -1,5 +1,5 @@
 import type { Job } from '../types'
-import { parseQc, qcText, timeAgo } from './Overview'
+import { AvatarImg, parseQc, qcText, timeAgo } from './Overview'
 import { Badge, Card, qcTone } from './ui'
 
 export default function QC({ jobs }: { jobs: Job[] }) {
@@ -19,7 +19,7 @@ export default function QC({ jobs }: { jobs: Job[] }) {
         <div className="card-body tight">
           {qcJobs.length === 0 ? <div className="empty">暂无质检记录</div> : (
             <table className="table">
-              <thead><tr><th>任务</th><th>人脸</th><th>黑帧</th><th>闪烁</th><th>SyncNet</th><th>结论</th><th>时间</th></tr></thead>
+              <thead><tr><th>任务</th><th>形象</th><th>人脸</th><th>黑帧</th><th>闪烁</th><th>SyncNet</th><th>结论</th><th>时间</th></tr></thead>
               <tbody>
                 {qcJobs.map(job => {
                   const qc = parseQc(job)
@@ -27,6 +27,7 @@ export default function QC({ jobs }: { jobs: Job[] }) {
                   return (
                     <tr key={job.id}>
                       <td className="name">{job.text.slice(0, 18) || job.id.slice(0, 8)}</td>
+                      <td><div className="avatar-cell"><span className="table-avatar"><AvatarImg id={job.avatar_id} alt={job.avatar_id} /></span><span className="mono">{job.avatar_id}</span></div></td>
                       <td className="mono">{qc?.face_missing_ratio ?? '—'}</td>
                       <td className="mono">{qc?.black_ratio ?? '—'}</td>
                       <td className="mono">{qc?.flicker_ratio ?? '—'}</td>

@@ -65,7 +65,7 @@ export default function Overview({ live, jobs, avatars, onView }: {
       </div>
 
       <div className="split">
-        <Card title="实时会话 / LIVE OPS" meta="WS · 25 FPS" actions={<button className="btn ghost mini-btn" onClick={() => onView('live')}>进入控制台 →</button>}>
+        <Card title="实时会话 / LIVE OPS" meta="WS · 25 FPS" actions={<button className="btn primary" onClick={() => onView('live')}>进入控制台 →</button>}>
           <div className="card-body sessions">
             {live.sessions.length === 0 && (
               <div className="empty">暂无实时会话。最多支持 {live.max} 路，第 {live.max + 1} 路会明确提示已满。</div>
@@ -103,7 +103,7 @@ export default function Overview({ live, jobs, avatars, onView }: {
       </div>
 
       <div className="split">
-        <Card title="离线队列" meta={`${jobs.length} JOBS · ${running} RUNNING`} actions={<button className="btn ghost mini-btn" onClick={() => onView('offline')}>全部任务 →</button>}>
+        <Card title="离线队列" meta={`${jobs.length} JOBS · ${running} RUNNING`} actions={<button className="btn" onClick={() => onView('offline')}>全部任务 →</button>}>
           <div className="card-body tight">
             {jobs.length === 0 ? <div className="empty">暂无离线任务。新建一条文案即可开始。</div> : (
               <table className="table">
@@ -112,7 +112,7 @@ export default function Overview({ live, jobs, avatars, onView }: {
                   {jobs.slice(0, 4).map(job => (
                     <tr key={job.id} onClick={() => onView('offline')} className="task-row">
                       <td><div className="title"><span className="avatar-dot" /><span className="name">{job.text.slice(0, 18) || '(无文案)'}</span></div><div className="mono">{timeAgo(job.created_at)}</div></td>
-                      <td className="mono">{job.avatar_id}</td>
+                      <td><div className="avatar-cell"><span className="table-avatar"><AvatarImg id={job.avatar_id} alt={job.avatar_id} /></span><span className="mono">{job.avatar_id}</span></div></td>
                       <td><Progress value={job.progress} wait={job.stage === 'waiting_live'} /></td>
                       <td>{job.stage === 'waiting_live' ? <Badge tone="wait">等待实时空闲</Badge> : <Badge tone={statusTone(job.status)}>{job.status === 'success' ? '完成' : job.status === 'failed' ? '失败' : job.status === 'running' ? '渲染中' : '排队中'}</Badge>}</td>
                       <td><Badge tone={qcTone(job.qc_status)}>{qcText(job)}</Badge></td>
@@ -136,7 +136,7 @@ export default function Overview({ live, jobs, avatars, onView }: {
             ))}
             <div className="list-row no-border" style={{ paddingTop: 12 }}>
               <span className="hint">SyncNet · 人脸 · 黑帧 · 闪烁</span>
-              <button className="btn ghost mini-btn" style={{ marginLeft: 'auto' }} onClick={() => onView('qc')}>质检中心 →</button>
+              <button className="btn" style={{ marginLeft: 'auto' }} onClick={() => onView('qc')}>质检中心 →</button>
             </div>
           </div>
         </Card>

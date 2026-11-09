@@ -394,3 +394,51 @@ textarea::placeholder{color:#475569}
   .present-page{overflow:auto}
 }
 .wb-detail .kv b{min-width:0;max-width:62%;overflow-wrap:anywhere}
+
+/* media-first tables / previews */
+.avatar-cell{display:flex;align-items:center;gap:8px;min-width:120px}
+.table-avatar{width:28px;height:36px;border-radius:5px;overflow:hidden;background:#0f172a;flex:0 0 28px;border:1px solid var(--line)}
+.table-avatar img{width:100%;height:100%;object-fit:cover;object-position:center top;display:block}
+.task-row .avatar-cell .mono{font-size:9px;color:var(--muted)}
+
+.present-chat{align-content:start;align-items:start;grid-auto-rows:max-content}
+.present-msg{align-self:start}
+
+.job-media{margin:13px 0 3px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#020617}
+.job-video{display:block;width:100%;max-height:300px;background:#000;object-fit:contain}
+.job-avatar-large{position:relative;height:220px;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 20%,#13233a,#050914)}
+.job-avatar-large img{width:100%;height:100%;object-fit:contain;opacity:.82}
+.job-avatar-large span{position:absolute;left:10px;bottom:10px;padding:5px 7px;border-radius:5px;background:rgba(2,6,23,.72);font:9px/1.2 var(--mono);color:var(--muted)}
+.job-media-foot{display:flex;justify-content:space-between;gap:8px;padding:8px 10px;border-top:1px solid var(--line);font-size:9px;color:var(--dim)}
+.job-media-foot .mono{color:var(--cyan)}
+
+.recording-name{display:flex;align-items:center;gap:10px;min-width:180px}
+.recording-name > div{display:grid;gap:4px;min-width:0}
+.recording-name b{font-size:11px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:170px}
+.recording-name small{font-size:9px;color:var(--dim);max-width:170px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.recording-thumb{position:relative;width:76px;height:48px;flex:0 0 76px;border:1px solid var(--line2);border-radius:6px;overflow:hidden;background:#020617;padding:0;cursor:pointer}
+.recording-thumb img,.recording-thumb video{width:100%;height:100%;object-fit:cover;display:block;background:#020617}
+.recording-play{position:absolute;inset:0;display:grid;place-items:center;background:linear-gradient(180deg,rgba(2,6,23,.05),rgba(2,6,23,.45));color:#e0f2fe;font-size:14px;opacity:.9}
+.recording-thumb:hover .recording-play{background:rgba(34,211,238,.26);color:#fff}
+
+.media-modal{position:fixed;inset:0;z-index:80;display:grid;place-items:center;padding:24px;background:rgba(2,6,23,.84);backdrop-filter:blur(12px)}
+.media-dialog{position:relative;width:min(1000px,92vw);max-height:92vh;background:#050b16;border:1px solid var(--line2);border-radius:14px;overflow:hidden;box-shadow:0 30px 100px rgba(0,0,0,.6)}
+.media-video{display:block;width:100%;max-height:76vh;background:#000;object-fit:contain}
+.media-caption{display:flex;justify-content:space-between;gap:12px;padding:11px 14px;border-top:1px solid var(--line);font-size:11px;color:var(--muted)}
+.media-caption .mono{font-size:9px;color:var(--dim)}
+.media-close{position:absolute;z-index:2;right:10px;top:10px;width:32px;height:32px;border-radius:50%;border:1px solid rgba(255,255,255,.2);background:rgba(2,6,23,.7);color:#fff;font-size:20px;line-height:1;cursor:pointer}
+
+@media(max-width:620px){
+  .job-video{max-height:210px}
+  .job-avatar-large{height:180px}
+  .recording-name{min-width:0}
+  .recording-thumb{width:58px;height:40px;flex-basis:58px}
+  .recording-name b,.recording-name small{max-width:120px}
+  .media-modal{padding:12px}
+  .media-dialog{width:100%}
+}
+.video-loading,.video-load-error{min-height:220px;display:grid;place-items:center;gap:8px;background:radial-gradient(ellipse at 50% 30%,#13233a,#050914);color:var(--dim);font:10px/1.4 var(--mono);text-align:center;padding:16px}
+.video-load-error{color:#fecdd3}
+.video-loading.media-video,.video-load-error.media-video{max-height:none;min-height:320px}
+.job-video.video-loading,.job-video.video-load-error{max-height:300px}
+@media(max-width:620px){.job-video.video-loading,.job-video.video-load-error{max-height:210px;min-height:180px}}

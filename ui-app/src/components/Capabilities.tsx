@@ -71,7 +71,7 @@ export default function Capabilities({ avatars, jobs, onWorkbench, onOffline, on
                   {recentJobs.map(j => (
                     <tr key={j.id} onClick={() => onOffline(j.avatar_id)} className="task-row">
                       <td><div className="name">{j.text.slice(0, 18) || '(无文案)'}</div><div className="mono">{timeAgo(j.created_at)}</div></td>
-                      <td className="mono">{j.avatar_id}</td>
+                      <td><div className="avatar-cell"><span className="table-avatar"><AvatarImg id={j.avatar_id} alt={j.avatar_id} /></span><span className="mono">{j.avatar_id}</span></div></td>
                       <td><Progress value={j.progress} wait={j.stage === 'waiting_live'} /></td>
                       <td><Badge tone={statusTone(j.status)}>{j.status === 'success' ? '完成' : j.status === 'failed' ? '失败' : j.status === 'running' ? '渲染中' : '排队中'}</Badge></td>
                       <td><Badge tone={qcTone(j.qc_status)}>{qcText(j)}</Badge></td>

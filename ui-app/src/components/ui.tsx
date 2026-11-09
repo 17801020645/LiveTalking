@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 
 export type Tone = 'live' | 'run' | 'wait' | 'ok' | 'fail' | 'idle'
@@ -47,4 +48,34 @@ export function qcTone(status?: string | null): Tone {
   if (status === 'fail') return 'fail'
   if (status === 'error') return 'fail'
   return 'idle'
+}
+
+export function VideoPreview({ src, poster, className = '', autoPlay = false }: {
+  src: string; poster?: string; className?: string; autoPlay?: boolean
+}) {
+  const [url, setUrl] = useState('')
+  const [error, setError] = useState('')
+  useEffect(() => {
+    let cancelled = false
+    let objectUrl = ''
+    setUrl(''); setError('')
+    fetch(src)
+      .then(res => {
+        if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
+        return res.blob()
+      })
+      .then(blob => {
+        if (cancelled) return
+        objectUrl = URL.createObjectURL(blob)
+        setUrl(objectUrl)
+      })
+      .catch(err => { if (!cancelled) setError(err.message || '视频加载失败') })
+    return () => {
+      cancelled = true
+      if (objectUrl) URL.revokeObjectURL(objectUrl)
+    }
+  }, [src])
+  if (error) return <div className={`video-load-error ${className}`}><span>视频加载失败</span><a className="btn ghost mini-btn" href={src} download>下载原文件</a></div>
+  if (!url) return <div className={`video-loading ${className}`}><span>加载视频预览…</span></div>
+  return <video className={className} src={url} poster={poster} controls autoPlay={autoPlay} playsInline preload="metadata" />
 }
