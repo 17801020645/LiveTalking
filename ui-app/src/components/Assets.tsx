@@ -103,6 +103,23 @@ export default function Assets({ avatars, voices, bgm, user, live, refresh, noti
           </div>
         </div>
       )}
+      <div className="grid-3" style={{ marginTop: 0, marginBottom: 14 }}>
+        <Card title="音色 / VOICES" meta="EDGETTS">
+          <div className="card-body">
+            {voices.map(v => <div className="voice-row" key={v.id}><b>{v.name}</b><Badge tone="ok">可用</Badge><span className="mono">{v.id}</span></div>)}
+            <div className="voice-row"><b>CosyVoice2 · 克隆</b><Badge tone="wait">未接</Badge><span className="mono">P4 / 需 GPU</span></div>
+          </div>
+        </Card>
+        <Card title="包装 / PACKS" meta="BGM · 字幕">
+          <div className="card-body list">
+            {bgm.map(b => <div className="list-row" key={b}><b>{b}</b><Badge tone="idle">BGM</Badge><span className="mono">12%</span></div>)}
+            {!bgm.length && <div className="list-row"><span className="hint">data/bgm 下暂无音乐</span></div>}
+            <div className="list-row"><b>默认字幕样式</b><Badge tone="ok">Noto CJK</Badge><span className="mono">44px</span></div>
+            <div className="list-row"><b>封面模板 · 标题</b><Badge tone="ok">第一句</Badge><span className="mono">JPG</span></div>
+          </div>
+        </Card>
+      </div>
+
       <div className="asset-toolbar">
         <div className="asset-search">
           <span aria-hidden="true">⌕</span>
@@ -131,22 +148,6 @@ export default function Assets({ avatars, voices, bgm, user, live, refresh, noti
         <button className="btn ghost mini-btn" disabled={page <= 1} onClick={() => setPage(p => Math.max(1, p - 1))}>‹ 上一页</button>
         <span className="hint">第 {page} / {totalPages} 页 · 共 {filtered.length} 个</span>
         <button className="btn ghost mini-btn" disabled={page >= totalPages} onClick={() => setPage(p => Math.min(totalPages, p + 1))}>下一页 ›</button>
-      </div>
-      <div className="grid-3" style={{ marginTop: 14 }}>
-        <Card title="音色 / VOICES" meta="EDGETTS">
-          <div className="card-body">
-            {voices.map(v => <div className="voice-row" key={v.id}><b>{v.name}</b><Badge tone="ok">可用</Badge><span className="mono">{v.id}</span></div>)}
-            <div className="voice-row"><b>CosyVoice2 · 克隆</b><Badge tone="wait">未接</Badge><span className="mono">P4 / 需 GPU</span></div>
-          </div>
-        </Card>
-        <Card title="包装 / PACKS" meta="BGM · 字幕">
-          <div className="card-body list">
-            {bgm.map(b => <div className="list-row" key={b}><b>{b}</b><Badge tone="idle">BGM</Badge><span className="mono">12%</span></div>)}
-            {!bgm.length && <div className="list-row"><span className="hint">data/bgm 下暂无音乐</span></div>}
-            <div className="list-row"><b>默认字幕样式</b><Badge tone="ok">Noto CJK</Badge><span className="mono">44px</span></div>
-            <div className="list-row"><b>封面模板 · 标题</b><Badge tone="ok">第一句</Badge><span className="mono">JPG</span></div>
-          </div>
-        </Card>
       </div>
     </div>
   )
