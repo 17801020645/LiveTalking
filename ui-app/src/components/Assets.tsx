@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { api } from '../api'
 import type { AvatarInfo, AvatarTask, LiveStatus, User, VoiceInfo } from '../types'
 import { Badge, Card } from './ui'
@@ -13,6 +13,22 @@ export default function Assets({ avatars, voices, bgm, user, live, refresh, noti
   const [task, setTask] = useState<AvatarTask | null>(null)
   const [tasks, setTasks] = useState<AvatarTask[]>([])
   const [error, setError] = useState('')
+  const [query, setQuery] = useState('')
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(18)
+
+  const sorted = useMemo(
+    () => [...avatars].sort((a, b) => Number(!!b.active) - Number(!!a.active) || a.id.localeCompare(b.id)),
+    [avatars],
+  )
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    return q ? sorted.filter(a => a.id.toLowerCase().includes(q)) : sorted
+  }, [sorted, query])
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize))
+  useEffect(() => { setPage(1) }, [query, pageSize])
+  useEffect(() => { setPage(p => Math.min(p, totalPages)) }, [totalPages])
+  const pageItems = filtered.slice((page - 1) * pageSize, page * pageSize)
 
   async function loadTasks() {
     if (user.role !== 'admin') return
@@ -87,15 +103,34 @@ export default function Assets({ avatars, voices, bgm, user, live, refresh, noti
           </div>
         </div>
       )}
+      <div className="asset-toolbar">
+        <div className="asset-search">
+          <span aria-hidden="true">⌕</span>
+          <input value={query} onChange={e => setQuery(e.target.value)} placeholder="搜索形象 ID…" aria-label="搜索形象" />
+        </div>
+        <span className="asset-count">{filtered.length} 个形象{query ? ` · 匹配“${query}”` : ''}</span>
+        <label className="asset-page-size">每页
+          <select value={pageSize} onChange={e => setPageSize(Number(e.target.value))} aria-label="每页数量">
+            <option value={12}>12</option><option value={18}>18</option><option value={24}>24</option><option value={48}>48</option>
+          </select>
+        </label>
+      </div>
+
       <div className="asset-grid">
-        {avatars.map(a => (
+        {pageItems.map(a => (
           <div className="card asset" key={a.id}>
-            <div className="cover"><img src={api.avatarFrame(a.id)} alt={a.id} onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }} /></div>
-            <h4>{a.id}</h4><p>{a.width}×{a.height} · {a.frames} frames</p>
+            <div className="cover"><img src={api.avatarFrame(a.id)} alt={a.id} loading="lazy" onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }} /></div>
+            <h4 title={a.id}>{a.id}</h4><p>{a.width}×{a.height} · {a.frames} 帧</p>
             <div className="foot"><Badge tone="ok">可用</Badge><button className="btn ghost mini-btn" style={{ marginLeft: 'auto' }} onClick={() => onOpenAvatar?.(a.id)}>工作台 →</button></div>
           </div>
         ))}
-        <div className="card asset"><div className="cover placeholder">1080P / TODO</div><h4>avatar_v1</h4><p>1080×1920 · 待拍摄</p><div className="foot"><Badge tone="wait">待补素材</Badge><span className="hint" style={{ marginLeft: 'auto' }}>iPhone 4K</span></div></div>
+        {!filtered.length && <div className="empty asset-empty">没有匹配的形象</div>}
+      </div>
+
+      <div className="asset-pager">
+        <button className="btn ghost mini-btn" disabled={page <= 1} onClick={() => setPage(p => Math.max(1, p - 1))}>‹ 上一页</button>
+        <span className="hint">第 {page} / {totalPages} 页 · 共 {filtered.length} 个</span>
+        <button className="btn ghost mini-btn" disabled={page >= totalPages} onClick={() => setPage(p => Math.min(totalPages, p + 1))}>下一页 ›</button>
       </div>
       <div className="grid-3" style={{ marginTop: 14 }}>
         <Card title="音色 / VOICES" meta="EDGETTS">
