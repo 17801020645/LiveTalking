@@ -1,4 +1,6 @@
-export type View = 'overview' | 'offline' | 'live' | 'assets' | 'recordings' | 'qc' | 'admin' | 'settings'
+export type View = 'overview' | 'workbench' | 'capabilities' | 'offline' | 'live' | 'present' | 'assets' | 'recordings' | 'qc' | 'admin' | 'settings'
+
+export interface Route { view: View; avatarId?: string }
 
 export interface Job {
   id: string

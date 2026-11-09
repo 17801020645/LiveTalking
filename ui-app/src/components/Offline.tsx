@@ -6,12 +6,15 @@ import { Badge, Card, Progress, qcTone, statusTone } from './ui'
 
 type Filter = 'all' | 'running' | 'done' | 'failed'
 
-export default function Offline({ jobs, avatars, voices, bgm, refresh, notify }: {
-  jobs: Job[]; avatars: AvatarInfo[]; voices: VoiceInfo[]; bgm: string[];
+export default function Offline({ jobs, avatars, voices, bgm, initialAvatarId, defaultAvatarId, refresh, notify }: {
+  jobs: Job[]; avatars: AvatarInfo[]; voices: VoiceInfo[]; bgm: string[]; initialAvatarId?: string; defaultAvatarId?: string;
   refresh: () => void; notify: (s: string) => void
 }) {
   const [text, setText] = useState('大家好，我是数字人小陈。今天用一分钟，带你看懂我们的新产品。')
-  const [avatar, setAvatar] = useState('')
+  const [avatar, setAvatar] = useState(() => {
+    const preferred = initialAvatarId || defaultAvatarId
+    return preferred && avatars.some(a => a.id === preferred) ? preferred : ''
+  })
   const [voice, setVoice] = useState('')
   const [subtitle, setSubtitle] = useState(true)
   const [cover, setCover] = useState(true)
@@ -24,7 +27,7 @@ export default function Offline({ jobs, avatars, voices, bgm, refresh, notify }:
   const batchRef = useRef<HTMLInputElement | null>(null)
 
   useEffect(() => {
-    if (!avatar && avatars[0]) setAvatar(avatars[0].id)
+    if (!avatar && avatars[0]) setAvatar(defaultAvatarId && avatars.some(a => a.id === defaultAvatarId) ? defaultAvatarId : avatars[0].id)
     if (!voice && voices[0]) setVoice(voices[0].id)
   }, [avatars, voices, avatar, voice])
 

@@ -6,10 +6,14 @@ import { Badge, Card } from './ui'
 
 type ChatMsg = { who: string; text: string; me?: boolean }
 
-export default function Live({ live, avatars, voices, notify }: {
-  live: LiveStatus; avatars: AvatarInfo[]; voices: VoiceInfo[]; notify: (s: string) => void
+export default function Live({ live, avatars, voices, notify, initialAvatarId, defaultAvatarId, mode = 'ops', onExit }: {
+  live: LiveStatus; avatars: AvatarInfo[]; voices: VoiceInfo[]; notify: (s: string) => void;
+  initialAvatarId?: string; defaultAvatarId?: string; mode?: 'ops' | 'present'; onExit?: () => void
 }) {
-  const [avatar, setAvatar] = useState('')
+  const [avatar, setAvatar] = useState(() => {
+    const preferred = initialAvatarId || defaultAvatarId
+    return preferred && avatars.some(a => a.id === preferred) ? preferred : ''
+  })
   const [voice, setVoice] = useState('')
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [connected, setConnected] = useState(false)
@@ -18,7 +22,7 @@ export default function Live({ live, avatars, voices, notify }: {
   const [connecting, setConnecting] = useState(false)
   const [input, setInput] = useState('')
   const [chat, setChat] = useState<ChatMsg[]>([
-    { who: '数字人 · 小陈', text: '点击“连接”后，可以输入文本或按住说话。' },
+    { who: '数字人 · 小陈', text: '你好，我是数字人小陈。可以输入文本，或按住说话。' },
   ])
   const [talkStatus, setTalkStatus] = useState('')
   const [recording, setRecording] = useState(false)
@@ -31,14 +35,25 @@ export default function Live({ live, avatars, voices, notify }: {
   const recorderRef = useRef<MediaRecorder | null>(null)
   const chunksRef = useRef<Blob[]>([])
   const timerRef = useRef<number | null>(null)
+  const autoStartedRef = useRef(false)
 
   useEffect(() => {
     if (!avatar) {
-      const preferred = avatars.find(a => a.id === 'avatar_ck') || avatars[0]
+      const preferred = avatars.find(a => a.id === defaultAvatarId) || avatars.find(a => a.id === 'avatar_ck') || avatars[0]
       if (preferred) setAvatar(preferred.id)
     }
     if (!voice && voices[0]) setVoice(voices[0].id)
   }, [avatars, voices, avatar, voice])
+
+  useEffect(() => {
+    if (mode !== 'present' || !avatar || autoStartedRef.current || sessionId || connecting) return
+    const t = window.setTimeout(() => {
+      if (autoStartedRef.current) return
+      autoStartedRef.current = true
+      void connect()
+    }, 350)
+    return () => window.clearTimeout(t)
+  }, [mode, avatar, sessionId, connecting])
 
   useEffect(() => () => { cleanup() }, [])
 
@@ -122,6 +137,14 @@ export default function Live({ live, avatars, voices, notify }: {
     if (audioRef.current) audioRef.current.srcObject = null
     setTalkStatus('')
     notify('会话已结束')
+  }
+
+  async function exitPresent() {
+    try {
+      if (sessionId) await disconnect()
+    } finally {
+      onExit?.()
+    }
   }
 
   function pollAssistant(sid: string) {
@@ -229,6 +252,62 @@ export default function Live({ live, avatars, voices, notify }: {
 
   const activeSessions = live.sessions
   const maxed = live.active >= live.max || activeSessions.length >= live.max
+
+  if (mode === 'present') {
+    return (
+      <div className="present-page">
+        <header className="present-top">
+          <div className="present-identity">
+            <div className="present-mark">◈</div>
+            <div><b>{avatar || 'NEXUS'}</b><span>数字人展示 · 全屏对话</span></div>
+          </div>
+          <div className="present-status">
+            <Badge tone={connected ? 'live' : 'idle'}>{connected ? '● LIVE' : 'IDLE'}</Badge>
+            <span className="mono">{sessionId ? sessionId.slice(0, 8) + '…' : '未连接'}</span>
+            <button className="btn ghost" onClick={exitPresent}>退出展示</button>
+          </div>
+        </header>
+        <div className="present-grid">
+          <section className="present-stage-wrap">
+            <div className="present-stage">
+              {!connected && <div className="present-avatar-fallback"><AvatarImg id={avatar} alt={avatar} /><span>{connecting ? '正在连接数字人…' : '点击连接，开始实时对话'}</span></div>}
+              <video ref={videoRef} autoPlay playsInline muted={false} onLoadedMetadata={() => setVideoReady(true)} style={{ opacity: videoReady ? 1 : 0 }} />
+              <audio ref={audioRef} autoPlay />
+              <div className="present-stage-hud"><Badge tone={connected ? 'live' : 'idle'}>{connected ? '● LIVE' : 'IDLE'}</Badge><Badge tone="idle">25 FPS</Badge><Badge tone="idle">WebRTC</Badge></div>
+              <div className="present-stage-foot"><span>{avatar || '—'}</span><span>{connected ? (videoReady ? '已连接' : '连接中') : '待连接'}</span></div>
+            </div>
+            <div className="present-controls">
+              {!sessionId
+                ? <button className="btn primary" onClick={connect} disabled={connecting || maxed}>{connecting ? '连接中…' : maxed ? '会话已满' : '◉ 开始对话'}</button>
+                : <>
+                    <button className="btn" onClick={interrupt}>■ 打断</button>
+                    <button className={`btn ${videoRecording ? 'danger' : ''}`} onClick={toggleRecord}>{videoRecording ? '■ 停止录制' : '● 录制'}</button>
+                    {recordReady && <a className="btn" href={`/record/${sessionId}`} target="_blank" rel="noreferrer">下载录像</a>}
+                    <button className="btn danger" onClick={disconnect}>结束会话</button>
+                  </>}
+            </div>
+          </section>
+          <aside className="present-chat-panel">
+            <div className="present-chat-head"><span>对话 / TRANSCRIPT</span><Badge tone="idle">ASR + LLM</Badge></div>
+            <div className="present-chat">
+              {chat.map((m, i) => (
+                <div key={i} className={`present-msg ${m.me ? 'me' : ''}`}><span className="who">{m.who}</span>{m.text}</div>
+              ))}
+            </div>
+            <div className="present-composer">
+              <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') sendText() }} placeholder="输入文本，或按住说话…" disabled={!sessionId} />
+              <button className="icon-btn" title="发送" onClick={() => sendText()} disabled={!sessionId}>➤</button>
+              <button className={`icon-btn ${recording ? 'recording' : ''}`} title="按住说话"
+                onPointerDown={e => { e.preventDefault(); startTalk() }} onPointerUp={e => { e.preventDefault(); stopTalk() }}
+                onPointerLeave={e => { e.preventDefault(); stopTalk() }} onPointerCancel={() => stopTalk()} disabled={!sessionId}>◉</button>
+            </div>
+            <div className={`hint ${talkStatus.includes('失败') || talkStatus.includes('静音') ? 'bad-text' : ''}`}>{talkStatus || '按住说话，松开后自动识别并发送'}</div>
+            <div className="present-footnote">实时会话优先占用 GPU · 最多 {live.max} 路 · 本页只保留对话与舞台</div>
+          </aside>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="page">

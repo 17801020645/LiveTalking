@@ -3,9 +3,9 @@ import { api } from '../api'
 import type { AvatarInfo, AvatarTask, LiveStatus, User, VoiceInfo } from '../types'
 import { Badge, Card } from './ui'
 
-export default function Assets({ avatars, voices, bgm, user, live, refresh, notify }: {
+export default function Assets({ avatars, voices, bgm, user, live, refresh, notify, onOpenAvatar }: {
   avatars: AvatarInfo[]; voices: VoiceInfo[]; bgm: string[]; user: User; live: LiveStatus;
-  refresh: () => void; notify: (s: string) => void
+  refresh: () => void; notify: (s: string) => void; onOpenAvatar?: (id: string) => void
 }) {
   const [uploading, setUploading] = useState(false)
   const [avatarId, setAvatarId] = useState('avatar_v' + new Date().toISOString().slice(5, 10).replace('-', ''))
@@ -92,7 +92,7 @@ export default function Assets({ avatars, voices, bgm, user, live, refresh, noti
           <div className="card asset" key={a.id}>
             <div className="cover"><img src={api.avatarFrame(a.id)} alt={a.id} onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }} /></div>
             <h4>{a.id}</h4><p>{a.width}×{a.height} · {a.frames} frames</p>
-            <div className="foot"><Badge tone="ok">可用</Badge><span className="hint" style={{ marginLeft: 'auto' }}>MuseTalk</span></div>
+            <div className="foot"><Badge tone="ok">可用</Badge><button className="btn ghost mini-btn" style={{ marginLeft: 'auto' }} onClick={() => onOpenAvatar?.(a.id)}>工作台 →</button></div>
           </div>
         ))}
         <div className="card asset"><div className="cover placeholder">1080P / TODO</div><h4>avatar_v1</h4><p>1080×1920 · 待拍摄</p><div className="foot"><Badge tone="wait">待补素材</Badge><span className="hint" style={{ marginLeft: 'auto' }}>iPhone 4K</span></div></div>

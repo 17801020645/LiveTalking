@@ -2,6 +2,8 @@ import type { LiveStatus, User, View } from '../types'
 
 const nav: { id: View; label: string; icon: string; tag?: string; adminOnly?: boolean }[] = [
   { id: 'overview', label: '总览', icon: '◫' },
+  { id: 'workbench', label: '数字人工作台', icon: '◈' },
+  { id: 'capabilities', label: '功能中心', icon: '⊞' },
   { id: 'offline', label: '离线任务', icon: '▤' },
   { id: 'live', label: '实时会话', icon: '◉' },
   { id: 'assets', label: '资产库', icon: '◇' },
@@ -14,7 +16,7 @@ export default function Shell({ view, onView, live, jobs, user, onLogout, childr
   view: View; onView: (v: View) => void; live: LiveStatus; jobs: number; user: User; onLogout: () => void; children: React.ReactNode
 }) {
   const titles: Record<View, string> = {
-    overview: '总览', offline: '离线任务', live: '实时会话', assets: '资产库', recordings: '录制库', qc: '质检中心', admin: '租户/用户', settings: '系统设置',
+    overview: '总览', workbench: '数字人工作台', capabilities: '功能中心', offline: '离线任务', live: '实时会话', present: '展示模式', assets: '资产库', recordings: '录制库', qc: '质检中心', admin: '租户/用户', settings: '系统设置',
   }
   const gpuPct = live.gpu.total_mb ? Math.round((live.gpu.used_mb / live.gpu.total_mb) * 100) : 0
   const gpuGb = (live.gpu.used_mb / 1024).toFixed(1)
