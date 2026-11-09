@@ -13,6 +13,7 @@ export default function Live({ live, avatars, voices, notify }: {
   const [voice, setVoice] = useState('')
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [connected, setConnected] = useState(false)
+  const [videoReady, setVideoReady] = useState(false)
   const [connecting, setConnecting] = useState(false)
   const [input, setInput] = useState('')
   const [chat, setChat] = useState<ChatMsg[]>([
@@ -87,9 +88,9 @@ export default function Live({ live, avatars, voices, notify }: {
         if (evt.track.kind === 'audio' && audioRef.current) audioRef.current.srcObject = stream
       })
       pc.addEventListener('connectionstatechange', () => {
-        if (pc.connectionState === 'connected') { setConnected(true); setConnecting(false) }
+        if (pc.connectionState === 'connected') { setConnected(true); setConnecting(false); setVideoReady(false) }
         if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
-          setConnected(false); setSessionId(null); setConnecting(false)
+          setConnected(false); setVideoReady(false); setSessionId(null); setConnecting(false)
           notify('WebRTC 连接已断开，请重连')
         }
       })
@@ -114,6 +115,7 @@ export default function Live({ live, avatars, voices, notify }: {
     cleanup()
     setSessionId(null)
     setConnected(false)
+    setVideoReady(false)
     if (videoRef.current) videoRef.current.srcObject = null
     if (audioRef.current) audioRef.current.srcObject = null
     setTalkStatus('')
@@ -210,11 +212,11 @@ export default function Live({ live, avatars, voices, notify }: {
           <div className="card-body">
             <div className="preview">
               {!connected && <div className="preview-empty"><AvatarImg id={avatar} alt="数字人预览" /><span>点击“连接会话”启动 WebRTC</span></div>}
-              <video ref={videoRef} autoPlay playsInline muted={false} style={{ opacity: connected ? 1 : 0 }} />
+              <video ref={videoRef} autoPlay playsInline muted={false} onLoadedMetadata={() => setVideoReady(true)} style={{ opacity: videoReady ? 1 : 0 }} />
               <audio ref={audioRef} autoPlay />
               <div className="scan" />
               <div className="hud"><Badge tone={connected ? 'live' : 'idle'}>{connected ? '● LIVE' : 'IDLE'}</Badge><Badge tone="idle">25 FPS</Badge><Badge tone="idle">WebRTC</Badge></div>
-              <div className="bottom"><span>GPU {((live.gpu.used_mb || 0) / 1024).toFixed(1)}G</span><span>LAN</span><div className="progress"><i style={{ width: connected ? '72%' : '0%' }} /></div><span>{connected ? '72%' : '—'}</span></div>
+              <div className="bottom"><span>GPU {((live.gpu.used_mb || 0) / 1024).toFixed(1)}G</span><span>LAN</span><div className={`progress ${videoReady ? '' : 'wait'}`}><i style={{ width: videoReady ? '100%' : connected ? '60%' : '0%' }} /></div><span>{videoReady ? '已连接' : connected ? '连接中' : '—'}</span></div>
             </div>
             <div className="preview-actions">
               <button className="btn" disabled={!sessionId} onClick={interrupt}>■ 打断</button>
