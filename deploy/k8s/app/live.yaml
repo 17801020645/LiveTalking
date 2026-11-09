@@ -78,6 +78,9 @@ spec:
             - name: streamout
               mountPath: /app/streamout
               readOnly: true
+            - name: web
+              mountPath: /app/web
+              readOnly: true
       volumes:
         - name: data
           hostPath:
@@ -94,6 +97,10 @@ spec:
         - name: streamout
           hostPath:
             path: /home/banren45/workspace/01_digital_human/LiveTalking/streamout
+            type: Directory
+        - name: web
+          hostPath:
+            path: /home/banren45/workspace/01_digital_human/LiveTalking/web
             type: Directory
 ---
 apiVersion: v1
