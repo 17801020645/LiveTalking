@@ -1,0 +1,3 @@
+# UI-only image: independent from the 14GB app/model image.
+FROM nginx:alpine
+COPY ui_dist /ui

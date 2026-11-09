@@ -22,6 +22,14 @@ spec:
       runtimeClassName: nvidia
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
+      initContainers:
+        - name: ui-assets
+          image: nexus-ui:v0.6.6
+          imagePullPolicy: IfNotPresent
+          command: ["sh", "-c", "cp -a /ui/. /app/ui_dist/"]
+          volumeMounts:
+            - name: ui-assets
+              mountPath: /app/ui_dist
       containers:
         - name: live
           image: nexus-app:v0.6.6
@@ -67,6 +75,9 @@ spec:
             periodSeconds: 30
             failureThreshold: 5
           volumeMounts:
+            - name: ui-assets
+              mountPath: /app/ui_dist
+              readOnly: true
             - name: data
               mountPath: /app/data
             - name: models
@@ -88,6 +99,8 @@ spec:
               mountPath: /app/llm.py
               readOnly: true
       volumes:
+        - name: ui-assets
+          emptyDir: {}
         - name: data
           hostPath:
             path: /data/apps/digital-human/data
